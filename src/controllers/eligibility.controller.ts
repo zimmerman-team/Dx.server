@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -90,7 +90,7 @@ const ELIGIBILITY_COUNTRY_RESPONSE: ResponseObject = {
 };
 
 export class EligibilityController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/eligibility')
   @response(200, ELIGIBILITY_RESPONSE)
@@ -102,8 +102,8 @@ export class EligibilityController {
       ? this.req.query.nonAggregateBy
       : this.req.query.aggregateBy ===
         EligibilityFieldsMapping.aggregateByFields[0]
-      ? EligibilityFieldsMapping.aggregateByFields[1]
-      : EligibilityFieldsMapping.aggregateByFields[0]
+        ? EligibilityFieldsMapping.aggregateByFields[1]
+        : EligibilityFieldsMapping.aggregateByFields[0]
     ).toString();
     const filterString = getFilterString(this.req.query);
     const params = querystring.stringify(
@@ -114,7 +114,7 @@ export class EligibilityController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.eligibility}/?${params}${filterString}&${EligibilityFieldsMapping.defaultSelect}`;
+    const url = `${urls.eligibility}?${params}${filterString}&${EligibilityFieldsMapping.defaultSelect}`;
 
     return axios
       .get(url)
@@ -158,7 +158,7 @@ export class EligibilityController {
   @get('/eligibility/years')
   @response(200, ELIGIBILITY_RESPONSE)
   eligibilityYears(): object {
-    const url = `${urls.eligibility}/?${EligibilityYearsFieldsMapping.aggregation}`;
+    const url = `${urls.eligibility}?${EligibilityYearsFieldsMapping.aggregation}`;
 
     return axios
       .get(url)
@@ -194,7 +194,7 @@ export class EligibilityController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.eligibility}/?${params}${filterString}&${ScatterplotFieldsMapping.defaultSelect}`;
+    const url = `${urls.eligibility}?${params}${filterString}&${ScatterplotFieldsMapping.defaultSelect}`;
 
     return axios
       .get(url)
@@ -254,29 +254,29 @@ export class EligibilityController {
                 _.get(item, ScatterplotFieldsMapping.incomeLevel, null) === null
                   ? 0
                   : _.findIndex(
-                      ScatterplotFieldsMapping.incomeLevels,
-                      (incomeLevel: string) =>
-                        incomeLevel ===
-                        _.get(
-                          item,
-                          ScatterplotFieldsMapping.incomeLevel,
-                          'None',
-                        ),
-                    ),
+                    ScatterplotFieldsMapping.incomeLevels,
+                    (incomeLevel: string) =>
+                      incomeLevel ===
+                      _.get(
+                        item,
+                        ScatterplotFieldsMapping.incomeLevel,
+                        'None',
+                      ),
+                  ),
               diseaseBurden:
                 _.get(item, ScatterplotFieldsMapping.diseaseBurden, null) ===
-                null
+                  null
                   ? 0
                   : _.findIndex(
-                      ScatterplotFieldsMapping.diseaseBurdens,
-                      (diseaseBurden: string) =>
-                        diseaseBurden ===
-                        _.get(
-                          item,
-                          ScatterplotFieldsMapping.diseaseBurden,
-                          'None',
-                        ),
-                    ),
+                    ScatterplotFieldsMapping.diseaseBurdens,
+                    (diseaseBurden: string) =>
+                      diseaseBurden ===
+                      _.get(
+                        item,
+                        ScatterplotFieldsMapping.diseaseBurden,
+                        'None',
+                      ),
+                  ),
             })),
           });
         });
@@ -304,15 +304,15 @@ export class EligibilityController {
                 ) === null
                   ? 0
                   : _.findIndex(
-                      ScatterplotFieldsMapping.incomeLevels,
-                      (il: string) =>
-                        il ===
-                        _.get(
-                          fItemWithData,
-                          ScatterplotFieldsMapping.incomeLevel,
-                          'None',
-                        ),
-                    );
+                    ScatterplotFieldsMapping.incomeLevels,
+                    (il: string) =>
+                      il ===
+                      _.get(
+                        fItemWithData,
+                        ScatterplotFieldsMapping.incomeLevel,
+                        'None',
+                      ),
+                  );
               data[index].data.push({
                 y: item.data[0].y,
                 x: year,
@@ -345,15 +345,15 @@ export class EligibilityController {
               ) === null
                 ? 0
                 : _.findIndex(
-                    ScatterplotFieldsMapping.incomeLevels,
-                    (il: string) =>
-                      il ===
-                      _.get(
-                        fItemWithData,
-                        ScatterplotFieldsMapping.incomeLevel,
-                        'None',
-                      ),
-                  );
+                  ScatterplotFieldsMapping.incomeLevels,
+                  (il: string) =>
+                    il ===
+                    _.get(
+                      fItemWithData,
+                      ScatterplotFieldsMapping.incomeLevel,
+                      'None',
+                    ),
+                );
             return {
               x: year,
               y: 'dummy2',

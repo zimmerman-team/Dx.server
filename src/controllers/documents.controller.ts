@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -54,7 +54,7 @@ const RESULTS_RESPONSE: ResponseObject = {
 };
 
 export class DocumentsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/documents')
   @response(200, RESULTS_RESPONSE)
@@ -75,7 +75,7 @@ export class DocumentsController {
     //     encodeURIComponent: (str: string) => str,
     //   },
     // );
-    const url = `${urls.documents}/?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
+    const url = `${urls.documents}?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
 
     return axios
       .get(url)
@@ -193,7 +193,7 @@ export class DocumentsController {
   grantDocuments(): object {
     const mapper = mapTransform(docsMap);
     const filterString = getFilterString(this.req.query);
-    const url = `${urls.documents}/?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
+    const url = `${urls.documents}?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
 
     return axios
       .get(url)
@@ -209,9 +209,8 @@ export class DocumentsController {
               count: groupedByCategory[category].length,
               docs: _.orderBy(
                 groupedByCategory[category].map((item: any) => ({
-                  title: `${item.processName}${
-                    item.fileIndex ? ` - ${item.fileIndex}` : ''
-                  }`,
+                  title: `${item.processName}${item.fileIndex ? ` - ${item.fileIndex}` : ''
+                    }`,
                   link: item.fileURL,
                 })),
                 'title',

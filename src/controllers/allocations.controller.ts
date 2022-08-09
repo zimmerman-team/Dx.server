@@ -64,7 +64,7 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}/?${params}${filterString}`;
+    const url = `${urls.allocations}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -109,7 +109,7 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}/?${params}${filterString}`;
+    const url = `${urls.allocations}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -151,7 +151,7 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}/?${params}${filterString}`;
+    const url = `${urls.allocations}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -260,7 +260,7 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}/?${params}${filterString}`;
+    const url = `${urls.allocations}?${params}${filterString}`;
 
     return axios
       .all([axios.get(url), axios.get(urls.geojson)])
@@ -416,7 +416,7 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}/?${params}${filterString}`;
+    const url = `${urls.allocations}?${params}${filterString}`;
 
     return axios
       .all([axios.get(url), axios.get(urls.multicountriescountriesdata)])

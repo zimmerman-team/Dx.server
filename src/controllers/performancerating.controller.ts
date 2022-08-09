@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -40,7 +40,7 @@ const PERFORMANCE_RATING_RESPONSE: ResponseObject = {
 };
 
 export class PerformanceratingController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/performance-rating')
   @response(200, PERFORMANCE_RATING_RESPONSE)
@@ -59,7 +59,7 @@ export class PerformanceratingController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.performancerating}/?${performanceratingMapping.defaultSelect}${performanceratingMapping.defaultOrderBy}${performanceratingMapping.defaultExpand}&$filter=performanceRating/performanceRatingCode ne null and grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber eq ${this.req.query.grantId} and grantAgreementImplementationPeriod/implementationPeriodNumber eq ${this.req.query.IPnumber}&${filtering.default_q_param}${params}`;
+    const url = `${urls.performancerating}?${performanceratingMapping.defaultSelect}${performanceratingMapping.defaultOrderBy}${performanceratingMapping.defaultExpand}&$filter=performanceRating/performanceRatingCode ne null and grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber eq ${this.req.query.grantId} and grantAgreementImplementationPeriod/implementationPeriodNumber eq ${this.req.query.IPnumber}&${filtering.default_q_param}${params}`;
 
     return axios
       .get(url)

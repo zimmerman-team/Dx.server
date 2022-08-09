@@ -101,7 +101,7 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}/?${params}${filterString}`;
+    const url = `${urls.budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -338,7 +338,7 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}/?${params}${filterString}`;
+    const url = `${urls.budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -422,7 +422,7 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}/?${params}${filterString}`;
+    const url = `${urls.budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -508,7 +508,7 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}/?${params}${filterString}`;
+    const url = `${urls.budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -590,7 +590,7 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}/?${params}${filterString}`;
+    const url = `${urls.budgets}?${params}${filterString}`;
 
     return axios
       .all([axios.get(url), axios.get(urls.geojson)])
@@ -746,7 +746,7 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}/?${params}${filterString}`;
+    const url = `${urls.budgets}?${params}${filterString}`;
 
     return axios
       .all([axios.get(url), axios.get(urls.multicountriescountriesdata)])

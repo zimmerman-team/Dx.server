@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -22,14 +22,14 @@ import {
   PFIndicatorResult,
   PFIndicatorResultDisaggregationGroup,
   PFIndicatorResultIntervention,
-  PFIndicatorResultInterventionValue,
+  PFIndicatorResultInterventionValue
 } from '../interfaces/performanceFrameworkNetwork';
 import {handleDataApiError} from '../utils/dataApiError';
 import {getFilterString} from '../utils/filtering/performanceframework/getFilterString';
 import {
   formatPFData,
   getAchievementRateLegendValues,
-  getColorBasedOnValue,
+  getColorBasedOnValue
 } from '../utils/performanceframework/formatPFData';
 import {getTimeframeGroups} from '../utils/performanceframework/getTimeframes';
 
@@ -59,7 +59,7 @@ const PERFORMANCE_FRAMEWORK_RESPONSE: ResponseObject = {
 };
 
 export class PerformanceframeworkController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/performance-framework')
   @response(200, PERFORMANCE_FRAMEWORK_RESPONSE)
@@ -83,7 +83,7 @@ export class PerformanceframeworkController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.performanceframework}/?${filterString}&${params}`;
+    const url = `${urls.performanceframework}?${filterString}&${params}`;
 
     return axios
       .get(url)
@@ -180,7 +180,7 @@ export class PerformanceframeworkController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.performanceframework}/?${filterString}&${params}`;
+    const url = `${urls.performanceframework}?${filterString}&${params}`;
 
     return axios
       .get(url)
@@ -220,32 +220,32 @@ export class PerformanceframeworkController {
               const disaggregations: PFIndicatorResultDisaggregationGroup[] =
                 baselineInstance.disaggregationGroup
                   ? [
-                      {
-                        name: baselineInstance.disaggregationGroup,
-                        values: [
-                          {
-                            category: baselineInstance.disaggregationValue,
-                            baseline: {
-                              numerator: baselineInstance.valueNumerator,
-                              denominator: baselineInstance.valueDenominator,
-                              percentage: baselineInstance.valuePercentage,
-                            },
-                            reported: {
-                              numerator: resultInstance.valueNumerator,
-                              denominator: resultInstance.valueDenominator,
-                              percentage: resultInstance.valuePercentage,
-                            },
+                    {
+                      name: baselineInstance.disaggregationGroup,
+                      values: [
+                        {
+                          category: baselineInstance.disaggregationValue,
+                          baseline: {
+                            numerator: baselineInstance.valueNumerator,
+                            denominator: baselineInstance.valueDenominator,
+                            percentage: baselineInstance.valuePercentage,
                           },
-                        ],
-                      },
-                    ]
+                          reported: {
+                            numerator: resultInstance.valueNumerator,
+                            denominator: resultInstance.valueDenominator,
+                            percentage: resultInstance.valuePercentage,
+                          },
+                        },
+                      ],
+                    },
+                  ]
                   : [];
               const achievementRate =
                 this.req.query.moduleName === 'Process indicator / WPTM'
                   ? resultInstance.valueNumerator ||
-                    targetInstance.valueNumerator
+                  targetInstance.valueNumerator
                   : resultInstance.valueAchievementRate ||
-                    targetInstance.valueAchievementRate;
+                  targetInstance.valueAchievementRate;
 
               results.push({
                 type: 'Percentage',
@@ -269,7 +269,7 @@ export class PerformanceframeworkController {
                   achievementRate,
                   getAchievementRateLegendValues(),
                   resultInstance.isIndicatorReversed ||
-                    targetInstance.isIndicatorReversed,
+                  targetInstance.isIndicatorReversed,
                   this.req.query.moduleName === 'Process indicator / WPTM',
                   resultInstance,
                 ),
@@ -280,7 +280,7 @@ export class PerformanceframeworkController {
                 ).slice(0, 10)}`,
                 isReversed:
                   resultInstance.isIndicatorReversed ||
-                  targetInstance.isIndicatorReversed
+                    targetInstance.isIndicatorReversed
                     ? 'Yes'
                     : 'No',
                 aggregationType:

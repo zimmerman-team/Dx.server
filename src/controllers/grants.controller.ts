@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -23,7 +23,7 @@ import urls from '../config/urls/index.json';
 import {
   GrantDetailInformation,
   GrantDetailPeriod,
-  GrantDetailPeriodInformation,
+  GrantDetailPeriodInformation
 } from '../interfaces/grantDetail';
 import {GrantListItemModel} from '../interfaces/grantList';
 import {handleDataApiError} from '../utils/dataApiError';
@@ -63,7 +63,7 @@ const GRANTS_RESPONSE: ResponseObject = {
 };
 
 export class GrantsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/grants')
   @response(200, GRANTS_RESPONSE)
@@ -84,9 +84,8 @@ export class GrantsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grants}${filterString}${filtering.orderby}${
-      filtering.param_assign_operator
-    }${orderBy}${parseInt(pageSize, 10) > 0 ? `&${params}` : ''}`;
+    const url = `${urls.grants}${filterString}${filtering.orderby}${filtering.param_assign_operator
+      }${orderBy}${parseInt(pageSize, 10) > 0 ? `&${params}` : ''}`;
 
     return axios
       .get(url)
@@ -111,7 +110,7 @@ export class GrantsController {
       };
     }
     const mapper = mapTransform(grantDetailMap);
-    const url = `${urls.grantsNoCount}/?$top=1&$filter=${grantDetailUtils.grantNumber} eq '${grantNumber}'`;
+    const url = `${urls.grantsNoCount}?$top=1&$filter=${grantDetailUtils.grantNumber} eq '${grantNumber}'`;
 
     return axios
       .get(url)
@@ -135,7 +134,7 @@ export class GrantsController {
       };
     }
     const mapper = mapTransform(grantPeriodsMap);
-    const url = `${urls.grantPeriods}/?${grantDetailUtils.defaultSelectFields}${grantDetailUtils.defaultSort}$filter=${grantDetailUtils.periodGrantNumber} eq '${grantNumber}'`;
+    const url = `${urls.grantPeriods}?${grantDetailUtils.defaultSelectFields}${grantDetailUtils.defaultSort}$filter=${grantDetailUtils.periodGrantNumber} eq '${grantNumber}'`;
 
     return axios
       .get(url)
@@ -164,8 +163,8 @@ export class GrantsController {
       };
     }
     const mapper = mapTransform(grantPeriodInfoMap);
-    const financialUrl = `${urls.grantPeriods}/?${grantDetailUtils.periodInfoSelectFields}$filter=${grantDetailUtils.periodGrantNumber} eq '${grantNumber}' and ${grantDetailUtils.periodNumber} eq ${IPnumber}`;
-    const ratingUrl = `${urls.performancerating}/?${grantDetailUtils.periodInfoRatingSelectFields}${grantDetailUtils.periodInfoRatingPageSize}${grantDetailUtils.periodInfoRatingExpand}${grantDetailUtils.periodInfoRatingSort}$filter=${grantDetailUtils.periodInfoRatingGrantNumber} eq '${grantNumber}' and ${grantDetailUtils.periodInfoRatingPeriodNumber} eq ${IPnumber}${grantDetailUtils.periodInfoRatingExtraFilter}`;
+    const financialUrl = `${urls.grantPeriods}?${grantDetailUtils.periodInfoSelectFields}$filter=${grantDetailUtils.periodGrantNumber} eq '${grantNumber}' and ${grantDetailUtils.periodNumber} eq ${IPnumber}`;
+    const ratingUrl = `${urls.performancerating}?${grantDetailUtils.periodInfoRatingSelectFields}${grantDetailUtils.periodInfoRatingPageSize}${grantDetailUtils.periodInfoRatingExpand}${grantDetailUtils.periodInfoRatingSort}$filter=${grantDetailUtils.periodInfoRatingGrantNumber} eq '${grantNumber}' and ${grantDetailUtils.periodInfoRatingPeriodNumber} eq ${IPnumber}${grantDetailUtils.periodInfoRatingExtraFilter}`;
 
     return axios
       .all([axios.get(financialUrl), axios.get(ratingUrl)])
@@ -201,9 +200,9 @@ export class GrantsController {
   grantsRadial(): object {
     const filterString = getFilterString(this.req.query);
     const filterStringPF = getFilterStringPF(this.req.query);
-    const grantsUrl = `${urls.grantsNoCount}/?${filterString}${GrantsRadialMapping.grantAgreementsSelect}`;
-    const periodsUrl = `${urls.vgrantPeriods}/?${filterString}${GrantsRadialMapping.implementationPeriodsSelect}`;
-    const ipRatingUrl = `${urls.performancerating}/?${filterStringPF}${GrantsRadialMapping.ipRatingDefaultExpand}${GrantsRadialMapping.ipRatingDefaultOrderBy}`;
+    const grantsUrl = `${urls.grantsNoCount}?${filterString}${GrantsRadialMapping.grantAgreementsSelect}`;
+    const periodsUrl = `${urls.vgrantPeriods}?${filterString}${GrantsRadialMapping.implementationPeriodsSelect}`;
+    const ipRatingUrl = `${urls.performancerating}?${filterStringPF}${GrantsRadialMapping.ipRatingDefaultExpand}${GrantsRadialMapping.ipRatingDefaultOrderBy}`;
 
     return axios
       .all([

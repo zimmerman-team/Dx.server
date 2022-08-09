@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import center from '@turf/center';
 import {points, Position} from '@turf/helpers';
@@ -27,7 +27,7 @@ import staticCountries from '../static-assets/countries.json';
 import {handleDataApiError} from '../utils/dataApiError';
 import {
   grantDetailGetFilterString,
-  grantDetailTreemapGetFilterString,
+  grantDetailTreemapGetFilterString
 } from '../utils/filtering/disbursements/grantDetailGetFilterString';
 import {getGeoMultiCountriesFilterString} from '../utils/filtering/disbursements/multicountries/getFilterString';
 import {getFilterString} from '../utils/filtering/grants/getFilterString';
@@ -172,7 +172,7 @@ const DISBURSEMENTS_TREEMAP_RESPONSE: ResponseObject = {
 };
 
 export class DisbursementsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   // Time/Cycle
 
@@ -191,7 +191,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.disbursements}/?${params}${filterString}`;
+    const url = `${urls.disbursements}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -296,7 +296,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.vgrantPeriods}/?${params}${filterString
+    const url = `${urls.vgrantPeriods}?${params}${filterString
       .replace('filter', '$filter=')
       .replace(')/', ')')}`;
 
@@ -411,7 +411,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.vcommitments}/?${params}${filterString}`;
+    const url = `${urls.vcommitments}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -520,7 +520,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.disbursements}/?${params}${filterString}`;
+    const url = `${urls.disbursements}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -606,7 +606,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.vgrantPeriods}/?${params}${filterString}`;
+    const url = `${urls.vgrantPeriods}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -692,7 +692,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.vcommitments}/?${params}${filterString}`;
+    const url = `${urls.vcommitments}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -774,7 +774,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -881,7 +881,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -989,7 +989,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -1097,7 +1097,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -1411,7 +1411,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -1729,7 +1729,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -2061,7 +2061,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .all([axios.get(url), axios.get(urls.geojson)])
@@ -2191,11 +2191,11 @@ export class DisbursementsController {
                 iso_a3: feature.id,
                 data: fItem
                   ? {
-                      components: fItem.components,
-                      disbursed: fItem.disbursed,
-                      committed: fItem.committed,
-                      signed: fItem.signed,
-                    }
+                    components: fItem.components,
+                    disbursed: fItem.disbursed,
+                    committed: fItem.committed,
+                    signed: fItem.signed,
+                  }
                   : {},
               },
             };
@@ -2238,7 +2238,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantPeriods}/?${params}${filterString}`;
+    const url = `${urls.grantPeriods}?${params}${filterString}`;
 
     return axios
       .all([axios.get(url), axios.get(urls.multicountriescountriesdata)])
@@ -2349,7 +2349,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -2456,7 +2456,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -2564,7 +2564,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantsNoCount}/?${params}${filterString}`;
+    const url = `${urls.grantsNoCount}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -2674,7 +2674,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantDetailDisbursements}/?${params}${filterString}`;
+    const url = `${urls.grantDetailDisbursements}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -2791,7 +2791,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.commitments}/?${params}${filterString
+    const url = `${urls.commitments}?${params}${filterString
       .replace(
         filteringGrants.IPnumber,
         GrantCommittedTimeCycleFieldsMapping.IPnumber,
@@ -2908,7 +2908,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantDetailGrants}/?${params}${filterString}`;
+    const url = `${urls.grantDetailGrants}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -3016,7 +3016,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantDetailGrants}/?${params}${filterString}`;
+    const url = `${urls.grantDetailGrants}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -3128,7 +3128,7 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.grantDetailGrants}/?${params}${filterString}`;
+    const url = `${urls.grantDetailGrants}?${params}${filterString}`;
 
     return axios
       .get(url)

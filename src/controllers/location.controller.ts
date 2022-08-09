@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios from 'axios';
 import _ from 'lodash';
@@ -28,7 +28,7 @@ const LOCATION_INFO_RESPONSE: ResponseObject = {
 };
 
 export class LocationController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/location/detail')
   @response(200, LOCATION_INFO_RESPONSE)
@@ -41,7 +41,7 @@ export class LocationController {
       };
     }
     const location = locations.split(',')[0];
-    const multicountriesUrl = `${urls.multicountries}/?${locationMappingFields[
+    const multicountriesUrl = `${urls.multicountries}?${locationMappingFields[
       location.length > 3
         ? 'countriesFilterString'
         : 'multiCountriesFilterString'
@@ -50,24 +50,20 @@ export class LocationController {
       this.req.query,
       locationMappingFields.locationFinancialAggregation,
     );
-    const financialUrl = `${urls.grantsNoCount}/?${filterString}`;
-    const indicatorsUrl = `${urls.indicators}/?${filtering.filter_operator}${
-      filtering.param_assign_operator
-    }${locationMappingFields.locationIndicatorsDefaultFilter} ${
-      filtering.and_operator
-    } ${locationMappingFields.locationIndicatorsLocationFilter.replace(
-      '<location>',
-      location as string,
-    )}&${filtering.orderby}${filtering.param_assign_operator}${
-      locationMappingFields.locationIndicatorsDefaultOrder
-    }&${filtering.page_size}${filtering.param_assign_operator}${
-      locationMappingFields.locationIndicatorsDefaultCap
-    }`;
+    const financialUrl = `${urls.grantsNoCount}?${filterString}`;
+    const indicatorsUrl = `${urls.indicators}?${filtering.filter_operator}${filtering.param_assign_operator
+      }${locationMappingFields.locationIndicatorsDefaultFilter} ${filtering.and_operator
+      } ${locationMappingFields.locationIndicatorsLocationFilter.replace(
+        '<location>',
+        location as string,
+      )}&${filtering.orderby}${filtering.param_assign_operator}${locationMappingFields.locationIndicatorsDefaultOrder
+      }&${filtering.page_size}${filtering.param_assign_operator}${locationMappingFields.locationIndicatorsDefaultCap
+      }`;
     const principalRecipientsFilterString = getFilterString(
       this.req.query,
       locationMappingFields.principalRecipientAggregation,
     );
-    const principalRecipientsUrl = `${urls.grantsNoCount}/?${principalRecipientsFilterString}`;
+    const principalRecipientsUrl = `${urls.grantsNoCount}?${principalRecipientsFilterString}`;
 
     return axios
       .all([
@@ -160,39 +156,39 @@ export class LocationController {
                   location.length > 3
                     ? []
                     : _.orderBy(
-                        multicountriesResp.map((mc: any) => ({
-                          name: _.get(
-                            mc,
-                            locationMappingFields.multiCountryName,
-                            '',
-                          ),
-                          code: _.get(
-                            mc,
-                            locationMappingFields.multiCountryName,
-                            '',
-                          ).replace(/\//g, '|'),
-                        })),
-                        'name',
-                        'asc',
-                      ),
+                      multicountriesResp.map((mc: any) => ({
+                        name: _.get(
+                          mc,
+                          locationMappingFields.multiCountryName,
+                          '',
+                        ),
+                        code: _.get(
+                          mc,
+                          locationMappingFields.multiCountryName,
+                          '',
+                        ).replace(/\//g, '|'),
+                      })),
+                      'name',
+                      'asc',
+                    ),
                 countries:
                   location.length > 3
                     ? _.orderBy(
-                        countriesResp.map((loc: any) => ({
-                          name: _.get(
-                            loc,
-                            locationMappingFields.countryName,
-                            '',
-                          ),
-                          code: _.get(
-                            loc,
-                            locationMappingFields.countryCode,
-                            '',
-                          ),
-                        })),
-                        'name',
-                        'asc',
-                      )
+                      countriesResp.map((loc: any) => ({
+                        name: _.get(
+                          loc,
+                          locationMappingFields.countryName,
+                          '',
+                        ),
+                        code: _.get(
+                          loc,
+                          locationMappingFields.countryCode,
+                          '',
+                        ),
+                      })),
+                      'name',
+                      'asc',
+                    )
                     : [],
                 indicators: locationIndicatorsResp.map((indicator: any) => ({
                   name: _.get(

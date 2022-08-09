@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -48,7 +48,7 @@ const PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE: ResponseObject = {
 };
 
 export class PledgescontributionsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/pledges-contributions/time-cycle')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
@@ -65,7 +65,7 @@ export class PledgescontributionsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.pledgescontributions}/?${params}${filterString}`;
+    const url = `${urls.pledgescontributions}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -139,7 +139,7 @@ export class PledgescontributionsController {
     const valueType = (
       this.req.query.valueType ?? PledgesContributionsGeoFieldsMapping.pledge
     ).toString();
-    const url = `${urls.pledgescontributions}/?${params}${filterString}`;
+    const url = `${urls.pledgescontributions}?${params}${filterString}`;
 
     return axios
       .all([
@@ -192,19 +192,19 @@ export class PledgescontributionsController {
                 amounts: [
                   valueType === PledgesContributionsGeoFieldsMapping.pledge
                     ? {
-                        label: 'Pledge',
-                        value: _.sumBy(
-                          pledges,
-                          PledgesContributionsGeoFieldsMapping.amount,
-                        ),
-                      }
+                      label: 'Pledge',
+                      value: _.sumBy(
+                        pledges,
+                        PledgesContributionsGeoFieldsMapping.amount,
+                      ),
+                    }
                     : {
-                        label: 'Contribution',
-                        value: _.sumBy(
-                          contributions,
-                          PledgesContributionsGeoFieldsMapping.amount,
-                        ),
-                      },
+                      label: 'Contribution',
+                      value: _.sumBy(
+                        contributions,
+                        PledgesContributionsGeoFieldsMapping.amount,
+                      ),
+                    },
                 ],
               });
             } else {
@@ -259,21 +259,21 @@ export class PledgescontributionsController {
                       ),
                       amounts: [
                         valueType ===
-                        PledgesContributionsGeoFieldsMapping.pledge
+                          PledgesContributionsGeoFieldsMapping.pledge
                           ? {
-                              label: 'Pledge',
-                              value: _.sumBy(
-                                pledges,
-                                PledgesContributionsGeoFieldsMapping.amount,
-                              ),
-                            }
+                            label: 'Pledge',
+                            value: _.sumBy(
+                              pledges,
+                              PledgesContributionsGeoFieldsMapping.amount,
+                            ),
+                          }
                           : {
-                              label: 'Contribution',
-                              value: _.sumBy(
-                                contributions,
-                                PledgesContributionsGeoFieldsMapping.amount,
-                              ),
-                            },
+                            label: 'Contribution',
+                            value: _.sumBy(
+                              contributions,
+                              PledgesContributionsGeoFieldsMapping.amount,
+                            ),
+                          },
                       ],
                       subType,
                       d2hCoordinates: multiCoordinates,
@@ -425,7 +425,7 @@ export class PledgescontributionsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.pledgescontributions}/?${params}${filterString}`;
+    const url = `${urls.pledgescontributions}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -539,7 +539,7 @@ export class PledgescontributionsController {
     const valueType = (
       this.req.query.valueType ?? PledgesContributionsGeoFieldsMapping.pledge
     ).toString();
-    const url = `${urls.pledgescontributions}/?${params}${filterString}`;
+    const url = `${urls.pledgescontributions}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -574,23 +574,23 @@ export class PledgescontributionsController {
               value:
                 valueType === PledgesContributionsGeoFieldsMapping.pledge
                   ? _.sumBy(
-                      pledges,
-                      PledgesContributionsGeoFieldsMapping.amount,
-                    )
+                    pledges,
+                    PledgesContributionsGeoFieldsMapping.amount,
+                  )
                   : _.sumBy(
-                      contributions,
-                      PledgesContributionsGeoFieldsMapping.amount,
-                    ),
+                    contributions,
+                    PledgesContributionsGeoFieldsMapping.amount,
+                  ),
               formattedValue: formatFinancialValue(
                 valueType === PledgesContributionsGeoFieldsMapping.pledge
                   ? _.sumBy(
-                      pledges,
-                      PledgesContributionsGeoFieldsMapping.amount,
-                    )
+                    pledges,
+                    PledgesContributionsGeoFieldsMapping.amount,
+                  )
                   : _.sumBy(
-                      contributions,
-                      PledgesContributionsGeoFieldsMapping.amount,
-                    ),
+                    contributions,
+                    PledgesContributionsGeoFieldsMapping.amount,
+                  ),
               ),
               color: '#DFE3E5',
               tooltip: {
@@ -601,25 +601,25 @@ export class PledgescontributionsController {
                     value:
                       valueType === PledgesContributionsGeoFieldsMapping.pledge
                         ? _.sumBy(
-                            pledges,
-                            PledgesContributionsGeoFieldsMapping.amount,
-                          )
+                          pledges,
+                          PledgesContributionsGeoFieldsMapping.amount,
+                        )
                         : _.sumBy(
-                            contributions,
-                            PledgesContributionsGeoFieldsMapping.amount,
-                          ),
+                          contributions,
+                          PledgesContributionsGeoFieldsMapping.amount,
+                        ),
                   },
                 ],
                 value:
                   valueType === PledgesContributionsGeoFieldsMapping.pledge
                     ? _.sumBy(
-                        pledges,
-                        PledgesContributionsGeoFieldsMapping.amount,
-                      )
+                      pledges,
+                      PledgesContributionsGeoFieldsMapping.amount,
+                    )
                     : _.sumBy(
-                        contributions,
-                        PledgesContributionsGeoFieldsMapping.amount,
-                      ),
+                      contributions,
+                      PledgesContributionsGeoFieldsMapping.amount,
+                    ),
               },
             });
           } else {
@@ -647,23 +647,23 @@ export class PledgescontributionsController {
                 value:
                   valueType === PledgesContributionsGeoFieldsMapping.pledge
                     ? _.sumBy(
-                        pledges,
-                        PledgesContributionsGeoFieldsMapping.amount,
-                      )
+                      pledges,
+                      PledgesContributionsGeoFieldsMapping.amount,
+                    )
                     : _.sumBy(
-                        contributions,
-                        PledgesContributionsGeoFieldsMapping.amount,
-                      ),
+                      contributions,
+                      PledgesContributionsGeoFieldsMapping.amount,
+                    ),
                 formattedValue: formatFinancialValue(
                   valueType === PledgesContributionsGeoFieldsMapping.pledge
                     ? _.sumBy(
-                        pledges,
-                        PledgesContributionsGeoFieldsMapping.amount,
-                      )
+                      pledges,
+                      PledgesContributionsGeoFieldsMapping.amount,
+                    )
                     : _.sumBy(
-                        contributions,
-                        PledgesContributionsGeoFieldsMapping.amount,
-                      ),
+                      contributions,
+                      PledgesContributionsGeoFieldsMapping.amount,
+                    ),
                 ),
                 color: '#DFE3E5',
                 tooltip: {
@@ -673,27 +673,27 @@ export class PledgescontributionsController {
                       name: valueType,
                       value:
                         valueType ===
-                        PledgesContributionsGeoFieldsMapping.pledge
+                          PledgesContributionsGeoFieldsMapping.pledge
                           ? _.sumBy(
-                              pledges,
-                              PledgesContributionsGeoFieldsMapping.amount,
-                            )
+                            pledges,
+                            PledgesContributionsGeoFieldsMapping.amount,
+                          )
                           : _.sumBy(
-                              contributions,
-                              PledgesContributionsGeoFieldsMapping.amount,
-                            ),
+                            contributions,
+                            PledgesContributionsGeoFieldsMapping.amount,
+                          ),
                     },
                   ],
                   value:
                     valueType === PledgesContributionsGeoFieldsMapping.pledge
                       ? _.sumBy(
-                          pledges,
-                          PledgesContributionsGeoFieldsMapping.amount,
-                        )
+                        pledges,
+                        PledgesContributionsGeoFieldsMapping.amount,
+                      )
                       : _.sumBy(
-                          contributions,
-                          PledgesContributionsGeoFieldsMapping.amount,
-                        ),
+                        contributions,
+                        PledgesContributionsGeoFieldsMapping.amount,
+                      ),
                 },
               });
             });

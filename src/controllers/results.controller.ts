@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -18,7 +18,7 @@ import {ResultListItemModel} from '../interfaces/resultList';
 import {handleDataApiError} from '../utils/dataApiError';
 import {
   getFilterString,
-  getFilterStringForStats,
+  getFilterStringForStats
 } from '../utils/filtering/results/getFilterString';
 
 const RESULTS_RESPONSE: ResponseObject = {
@@ -84,14 +84,14 @@ const RESULT_STATS_RESPONSE: ResponseObject = {
 };
 
 export class ResultsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/results')
   @response(200, RESULTS_RESPONSE)
   results(): object {
     const mapper = mapTransform(resultsMap);
     const filterString = getFilterString(this.req.query);
-    const url = `${urls.results}/?${resultsUtils.defaultSelect}${filterString}`;
+    const url = `${urls.results}?${resultsUtils.defaultSelect}${filterString}`;
 
     return axios
       .get(url)
@@ -133,7 +133,7 @@ export class ResultsController {
   @get('/results/years')
   @response(200, RESULTS_RESPONSE)
   resultYears(): object {
-    const url = `${urls.results}/?${ResultsYearsMappingFields.aggregation}`;
+    const url = `${urls.results}?${ResultsYearsMappingFields.aggregation}`;
 
     return axios
       .get(url)
@@ -156,7 +156,7 @@ export class ResultsController {
       this.req.query,
       resultStatsMap.ResultStatsAggregation,
     );
-    const url = `${urls.results}/?${filterString}`;
+    const url = `${urls.results}?${filterString}`;
 
     return axios
       .get(url)

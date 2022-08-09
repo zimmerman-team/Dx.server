@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -27,7 +27,7 @@ const PARTNER_INFO_RESPONSE: ResponseObject = {
 };
 
 export class PartnerController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/partner/detail')
   @response(200, PARTNER_INFO_RESPONSE)
@@ -43,7 +43,7 @@ export class PartnerController {
       this.req.query,
       partnerMappingFields.url,
     );
-    const url = `${urls.grantsNoCount}/?${filterString}`;
+    const url = `${urls.grantsNoCount}?${filterString}`;
 
     return axios
       .get(url)
