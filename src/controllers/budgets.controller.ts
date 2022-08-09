@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import center from '@turf/center';
 import {points, Position} from '@turf/helpers';
@@ -84,7 +84,7 @@ const BUDGETS_TIME_CYCLE_RESPONSE: ResponseObject = {
 };
 
 export class BudgetsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/budgets/flow')
   @response(200, BUDGETS_FLOW_RESPONSE)
@@ -101,7 +101,8 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -338,7 +339,8 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -422,7 +424,8 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -508,7 +511,8 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -590,10 +594,11 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
-      .all([axios.get(url), axios.get(urls.geojson)])
+      .all([axios.get(url), axios.get(_.get(urls, datasource).geojson)])
       .then(
         axios.spread((...responses) => {
           const geoJSONData = responses[1].data.features;
@@ -713,9 +718,9 @@ export class BudgetsController {
                 iso_a3: feature.id,
                 data: fItem
                   ? {
-                      components: fItem.components,
-                      value: fItem.value,
-                    }
+                    components: fItem.components,
+                    value: fItem.value,
+                  }
                   : {},
               },
             };
@@ -746,10 +751,11 @@ export class BudgetsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.budgets}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
-      .all([axios.get(url), axios.get(urls.multicountriescountriesdata)])
+      .all([axios.get(url), axios.get(_.get(urls, datasource).multicountriescountriesdata)])
       .then(
         axios.spread((...responses) => {
           const rawData = _.get(

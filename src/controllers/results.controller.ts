@@ -91,7 +91,8 @@ export class ResultsController {
   results(): object {
     const mapper = mapTransform(resultsMap);
     const filterString = getFilterString(this.req.query);
-    const url = `${urls.results}?${resultsUtils.defaultSelect}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).results}?${resultsUtils.defaultSelect}${filterString}`;
 
     return axios
       .get(url)
@@ -133,7 +134,8 @@ export class ResultsController {
   @get('/results/years')
   @response(200, RESULTS_RESPONSE)
   resultYears(): object {
-    const url = `${urls.results}?${ResultsYearsMappingFields.aggregation}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).results}?${ResultsYearsMappingFields.aggregation}`;
 
     return axios
       .get(url)
@@ -156,7 +158,8 @@ export class ResultsController {
       this.req.query,
       resultStatsMap.ResultStatsAggregation,
     );
-    const url = `${urls.results}?${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).results}?${filterString}`;
 
     return axios
       .get(url)

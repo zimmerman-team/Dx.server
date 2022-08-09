@@ -41,7 +41,8 @@ export class LocationController {
       };
     }
     const location = locations.split(',')[0];
-    const multicountriesUrl = `${urls.multicountries}?${locationMappingFields[
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const multicountriesUrl = `${_.get(urls, datasource).multicountries}?${locationMappingFields[
       location.length > 3
         ? 'countriesFilterString'
         : 'multiCountriesFilterString'
@@ -50,8 +51,8 @@ export class LocationController {
       this.req.query,
       locationMappingFields.locationFinancialAggregation,
     );
-    const financialUrl = `${urls.grantsNoCount}?${filterString}`;
-    const indicatorsUrl = `${urls.indicators}?${filtering.filter_operator}${filtering.param_assign_operator
+    const financialUrl = `${_.get(urls, datasource).grantsNoCount}?${filterString}`;
+    const indicatorsUrl = `${_.get(urls, datasource).indicators}?${filtering.filter_operator}${filtering.param_assign_operator
       }${locationMappingFields.locationIndicatorsDefaultFilter} ${filtering.and_operator
       } ${locationMappingFields.locationIndicatorsLocationFilter.replace(
         '<location>',
@@ -63,7 +64,7 @@ export class LocationController {
       this.req.query,
       locationMappingFields.principalRecipientAggregation,
     );
-    const principalRecipientsUrl = `${urls.grantsNoCount}?${principalRecipientsFilterString}`;
+    const principalRecipientsUrl = `${_.get(urls, datasource).grantsNoCount}?${principalRecipientsFilterString}`;
 
     return axios
       .all([

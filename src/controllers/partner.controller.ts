@@ -43,7 +43,8 @@ export class PartnerController {
       this.req.query,
       partnerMappingFields.url,
     );
-    const url = `${urls.grantsNoCount}?${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).grantsNoCount}?${filterString}`;
 
     return axios
       .get(url)

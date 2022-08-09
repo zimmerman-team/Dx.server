@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import center from '@turf/center';
 import {points, Position} from '@turf/helpers';
@@ -47,7 +47,7 @@ const ALLOCATIONS_RESPONSE: ResponseObject = {
 };
 
 export class AllocationsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/allocations')
   @response(200, ALLOCATIONS_RESPONSE)
@@ -64,7 +64,8 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -109,7 +110,8 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -151,7 +153,8 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -260,10 +263,11 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
-      .all([axios.get(url), axios.get(urls.geojson)])
+      .all([axios.get(url), axios.get(_.get(urls, datasource).geojson)])
       .then(
         axios.spread((...responses) => {
           const geoJSONData = responses[1].data.features;
@@ -383,9 +387,9 @@ export class AllocationsController {
                 iso_a3: feature.id,
                 data: fItem
                   ? {
-                      components: fItem.components,
-                      value: fItem.value,
-                    }
+                    components: fItem.components,
+                    value: fItem.value,
+                  }
                   : {},
               },
             };
@@ -416,10 +420,11 @@ export class AllocationsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.allocations}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
-      .all([axios.get(url), axios.get(urls.multicountriescountriesdata)])
+      .all([axios.get(url), axios.get(_.get(urls, datasource).multicountriescountriesdata)])
       .then(
         axios.spread((...responses) => {
           const rawData = _.get(

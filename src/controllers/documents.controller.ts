@@ -75,7 +75,8 @@ export class DocumentsController {
     //     encodeURIComponent: (str: string) => str,
     //   },
     // );
-    const url = `${urls.documents}?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).documents}?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
 
     return axios
       .get(url)
@@ -193,7 +194,8 @@ export class DocumentsController {
   grantDocuments(): object {
     const mapper = mapTransform(docsMap);
     const filterString = getFilterString(this.req.query);
-    const url = `${urls.documents}?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).documents}?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
 
     return axios
       .get(url)

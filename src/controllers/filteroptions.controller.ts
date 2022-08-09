@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
@@ -69,12 +69,13 @@ const FILTER_OPTIONS_RESPONSE: ResponseObject = {
 };
 
 export class FilteroptionsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/filter-options/locations')
   @response(200, FILTER_OPTIONS_RESPONSE)
   locations(): object {
-    const url = urls.filteroptionslocations;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = _.get(urls, datasource).filteroptionslocations;
 
     return axios
       .get(url)
@@ -90,77 +91,77 @@ export class FilteroptionsController {
             subOptions:
               subOptions && subOptions.length > 0
                 ? _.orderBy(
-                    subOptions.map((item2: any) => {
-                      const item2SubOptions = _.get(
-                        item2,
-                        mappingLocations.children,
-                        [],
-                      );
-                      return {
-                        label: _.get(item2, mappingLocations.label, ''),
-                        value: _.get(item2, mappingLocations.value, ''),
-                        subOptions:
-                          item2SubOptions && item2SubOptions.length > 0
-                            ? _.orderBy(
-                                item2SubOptions.map((item3: any) => {
-                                  const item3SubOptions = _.get(
-                                    item3,
-                                    mappingLocations.children,
-                                    [],
-                                  );
-                                  return {
-                                    label: _.get(
-                                      item3,
-                                      mappingLocations.label,
-                                      '',
-                                    ),
-                                    value: _.get(
-                                      item3,
-                                      mappingLocations.value,
-                                      '',
-                                    ),
-                                    subOptions:
-                                      item3SubOptions &&
-                                      item3SubOptions.length > 0
-                                        ? _.orderBy(
-                                            item3SubOptions.map(
-                                              (item4: any) => {
-                                                return {
-                                                  label: _.get(
-                                                    item4,
-                                                    mappingLocations.label,
-                                                    '',
-                                                  ),
-                                                  value: _.get(
-                                                    item4,
-                                                    mappingLocations.value,
-                                                    '',
-                                                  ),
-                                                };
-                                              },
+                  subOptions.map((item2: any) => {
+                    const item2SubOptions = _.get(
+                      item2,
+                      mappingLocations.children,
+                      [],
+                    );
+                    return {
+                      label: _.get(item2, mappingLocations.label, ''),
+                      value: _.get(item2, mappingLocations.value, ''),
+                      subOptions:
+                        item2SubOptions && item2SubOptions.length > 0
+                          ? _.orderBy(
+                            item2SubOptions.map((item3: any) => {
+                              const item3SubOptions = _.get(
+                                item3,
+                                mappingLocations.children,
+                                [],
+                              );
+                              return {
+                                label: _.get(
+                                  item3,
+                                  mappingLocations.label,
+                                  '',
+                                ),
+                                value: _.get(
+                                  item3,
+                                  mappingLocations.value,
+                                  '',
+                                ),
+                                subOptions:
+                                  item3SubOptions &&
+                                    item3SubOptions.length > 0
+                                    ? _.orderBy(
+                                      item3SubOptions.map(
+                                        (item4: any) => {
+                                          return {
+                                            label: _.get(
+                                              item4,
+                                              mappingLocations.label,
+                                              '',
                                             ),
-                                            'label',
-                                            'asc',
-                                          )
-                                        : undefined,
-                                  };
-                                }),
-                                'label',
-                                'asc',
-                              )
-                            : undefined,
-                      };
-                    }),
-                    'label',
-                    'asc',
-                  )
+                                            value: _.get(
+                                              item4,
+                                              mappingLocations.value,
+                                              '',
+                                            ),
+                                          };
+                                        },
+                                      ),
+                                      'label',
+                                      'asc',
+                                    )
+                                    : undefined,
+                              };
+                            }),
+                            'label',
+                            'asc',
+                          )
+                          : undefined,
+                    };
+                  }),
+                  'label',
+                  'asc',
+                )
                 : undefined,
           });
         });
 
-        if (urls.filteroptionsmulticountries) {
+        if (_.get(urls, datasource).filteroptionsmulticountries) {
           return axios
-            .get(urls.filteroptionsmulticountries)
+            .get(_.get(urls, datasource).filteroptionsmulticountries)
             .then((resp2: AxiosResponse) => {
               const mcRawData = _.get(
                 resp2.data,
@@ -215,7 +216,8 @@ export class FilteroptionsController {
   @get('/filter-options/components')
   @response(200, FILTER_OPTIONS_RESPONSE)
   components(): object {
-    const url = urls.filteroptionscomponents;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = _.get(urls, datasource).filteroptionscomponents;
 
     return axios
       .get(url)
@@ -236,7 +238,8 @@ export class FilteroptionsController {
   @get('/filter-options/partner-types')
   @response(200, FILTER_OPTIONS_RESPONSE)
   partnerTypes(): object {
-    const url = urls.filteroptionspartnertypes;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = _.get(urls, datasource).filteroptionspartnertypes;
 
     return axios
       .get(url)
@@ -306,7 +309,8 @@ export class FilteroptionsController {
   @get('/filter-options/status')
   @response(200, FILTER_OPTIONS_RESPONSE)
   status(): object {
-    const url = urls.filteroptionsstatus;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = _.get(urls, datasource).filteroptionsstatus;
 
     return axios
       .get(url)
@@ -331,7 +335,8 @@ export class FilteroptionsController {
   @get('/filter-options/replenishment-periods')
   @response(200, FILTER_OPTIONS_RESPONSE)
   replenishmentPeriods(): object {
-    const url = urls.filteroptionsreplenishmentperiods;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = _.get(urls, datasource).filteroptionsreplenishmentperiods;
 
     return axios
       .get(url)
@@ -362,7 +367,8 @@ export class FilteroptionsController {
   donors(): object {
     const keyword = (this.req.query.q ?? '').toString().trim();
     const keywords = keyword.split(' ');
-    const url = urls.filteroptionsdonors;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = _.get(urls, datasource).filteroptionsdonors;
 
     return axios
       .get(url)

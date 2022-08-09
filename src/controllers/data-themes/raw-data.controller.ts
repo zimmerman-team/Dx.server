@@ -23,8 +23,9 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/investment-signed')
   @response(200)
   investmentSigned(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
-      .get(`${urls.vgrantPeriods}?${investmentSigned.select}&${generic.rows}`)
+      .get(`${_.get(urls, datasource).vgrantPeriods}?${investmentSigned.select}&${generic.rows}`)
       .then((res: AxiosResponse) => {
         const data = _.get(res.data, investmentSigned.dataPath, []).map(
           formatRawData,
@@ -42,9 +43,10 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/investment-committed')
   @response(200)
   investmentCommitted(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
       .get(
-        `${urls.vcommitments}?${investmentCommitted.select}&${generic.rows}`,
+        `${_.get(urls, datasource).vcommitments}?${investmentCommitted.select}&${generic.rows}`,
       )
       .then((res: AxiosResponse) => {
         const data = _.get(res.data, investmentCommitted.dataPath, []).map(
@@ -63,9 +65,10 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/investment-disbursed')
   @response(200)
   investmentDisbursed(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
       .get(
-        `${urls.disbursements}?${investmentDisbursed.select}&${generic.rows}`,
+        `${_.get(urls, datasource).disbursements}?${investmentDisbursed.select}&${generic.rows}`,
       )
       .then((res: AxiosResponse) => {
         const data = _.get(res.data, investmentDisbursed.dataPath, []).map(
@@ -85,8 +88,9 @@ export class DataThemesRawDataController {
   @response(200)
   budgets(): object {
     const mapper = mapTransform(budgets.mapping);
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
-      .get(`${urls.budgets}?${budgets.expand}&${generic.rows}`)
+      .get(`${_.get(urls, datasource).budgets}?${budgets.expand}&${generic.rows}`)
       .then((res: AxiosResponse) => {
         const data = (mapper(res.data) as never[]).map(formatRawData);
         const filterOptions = getDatasetFilterOptions(data);
@@ -103,9 +107,10 @@ export class DataThemesRawDataController {
   @response(200)
   pledgesContributions(): object {
     const mapper = mapTransform(pledgesContributions.mapping);
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
       .get(
-        `${urls.pledgescontributions}?${pledgesContributions.expand}&${generic.rows}`,
+        `${_.get(urls, datasource).pledgescontributions}?${pledgesContributions.expand}&${generic.rows}`,
       )
       .then((res: AxiosResponse) => {
         const data = (mapper(res.data) as never[]).map(formatRawData);
@@ -123,8 +128,9 @@ export class DataThemesRawDataController {
   @response(200)
   allocations(): object {
     const mapper = mapTransform(allocations.mapping);
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
-      .get(`${urls.allocations}?${allocations.expand}&${generic.rows}`)
+      .get(`${_.get(urls, datasource).allocations}?${allocations.expand}&${generic.rows}`)
       .then((res: AxiosResponse) => {
         const data = (mapper(res.data) as never[]).map(formatRawData);
         const filterOptions = getDatasetFilterOptions(data);
@@ -140,8 +146,9 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/grants')
   @response(200)
   grants(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
-      .get(`${urls.grantsNoCount}?${grants.select}&${generic.rows}`)
+      .get(`${_.get(urls, datasource).grantsNoCount}?${grants.select}&${generic.rows}`)
       .then((res: AxiosResponse) => {
         const data = _.get(res.data, grants.dataPath, []).map(formatRawData);
         const filterOptions = getDatasetFilterOptions(data);
@@ -157,8 +164,9 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/eligibility')
   @response(200)
   eligibility(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
-      .get(`${urls.eligibility}?${eligibility.select}&${generic.rows}`)
+      .get(`${_.get(urls, datasource).eligibility}?${eligibility.select}&${generic.rows}`)
       .then((res: AxiosResponse) => {
         const data = _.get(res.data, eligibility.dataPath, []).map(
           formatRawData,

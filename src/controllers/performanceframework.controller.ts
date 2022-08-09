@@ -83,7 +83,8 @@ export class PerformanceframeworkController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.performanceframework}?${filterString}&${params}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).performanceframework}?${filterString}&${params}`;
 
     return axios
       .get(url)
@@ -180,7 +181,8 @@ export class PerformanceframeworkController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.performanceframework}?${filterString}&${params}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).performanceframework}?${filterString}&${params}`;
 
     return axios
       .get(url)

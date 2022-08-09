@@ -65,7 +65,8 @@ export class PledgescontributionsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.pledgescontributions}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -139,7 +140,8 @@ export class PledgescontributionsController {
     const valueType = (
       this.req.query.valueType ?? PledgesContributionsGeoFieldsMapping.pledge
     ).toString();
-    const url = `${urls.pledgescontributions}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
     return axios
       .all([
@@ -147,7 +149,7 @@ export class PledgescontributionsController {
         axios.get(
           PledgesContributionsGeoFieldsMapping.inAppDonorsFilterOptionsURL,
         ),
-        axios.get(urls.geojson),
+        axios.get(_.get(urls, datasource).geojson),
         axios.get(PledgesContributionsGeoFieldsMapping.d2hspatialshapesURL),
       ])
       .then(
@@ -425,7 +427,8 @@ export class PledgescontributionsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.pledgescontributions}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -539,7 +542,8 @@ export class PledgescontributionsController {
     const valueType = (
       this.req.query.valueType ?? PledgesContributionsGeoFieldsMapping.pledge
     ).toString();
-    const url = `${urls.pledgescontributions}?${params}${filterString}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
     return axios
       .get(url)

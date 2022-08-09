@@ -114,7 +114,8 @@ export class EligibilityController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.eligibility}?${params}${filterString}&${EligibilityFieldsMapping.defaultSelect}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).eligibility}?${params}${filterString}&${EligibilityFieldsMapping.defaultSelect}`;
 
     return axios
       .get(url)
@@ -158,7 +159,8 @@ export class EligibilityController {
   @get('/eligibility/years')
   @response(200, ELIGIBILITY_RESPONSE)
   eligibilityYears(): object {
-    const url = `${urls.eligibility}?${EligibilityYearsFieldsMapping.aggregation}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).eligibility}?${EligibilityYearsFieldsMapping.aggregation}`;
 
     return axios
       .get(url)
@@ -194,7 +196,8 @@ export class EligibilityController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.eligibility}?${params}${filterString}&${ScatterplotFieldsMapping.defaultSelect}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).eligibility}?${params}${filterString}&${ScatterplotFieldsMapping.defaultSelect}`;
 
     return axios
       .get(url)

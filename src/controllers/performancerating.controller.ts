@@ -59,7 +59,8 @@ export class PerformanceratingController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${urls.performancerating}?${performanceratingMapping.defaultSelect}${performanceratingMapping.defaultOrderBy}${performanceratingMapping.defaultExpand}&$filter=performanceRating/performanceRatingCode ne null and grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber eq ${this.req.query.grantId} and grantAgreementImplementationPeriod/implementationPeriodNumber eq ${this.req.query.IPnumber}&${filtering.default_q_param}${params}`;
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const url = `${_.get(urls, datasource).performancerating}?${performanceratingMapping.defaultSelect}${performanceratingMapping.defaultOrderBy}${performanceratingMapping.defaultExpand}&$filter=performanceRating/performanceRatingCode ne null and grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber eq ${this.req.query.grantId} and grantAgreementImplementationPeriod/implementationPeriodNumber eq ${this.req.query.IPnumber}&${filtering.default_q_param}${params}`;
 
     return axios
       .get(url)
