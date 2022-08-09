@@ -26,6 +26,11 @@ Whenever dependencies in `package.json` are changed, run the following command:
 yarn install
 ```
 
+## Create a .env file with, change the value to your liking
+```
+DEFAULT_DATASOURCE=TGFOData
+```
+
 ## Run the application in development mode
 
 ```sh

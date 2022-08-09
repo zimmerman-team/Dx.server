@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {ApiApplication, ApplicationConfig} from './application';
 
 export * from './application';
