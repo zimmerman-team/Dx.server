@@ -34,7 +34,7 @@ export function getFilterString(params: any, datasource: string, defaultFilter?:
 
   if (str.length > 0) {
     if (!defaultFilter) {
-      str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
+      str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}`;
     }
   }
 
