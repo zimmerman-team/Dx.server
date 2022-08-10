@@ -74,7 +74,7 @@ export class FilteroptionsController {
   @get('/filter-options/locations')
   @response(200, FILTER_OPTIONS_RESPONSE)
   locations(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = _.get(urls, datasource).filteroptionslocations;
 
     return axios
@@ -216,7 +216,7 @@ export class FilteroptionsController {
   @get('/filter-options/components')
   @response(200, FILTER_OPTIONS_RESPONSE)
   components(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = _.get(urls, datasource).filteroptionscomponents;
 
     return axios
@@ -238,7 +238,7 @@ export class FilteroptionsController {
   @get('/filter-options/partner-types')
   @response(200, FILTER_OPTIONS_RESPONSE)
   partnerTypes(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = _.get(urls, datasource).filteroptionspartnertypes;
 
     return axios
@@ -309,7 +309,7 @@ export class FilteroptionsController {
   @get('/filter-options/status')
   @response(200, FILTER_OPTIONS_RESPONSE)
   status(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = _.get(urls, datasource).filteroptionsstatus;
 
     return axios
@@ -335,7 +335,7 @@ export class FilteroptionsController {
   @get('/filter-options/replenishment-periods')
   @response(200, FILTER_OPTIONS_RESPONSE)
   replenishmentPeriods(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = _.get(urls, datasource).filteroptionsreplenishmentperiods;
 
     return axios
@@ -367,7 +367,7 @@ export class FilteroptionsController {
   donors(): object {
     const keyword = (this.req.query.q ?? '').toString().trim();
     const keywords = keyword.split(' ');
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = _.get(urls, datasource).filteroptionsdonors;
 
     return axios

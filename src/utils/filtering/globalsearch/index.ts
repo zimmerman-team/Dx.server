@@ -5,7 +5,7 @@ export function buildGlobalSearchFilterString(
   fields: string[],
   template: string,
   keywords: string[],
-  datasource: string,
+  datasource: any,
 ): string {
   const strArray: string[] = [];
 

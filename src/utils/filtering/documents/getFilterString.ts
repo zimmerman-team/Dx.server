@@ -2,7 +2,7 @@ import _ from 'lodash';
 import filteringDocuments from '../../../config/filtering/documents.json';
 import filtering from '../../../config/filtering/index.json';
 
-export function getFilterString(params: any, datasource: string, defaultFilter?: string) {
+export function getFilterString(params: any, datasource: any, defaultFilter?: string) {
   let str = defaultFilter ?? '';
 
   const locations = _.filter(

@@ -1,14 +1,13 @@
 import _ from 'lodash';
 import performanceframeworkMappingUtils from '../../config/mapping/performanceframework/utils.json';
 
-
 export function getColorBasedOnValue(
   value: number,
   rates: {value: number; color: string}[],
   isReversed: boolean,
   isWPTM: boolean,
   result: any,
-  datasource: string,
+  datasource: any,
 ) {
   const rateColors = _.get(performanceframeworkMappingUtils, datasource).valueAchievementRateColors;
 
@@ -54,7 +53,7 @@ export function getColorBasedOnValue(
   return '#E2E2E2';
 }
 
-export function getAchievementRateLegendValues(datasource: string) {
+export function getAchievementRateLegendValues(datasource: any) {
   const rateColors = _.get(performanceframeworkMappingUtils, datasource).valueAchievementRateColors;
   return [
     {
@@ -102,7 +101,7 @@ export function formatPFData(
     formatted: string;
     number: number;
   }[],
-  datasource: string,
+  datasource: any,
 ) {
   const indicatorSetOrder = _.get(performanceframeworkMappingUtils, datasource).indicatorSetOrder;
   const nodes: {id: string;[key: string]: any}[] = [];

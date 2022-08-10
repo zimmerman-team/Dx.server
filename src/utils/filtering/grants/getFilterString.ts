@@ -2,7 +2,7 @@ import _ from 'lodash';
 import filteringGrants from '../../../config/filtering/grants.json';
 import filtering from '../../../config/filtering/index.json';
 
-export function getFilterString(params: any, datasource: string, aggregationString?: string) {
+export function getFilterString(params: any, datasource: any, aggregationString?: string) {
   let str = '';
 
   const locations = _.filter(

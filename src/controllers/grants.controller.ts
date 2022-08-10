@@ -68,7 +68,7 @@ export class GrantsController {
   @get('/grants')
   @response(200, GRANTS_RESPONSE)
   grants(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(grantsMap, datasource));
     const page = (this.req.query.page ?? '1').toString();
     const pageSize = (this.req.query.pageSize ?? '10').toString();
@@ -110,7 +110,7 @@ export class GrantsController {
         message: '"grantNumber" parameter is required.',
       };
     }
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(grantDetailMap, datasource));
     const url = `${_.get(urls, datasource).grantsNoCount}?$top=1&$filter=${_.get(grantDetailUtils, datasource).grantNumber} eq '${grantNumber}'`;
 
@@ -135,7 +135,7 @@ export class GrantsController {
         message: '"grantNumber" parameter is required.',
       };
     }
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(grantPeriodsMap, datasource));
     const url = `${_.get(urls, datasource).grantPeriods}?${_.get(grantDetailUtils, datasource).defaultSelectFields}${_.get(grantDetailUtils, datasource).defaultSort}$filter=${_.get(grantDetailUtils, datasource).periodGrantNumber} eq '${grantNumber}'`;
 
@@ -165,7 +165,7 @@ export class GrantsController {
         message: '"grantId" and "IPnumber" parameters is required.',
       };
     }
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(grantPeriodInfoMap, datasource));
     const financialUrl = `${_.get(urls, datasource).grantPeriods}?${_.get(grantDetailUtils, datasource).periodInfoSelectFields}$filter=${_.get(grantDetailUtils, datasource).periodGrantNumber} eq '${grantNumber}' and ${_.get(grantDetailUtils, datasource).periodNumber} eq ${IPnumber}`;
     const ratingUrl = `${_.get(urls, datasource).performancerating}?${_.get(grantDetailUtils, datasource).periodInfoRatingSelectFields}${_.get(grantDetailUtils, datasource).periodInfoRatingPageSize}${_.get(grantDetailUtils, datasource).periodInfoRatingExpand}${_.get(grantDetailUtils, datasource).periodInfoRatingSort}$filter=${_.get(grantDetailUtils, datasource).periodInfoRatingGrantNumber} eq '${grantNumber}' and ${_.get(grantDetailUtils, datasource).periodInfoRatingPeriodNumber} eq ${IPnumber}${_.get(grantDetailUtils, datasource).periodInfoRatingExtraFilter}`;
@@ -202,7 +202,7 @@ export class GrantsController {
   @get('/grants/radial')
   @response(200, GRANTS_RESPONSE)
   grantsRadial(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(this.req.query, datasource);
     const filterStringPF = getFilterStringPF(this.req.query, datasource);
     const grantsUrl = `${_.get(urls, datasource).grantsNoCount}?${filterString}${_.get(GrantsRadialMapping, datasource).grantAgreementsSelect}`;

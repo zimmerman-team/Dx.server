@@ -95,7 +95,7 @@ export class EligibilityController {
   @get('/eligibility')
   @response(200, ELIGIBILITY_RESPONSE)
   eligibility(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const aggregateByField =
       this.req.query.aggregateBy ??
       _.get(EligibilityFieldsMapping, datasource).aggregateByFields[0];
@@ -159,7 +159,7 @@ export class EligibilityController {
   @get('/eligibility/years')
   @response(200, ELIGIBILITY_RESPONSE)
   eligibilityYears(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).eligibility}?${_.get(EligibilityYearsFieldsMapping, datasource).aggregation}`;
 
     return axios
@@ -181,7 +181,7 @@ export class EligibilityController {
   @get('/eligibility/country')
   @response(200, ELIGIBILITY_COUNTRY_RESPONSE)
   eligibilityCountry(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (_.get(this.req.query, 'locations', '').length === 0) {
       return {
         count: 0,

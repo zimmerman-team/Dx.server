@@ -52,7 +52,7 @@ export class AllocationsController {
   @get('/allocations')
   @response(200, ALLOCATIONS_RESPONSE)
   allocations(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -71,7 +71,7 @@ export class AllocationsController {
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+        const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
         const rawData = _.orderBy(
           _.get(resp.data, _.get(AllocationsFieldsMapping, datasource).dataPath, []),
           _.get(AllocationsFieldsMapping, datasource).amount,
@@ -100,7 +100,7 @@ export class AllocationsController {
   @get('/allocations/periods')
   @response(200, ALLOCATIONS_RESPONSE)
   allocationsPeriods(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -144,7 +144,7 @@ export class AllocationsController {
   @get('/allocations/drilldown')
   @response(200, ALLOCATIONS_RESPONSE)
   allocationsDrilldown(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -255,7 +255,7 @@ export class AllocationsController {
   @get('/allocations/geomap')
   @response(200, ALLOCATIONS_RESPONSE)
   geomap(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -412,7 +412,7 @@ export class AllocationsController {
   @get('/allocations/geomap/multicountries')
   @response(200, ALLOCATIONS_RESPONSE)
   geomapMulticountries(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,

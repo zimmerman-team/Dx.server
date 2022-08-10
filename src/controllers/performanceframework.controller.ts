@@ -64,7 +64,7 @@ export class PerformanceframeworkController {
   @get('/performance-framework')
   @response(200, PERFORMANCE_FRAMEWORK_RESPONSE)
   performancerating(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (!this.req.query.grantId || !this.req.query.IPnumber) {
       return {
         data: [],
@@ -157,7 +157,7 @@ export class PerformanceframeworkController {
   @get('/performance-framework/expand')
   @response(200, PERFORMANCE_FRAMEWORK_RESPONSE)
   performanceratingexpand(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (
       !this.req.query.indicatorSet ||
       !this.req.query.moduleName ||

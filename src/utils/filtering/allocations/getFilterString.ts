@@ -4,7 +4,7 @@ import filtering from '../../../config/filtering/index.json';
 
 export function getFilterString(
   params: any,
-  datasource: string,
+  datasource: any,
   aggregationString?: string,
   extraFilterString?: string,
 ) {

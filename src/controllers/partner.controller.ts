@@ -32,7 +32,7 @@ export class PartnerController {
   @get('/partner/detail')
   @response(200, PARTNER_INFO_RESPONSE)
   partnerDetail(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const partners = _.get(this.req.query, 'partners', '') as string;
     if (partners.length === 0) {
       return {

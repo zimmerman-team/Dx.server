@@ -89,7 +89,7 @@ export class BudgetsController {
   @get('/budgets/flow')
   @response(200, BUDGETS_FLOW_RESPONSE)
   flow(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -328,7 +328,7 @@ export class BudgetsController {
   @get('/budgets/time-cycle')
   @response(200, BUDGETS_TIME_CYCLE_RESPONSE)
   timeCycle(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -407,7 +407,7 @@ export class BudgetsController {
   @get('/budgets/drilldown')
   @response(200, BUDGETS_FLOW_RESPONSE)
   flowDrilldown(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (!this.req.query.levelParam) {
       return {
         count: 0,
@@ -433,7 +433,7 @@ export class BudgetsController {
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+        const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
         const groupedDataByComponent = _.groupBy(
           _.get(resp.data, _.get(BudgetsFlowDrilldownFieldsMapping, datasource).dataPath, []),
           _.get(BudgetsFlowDrilldownFieldsMapping, datasource).component,
@@ -503,7 +503,7 @@ export class BudgetsController {
         message: '"levelParam" and "activityAreaName" parameters are required.',
       };
     }
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getDrilldownFilterString(
       this.req.query,
       datasource,
@@ -587,7 +587,7 @@ export class BudgetsController {
   @get('/budgets/geomap')
   @response(200, BUDGETS_FLOW_RESPONSE)
   geomap(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -745,7 +745,7 @@ export class BudgetsController {
   @response(200, BUDGETS_FLOW_RESPONSE)
   geomapMulticountries(): object {
 
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,

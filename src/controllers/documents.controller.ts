@@ -59,7 +59,7 @@ export class DocumentsController {
   @get('/documents')
   @response(200, RESULTS_RESPONSE)
   documents(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(docsMap, datasource));
     const filterString = getFilterString(
       this.req.query,
@@ -193,7 +193,7 @@ export class DocumentsController {
   @get('/grant-documents')
   @response(200, RESULTS_RESPONSE)
   grantDocuments(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(docsMap, datasource));
     const filterString = getFilterString(this.req.query, datasource);
     const url = `${_.get(urls, datasource).documents}?${_.get(docsUtils, datasource).defaultSelect}${_.get(docsUtils, datasource).defaultOrderBy}${filterString}`;

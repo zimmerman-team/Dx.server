@@ -23,7 +23,7 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/investment-signed')
   @response(200)
   investmentSigned(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
       .get(`${_.get(urls, datasource).vgrantPeriods}?${_.get(investmentSigned, datasource).select}&${_.get(generic, datasource).rows}`)
       .then((res: AxiosResponse) => {
@@ -43,7 +43,7 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/investment-committed')
   @response(200)
   investmentCommitted(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
       .get(
         `${_.get(urls, datasource).vcommitments}?${_.get(investmentCommitted, datasource).select}&${_.get(generic, datasource).rows}`,
@@ -65,7 +65,7 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/investment-disbursed')
   @response(200)
   investmentDisbursed(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
       .get(
         `${_.get(urls, datasource).disbursements}?${_.get(investmentDisbursed, datasource).select}&${_.get(generic, datasource).rows}`,
@@ -87,7 +87,7 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/budgets')
   @response(200)
   budgets(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(budgets, datasource).mapping);
     return axios
       .get(`${_.get(urls, datasource).budgets}?${_.get(budgets, datasource).expand}&${_.get(generic, datasource).rows}`)
@@ -106,7 +106,7 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/pledges-contributions')
   @response(200)
   pledgesContributions(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(pledgesContributions, datasource).mapping);
     return axios
       .get(
@@ -127,7 +127,7 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/allocations')
   @response(200)
   allocations(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(allocations, datasource).mapping);
     return axios
       .get(`${_.get(urls, datasource).allocations}?${_.get(allocations, datasource).expand}&${_.get(generic, datasource).rows}`)
@@ -146,7 +146,7 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/grants')
   @response(200)
   grants(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
       .get(`${_.get(urls, datasource).grantsNoCount}?${_.get(grants, datasource).select}&${_.get(generic, datasource).rows}`)
       .then((res: AxiosResponse) => {
@@ -164,7 +164,7 @@ export class DataThemesRawDataController {
   @get('/data-themes/raw-data/eligibility')
   @response(200)
   eligibility(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     return axios
       .get(`${_.get(urls, datasource).eligibility}?${_.get(eligibility, datasource).select}&${_.get(generic, datasource).rows}`)
       .then((res: AxiosResponse) => {

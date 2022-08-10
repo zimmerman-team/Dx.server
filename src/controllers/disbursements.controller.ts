@@ -179,7 +179,7 @@ export class DisbursementsController {
   @get('/disbursements/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   timeCycle(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -286,7 +286,7 @@ export class DisbursementsController {
   @get('/signed/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   timeCycleSigned(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -403,7 +403,7 @@ export class DisbursementsController {
   @get('/commitment/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   timeCycleCommitment(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -514,7 +514,7 @@ export class DisbursementsController {
   @get('/disbursements/time-cycle/drilldown')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   timeCycleDrilldown(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -602,7 +602,7 @@ export class DisbursementsController {
     };
     // @ts-ignore
     delete query.barPeriod;
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       query,
       datasource,
@@ -690,7 +690,7 @@ export class DisbursementsController {
     };
     // @ts-ignore
     delete query.barPeriod;
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       query,
       datasource,
@@ -774,7 +774,7 @@ export class DisbursementsController {
   @get('/disbursements/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemap(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -883,7 +883,7 @@ export class DisbursementsController {
   @get('/signed/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapSigned(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -993,7 +993,7 @@ export class DisbursementsController {
   @get('/commitment/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapCommitment(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -1103,7 +1103,7 @@ export class DisbursementsController {
   @get('/disbursements/treemap/drilldown')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapDrilldown(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -1419,7 +1419,7 @@ export class DisbursementsController {
   @get('/signed/treemap/drilldown')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapDrilldownSigned(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -1739,7 +1739,7 @@ export class DisbursementsController {
   @get('/commitment/treemap/drilldown')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapDrilldownCommitment(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -2061,7 +2061,7 @@ export class DisbursementsController {
   @get('/disbursements/geomap')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   geomap(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     let aggregationField = _.get(GeomapFieldsMapping, datasource).disbursed;
     if (
       this.req.query.aggregationField &&
@@ -2239,7 +2239,7 @@ export class DisbursementsController {
   @get('/disbursements/geomap/multicountries')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   geomapMulticountries(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     let aggregationField = _.get(GeomapFieldsMapping, datasource).disbursed;
     if (
       this.req.query.aggregationField &&
@@ -2365,7 +2365,7 @@ export class DisbursementsController {
   @get('/location/disbursements/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   locationDetailTreemap(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -2474,7 +2474,7 @@ export class DisbursementsController {
   @get('/location/signed/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   locationDetailTreemapSigned(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -2584,7 +2584,7 @@ export class DisbursementsController {
   @get('/location/commitment/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   locationDetailTreemapCommitment(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -2696,7 +2696,7 @@ export class DisbursementsController {
   @get('/grant/disbursements/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   grantDetailTimeCycle(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = grantDetailGetFilterString(
       this.req.query,
       datasource,
@@ -2815,7 +2815,7 @@ export class DisbursementsController {
   @get('/grant/commitment/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   grantDetailTimeCycleCommitment(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -2934,7 +2934,7 @@ export class DisbursementsController {
   @get('/grant/disbursements/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   grantDetailTreemap(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = grantDetailTreemapGetFilterString(
       this.req.query,
       datasource,
@@ -3044,7 +3044,7 @@ export class DisbursementsController {
   @get('/grant/signed/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   grantDetailTreemapSigned(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = grantDetailTreemapGetFilterString(
       this.req.query,
       datasource,
@@ -3158,7 +3158,7 @@ export class DisbursementsController {
   @get('/grant/commitment/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   grantDetailTreemapCommitment(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = grantDetailTreemapGetFilterString(
       this.req.query,
       datasource,

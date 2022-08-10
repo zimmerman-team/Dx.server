@@ -53,7 +53,7 @@ export class PledgescontributionsController {
   @get('/pledges-contributions/time-cycle')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
   timeCycle(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -126,7 +126,7 @@ export class PledgescontributionsController {
   @get('/pledges-contributions/geomap')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
   geomap(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -411,7 +411,7 @@ export class PledgescontributionsController {
   @get('/pledges-contributions/time-cycle/drilldown')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
   timeCycleDrilldown(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const valueType =
       (_.get(this.req.query, 'levelParam', '') as string)
         .split('-')
@@ -530,7 +530,7 @@ export class PledgescontributionsController {
   @get('/pledges-contributions/treemap')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
   treemap(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,

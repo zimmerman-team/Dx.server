@@ -41,7 +41,7 @@ export class LocationController {
       };
     }
     const location = locations.split(',')[0];
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const multicountriesUrl = `${_.get(urls, datasource).multicountries}?${_.get(locationMappingFields, datasource)[
       location.length > 3
         ? 'countriesFilterString'

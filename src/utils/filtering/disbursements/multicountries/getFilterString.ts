@@ -4,7 +4,7 @@ import filteringMulticountries from '../../../../config/filtering/multicountries
 
 export function getGeoMultiCountriesFilterString(
   params: any,
-  datasource: string,
+  datasource: any,
   aggregationString?: string,
   extraFilterString?: string,
 ) {

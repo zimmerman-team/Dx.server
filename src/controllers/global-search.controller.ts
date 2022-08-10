@@ -78,7 +78,7 @@ export class GlobalSearchController {
       };
     }
     const keywords = keyword.split(' ');
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const calls = _.filter(
       _.get(globalSearchMapping, datasource).categories,
       (category: any) => category.url.length > 0,

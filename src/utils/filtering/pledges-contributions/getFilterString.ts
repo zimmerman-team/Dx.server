@@ -3,7 +3,7 @@ import filtering from '../../../config/filtering/index.json';
 import filteringPledgesContributions from '../../../config/filtering/pledgescontributions.json';
 import PledgesContributionsTimeCycleFieldsMapping from '../../../config/mapping/pledgescontributions/timeCycle.json';
 
-export function getFilterString(params: any, datasource: string, aggregationString?: string) {
+export function getFilterString(params: any, datasource: any, aggregationString?: string) {
   let str = '';
 
   const donors = _.filter(

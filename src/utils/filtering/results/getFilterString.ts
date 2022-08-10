@@ -2,7 +2,7 @@ import _ from 'lodash';
 import filtering from '../../../config/filtering/index.json';
 import filteringResults from '../../../config/filtering/results.json';
 
-export function getFilterString(params: any, datasource: string, defaultFilter?: string) {
+export function getFilterString(params: any, datasource: any, defaultFilter?: string) {
   let str = defaultFilter ?? '';
 
   const locations = _.filter(
@@ -51,7 +51,7 @@ export function getFilterString(params: any, datasource: string, defaultFilter?:
 
 export function getFilterStringForStats(
   params: any,
-  datasource: string,
+  datasource: any,
   aggregationString?: string,
 ) {
   let str = '';

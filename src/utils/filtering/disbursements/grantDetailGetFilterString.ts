@@ -5,7 +5,7 @@ import filtering from '../../../config/filtering/index.json';
 
 export function grantDetailGetFilterString(
   params: any,
-  datasource: string,
+  datasource: any,
   aggregationString?: string,
 ) {
   let str = '';
@@ -44,7 +44,7 @@ export function grantDetailGetFilterString(
 
 export function grantDetailTreemapGetFilterString(
   params: any,
-  datasource: string,
+  datasource: any,
   aggregationString?: string,
 ) {
   let str = '';

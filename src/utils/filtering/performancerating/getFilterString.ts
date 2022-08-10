@@ -2,7 +2,7 @@ import _ from 'lodash';
 import filtering from '../../../config/filtering/index.json';
 import filteringPF from '../../../config/filtering/performancerating.json';
 
-export function getFilterString(params: any, datasource: string) {
+export function getFilterString(params: any, datasource: any) {
   let str = '';
 
   const locations = _.filter(

@@ -89,7 +89,7 @@ export class ResultsController {
   @get('/results')
   @response(200, RESULTS_RESPONSE)
   results(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const mapper = mapTransform(_.get(resultsMap, datasource));
     const filterString = getFilterString(this.req.query, datasource);
     const url = `${_.get(urls, datasource).results}?${_.get(resultsUtils, datasource).defaultSelect}${filterString}`;
@@ -134,7 +134,7 @@ export class ResultsController {
   @get('/results/years')
   @response(200, RESULTS_RESPONSE)
   resultYears(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).results}?${_.get(ResultsYearsMappingFields, datasource).aggregation}`;
 
     return axios
@@ -154,7 +154,7 @@ export class ResultsController {
   @get('/results-stats')
   @response(200, RESULT_STATS_RESPONSE)
   resultStats(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterStringForStats(
       this.req.query,
       datasource,

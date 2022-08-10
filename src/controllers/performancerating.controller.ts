@@ -45,7 +45,7 @@ export class PerformanceratingController {
   @get('/performance-rating')
   @response(200, PERFORMANCE_RATING_RESPONSE)
   performancerating(): object {
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (!this.req.query.grantId && !this.req.query.IPnumber) {
       return {
         data: [],
