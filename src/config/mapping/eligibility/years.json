@@ -1,5 +1,7 @@
 {
-  "dataPath": "value",
-  "year": "eligibilityYear",
-  "aggregation": "$apply=groupby((eligibilityYear))&$orderby=eligibilityYear desc"
+  "TGFOData": {
+    "dataPath": "value",
+    "year": "eligibilityYear",
+    "aggregation": "$apply=groupby((eligibilityYear))&$orderby=eligibilityYear desc"
+  }
 }

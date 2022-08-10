@@ -2,7 +2,7 @@ import _ from 'lodash';
 import filteringGrants from '../../../config/filtering/grants.json';
 import filtering from '../../../config/filtering/index.json';
 
-export function getFilterString(params: any, aggregationString?: string) {
+export function getFilterString(params: any, datasource: string, aggregationString?: string) {
   let str = '';
 
   const locations = _.filter(
@@ -10,10 +10,10 @@ export function getFilterString(params: any, aggregationString?: string) {
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `(${filteringGrants.country}${filtering.in}(${locations.join(
-      filtering.multi_param_separator,
-    )}) OR ${filteringGrants.multicountry}${filtering.in}(${locations.join(
-      filtering.multi_param_separator,
+    str += `(${_.get(filteringGrants, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
+      _.get(filtering, datasource).multi_param_separator,
+    )}) OR ${_.get(filteringGrants, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
+      _.get(filtering, datasource).multi_param_separator,
     )}))`;
   }
 
@@ -22,9 +22,8 @@ export function getFilterString(params: any, aggregationString?: string) {
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringGrants.component}${
-      filtering.in
-    }(${components.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrants, datasource).component}${_.get(filtering, datasource).in
+      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const statuses = _.filter(
@@ -32,9 +31,8 @@ export function getFilterString(params: any, aggregationString?: string) {
     (stat: string) => stat.length > 0,
   ).map((stat: string) => `'${stat}'`);
   if (statuses.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringGrants.status}${
-      filtering.in
-    }(${statuses.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrants, datasource).status}${_.get(filtering, datasource).in
+      }(${statuses.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partners = _.filter(
@@ -42,9 +40,8 @@ export function getFilterString(params: any, aggregationString?: string) {
     (partner: string) => partner.length > 0,
   ).map((partner: string) => `'${partner}'`);
   if (partners.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringGrants.partner}${
-      filtering.in
-    }(${partners.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrants, datasource).partner}${_.get(filtering, datasource).in
+      }(${partners.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partnerSubTypes = _.filter(
@@ -52,9 +49,8 @@ export function getFilterString(params: any, aggregationString?: string) {
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerSubTypes.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringGrants.partner_sub_type
-    }${filtering.in}(${partnerSubTypes.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrants, datasource).partner_sub_type
+      }${_.get(filtering, datasource).in}(${partnerSubTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partnerTypes = _.filter(
@@ -62,28 +58,25 @@ export function getFilterString(params: any, aggregationString?: string) {
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerTypes.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringGrants.partner_type}${
-      filtering.in
-    }(${partnerTypes.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrants, datasource).partner_type}${_.get(filtering, datasource).in
+      }(${partnerTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const grantId = _.get(params, 'grantId', null);
   if (grantId) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringGrants.grantId}${
-      filtering.eq
-    }${grantId}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrants, datasource).grantId}${_.get(filtering, datasource).eq
+      }${grantId}`;
   }
 
   const barPeriod = _.get(params, 'barPeriod', null);
   if (barPeriod) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringGrants.barPeriod}${
-      filtering.eq
-    }${barPeriod}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrants, datasource).barPeriod}${_.get(filtering, datasource).eq
+      }${barPeriod}`;
   }
 
   const search = _.get(params, 'q', '');
   if (search.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringGrants.search.replace(
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrants, datasource).search.replace(
       '<value>',
       `'${search}'`,
     )}`;

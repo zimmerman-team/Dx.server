@@ -1,5 +1,7 @@
 {
-  "dataPath": "value",
-  "label": "replenishmentPeriodName",
-  "value": "replenishmentPeriodName"
+  "TGFOData": {
+    "dataPath": "value",
+    "label": "replenishmentPeriodName",
+    "value": "replenishmentPeriodName"
+  }
 }

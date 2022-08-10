@@ -1,4 +1,6 @@
 {
-  "countPath": "@odata.count",
-  "defaultOrderBy": "grantAgreementStatusTypeName asc, grantAgreementNumber asc"
+  "TGFOData": {
+    "countPath": "@odata.count",
+    "defaultOrderBy": "grantAgreementStatusTypeName asc, grantAgreementNumber asc"
+  }
 }

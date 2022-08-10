@@ -4,6 +4,7 @@ import filtering from '../../../config/filtering/index.json';
 
 export function getFilterString(
   params: any,
+  datasource: string,
   aggregationString?: string,
   extraFilterString?: string,
 ) {
@@ -14,10 +15,10 @@ export function getFilterString(
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `(${filteringBudgets.country}${filtering.in}(${locations.join(
-      filtering.multi_param_separator,
-    )}) OR ${filteringBudgets.multicountry}${filtering.in}(${locations.join(
-      filtering.multi_param_separator,
+    str += `(${_.get(filteringBudgets, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
+      _.get(filtering, datasource).multi_param_separator,
+    )}) OR ${_.get(filteringBudgets, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
+      _.get(filtering, datasource).multi_param_separator,
     )}))`;
   }
 
@@ -26,9 +27,8 @@ export function getFilterString(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringBudgets.component}${
-      filtering.in
-    }(${components.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).component}${_.get(filtering, datasource).in
+      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const statuses = _.filter(
@@ -36,9 +36,8 @@ export function getFilterString(
     (stat: string) => stat.length > 0,
   ).map((stat: string) => `'${stat}'`);
   if (statuses.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringBudgets.status}${
-      filtering.in
-    }(${statuses.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).status}${_.get(filtering, datasource).in
+      }(${statuses.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partners = _.filter(
@@ -46,9 +45,8 @@ export function getFilterString(
     (partner: string) => partner.length > 0,
   ).map((partner: string) => `'${partner}'`);
   if (partners.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringBudgets.partner}${
-      filtering.in
-    }(${partners.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).partner}${_.get(filtering, datasource).in
+      }(${partners.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partnerSubTypes = _.filter(
@@ -56,9 +54,8 @@ export function getFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerSubTypes.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringBudgets.partner_sub_type
-    }${filtering.in}(${partnerSubTypes.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).partner_sub_type
+      }${_.get(filtering, datasource).in}(${partnerSubTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partnerTypes = _.filter(
@@ -66,33 +63,30 @@ export function getFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerTypes.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringBudgets.partner_type}${
-      filtering.in
-    }(${partnerTypes.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).partner_type}${_.get(filtering, datasource).in
+      }(${partnerTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const grantId = _.get(params, 'grantId', null);
   if (grantId) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringBudgets.grantId}${
-      filtering.eq
-    }${grantId}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).grantId}${_.get(filtering, datasource).eq
+      }${grantId}`;
   }
 
   const IPnumber = _.get(params, 'IPnumber', null);
   if (IPnumber) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringBudgets.IPnumber}${
-      filtering.eq
-    }${IPnumber}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).IPnumber}${_.get(filtering, datasource).eq
+      }${IPnumber}`;
   }
 
   if (str.length > 0) {
-    str = `${filtering.filter_operator}${filtering.param_assign_operator}${str}&`;
+    str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
     if (aggregationString) {
       str = aggregationString.replace(
         '<filterString>',
         `${str
           .replace(
-            `${filtering.filter_operator}${filtering.param_assign_operator}`,
+            `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}`,
             'filter(',
           )
           .replace('&', ')/')}`,

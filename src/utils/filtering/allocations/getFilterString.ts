@@ -4,6 +4,7 @@ import filtering from '../../../config/filtering/index.json';
 
 export function getFilterString(
   params: any,
+  datasource: string,
   aggregationString?: string,
   extraFilterString?: string,
 ) {
@@ -14,10 +15,10 @@ export function getFilterString(
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `(${filteringAllocations.country}${filtering.in}(${locations.join(
-      filtering.multi_param_separator,
-    )}) OR ${filteringAllocations.multicountry}${filtering.in}(${locations.join(
-      filtering.multi_param_separator,
+    str += `(${_.get(filteringAllocations, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
+      _.get(filtering, datasource).multi_param_separator,
+    )}) OR ${_.get(filteringAllocations, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
+      _.get(filtering, datasource).multi_param_separator,
     )}))`;
   }
 
@@ -26,9 +27,8 @@ export function getFilterString(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringAllocations.component}${
-      filtering.in
-    }(${components.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringAllocations, datasource).component}${_.get(filtering, datasource).in
+      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const periods = _.filter(
@@ -42,26 +42,23 @@ export function getFilterString(
     const endPeriods = periods.map((period: string) =>
       period.split('-')[1].trim(),
     );
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringAllocations.periodStart
-    }${filtering.in}(${startPeriods.join(filtering.multi_param_separator)})`;
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringAllocations.periodEnd}${
-      filtering.in
-    }(${endPeriods.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringAllocations, datasource).periodStart
+      }${_.get(filtering, datasource).in}(${startPeriods.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringAllocations, datasource).periodEnd}${_.get(filtering, datasource).in
+      }(${endPeriods.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
-  str += `${
-    str.length > 0 && _.get(params, 'levelParam', '').length > 0 ? ' AND ' : ''
-  }${_.get(params, 'levelParam', '')}`;
+  str += `${str.length > 0 && _.get(params, 'levelParam', '').length > 0 ? ' AND ' : ''
+    }${_.get(params, 'levelParam', '')}`;
 
   if (str.length > 0) {
-    str = `${filtering.filter_operator}${filtering.param_assign_operator}${str}&`;
+    str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
     if (aggregationString) {
       str = aggregationString.replace(
         '<filterString>',
         `${str
           .replace(
-            `${filtering.filter_operator}${filtering.param_assign_operator}`,
+            `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}`,
             'filter(',
           )
           .replace('&', ')/')}`,

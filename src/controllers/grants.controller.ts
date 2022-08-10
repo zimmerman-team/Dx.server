@@ -68,24 +68,24 @@ export class GrantsController {
   @get('/grants')
   @response(200, GRANTS_RESPONSE)
   grants(): object {
-    const mapper = mapTransform(grantsMap);
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const mapper = mapTransform(_.get(grantsMap, datasource));
     const page = (this.req.query.page ?? '1').toString();
     const pageSize = (this.req.query.pageSize ?? '10').toString();
-    const orderBy = this.req.query.orderBy ?? grantsUtils.defaultOrderBy;
-    const filterString = getFilterString(this.req.query);
+    const orderBy = this.req.query.orderBy ?? _.get(grantsUtils, datasource).defaultOrderBy;
+    const filterString = getFilterString(this.req.query, datasource);
     const params = querystring.stringify(
       {
-        ...getPage(filtering.page, parseInt(page, 10), parseInt(pageSize, 10)),
-        [filtering.page_size]: pageSize,
+        ...getPage(_.get(filtering, datasource).page, parseInt(page, 10), parseInt(pageSize, 10)),
+        [_.get(filtering, datasource).page_size]: pageSize,
       },
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).grants}${filterString}${filtering.orderby}${filtering.param_assign_operator
+    const url = `${_.get(urls, datasource).grants}${filterString}${_.get(filtering, datasource).orderby}${_.get(filtering, datasource).param_assign_operator
       }${orderBy}${parseInt(pageSize, 10) > 0 ? `&${params}` : ''}`;
 
     return axios
@@ -93,7 +93,7 @@ export class GrantsController {
       .then((resp: AxiosResponse) => {
         const res: GrantListItemModel[] = mapper(resp.data) as never[];
         return {
-          count: resp.data[grantsUtils.countPath],
+          count: resp.data[_.get(grantsUtils, datasource).countPath],
           data: res,
         };
       })
@@ -110,9 +110,9 @@ export class GrantsController {
         message: '"grantNumber" parameter is required.',
       };
     }
-    const mapper = mapTransform(grantDetailMap);
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).grantsNoCount}?$top=1&$filter=${grantDetailUtils.grantNumber} eq '${grantNumber}'`;
+    const mapper = mapTransform(_.get(grantDetailMap, datasource));
+    const url = `${_.get(urls, datasource).grantsNoCount}?$top=1&$filter=${_.get(grantDetailUtils, datasource).grantNumber} eq '${grantNumber}'`;
 
     return axios
       .get(url)
@@ -135,9 +135,9 @@ export class GrantsController {
         message: '"grantNumber" parameter is required.',
       };
     }
-    const mapper = mapTransform(grantPeriodsMap);
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).grantPeriods}?${grantDetailUtils.defaultSelectFields}${grantDetailUtils.defaultSort}$filter=${grantDetailUtils.periodGrantNumber} eq '${grantNumber}'`;
+    const mapper = mapTransform(_.get(grantPeriodsMap, datasource));
+    const url = `${_.get(urls, datasource).grantPeriods}?${_.get(grantDetailUtils, datasource).defaultSelectFields}${_.get(grantDetailUtils, datasource).defaultSort}$filter=${_.get(grantDetailUtils, datasource).periodGrantNumber} eq '${grantNumber}'`;
 
     return axios
       .get(url)
@@ -165,10 +165,10 @@ export class GrantsController {
         message: '"grantId" and "IPnumber" parameters is required.',
       };
     }
-    const mapper = mapTransform(grantPeriodInfoMap);
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const financialUrl = `${_.get(urls, datasource).grantPeriods}?${grantDetailUtils.periodInfoSelectFields}$filter=${grantDetailUtils.periodGrantNumber} eq '${grantNumber}' and ${grantDetailUtils.periodNumber} eq ${IPnumber}`;
-    const ratingUrl = `${_.get(urls, datasource).performancerating}?${grantDetailUtils.periodInfoRatingSelectFields}${grantDetailUtils.periodInfoRatingPageSize}${grantDetailUtils.periodInfoRatingExpand}${grantDetailUtils.periodInfoRatingSort}$filter=${grantDetailUtils.periodInfoRatingGrantNumber} eq '${grantNumber}' and ${grantDetailUtils.periodInfoRatingPeriodNumber} eq ${IPnumber}${grantDetailUtils.periodInfoRatingExtraFilter}`;
+    const mapper = mapTransform(_.get(grantPeriodInfoMap, datasource));
+    const financialUrl = `${_.get(urls, datasource).grantPeriods}?${_.get(grantDetailUtils, datasource).periodInfoSelectFields}$filter=${_.get(grantDetailUtils, datasource).periodGrantNumber} eq '${grantNumber}' and ${_.get(grantDetailUtils, datasource).periodNumber} eq ${IPnumber}`;
+    const ratingUrl = `${_.get(urls, datasource).performancerating}?${_.get(grantDetailUtils, datasource).periodInfoRatingSelectFields}${_.get(grantDetailUtils, datasource).periodInfoRatingPageSize}${_.get(grantDetailUtils, datasource).periodInfoRatingExpand}${_.get(grantDetailUtils, datasource).periodInfoRatingSort}$filter=${_.get(grantDetailUtils, datasource).periodInfoRatingGrantNumber} eq '${grantNumber}' and ${_.get(grantDetailUtils, datasource).periodInfoRatingPeriodNumber} eq ${IPnumber}${_.get(grantDetailUtils, datasource).periodInfoRatingExtraFilter}`;
 
     return axios
       .all([axios.get(financialUrl), axios.get(ratingUrl)])
@@ -178,12 +178,12 @@ export class GrantsController {
             {
               ..._.get(
                 responses[0].data,
-                grantDetailUtils.periodInfoDataPath,
+                _.get(grantDetailUtils, datasource).periodInfoDataPath,
                 {},
               ),
               ..._.get(
                 responses[1].data,
-                grantDetailUtils.periodInfoDataPath,
+                _.get(grantDetailUtils, datasource).periodInfoDataPath,
                 {},
               ),
             },
@@ -202,12 +202,12 @@ export class GrantsController {
   @get('/grants/radial')
   @response(200, GRANTS_RESPONSE)
   grantsRadial(): object {
-    const filterString = getFilterString(this.req.query);
-    const filterStringPF = getFilterStringPF(this.req.query);
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const grantsUrl = `${_.get(urls, datasource).grantsNoCount}?${filterString}${GrantsRadialMapping.grantAgreementsSelect}`;
-    const periodsUrl = `${_.get(urls, datasource).vgrantPeriods}?${filterString}${GrantsRadialMapping.implementationPeriodsSelect}`;
-    const ipRatingUrl = `${_.get(urls, datasource).performancerating}?${filterStringPF}${GrantsRadialMapping.ipRatingDefaultExpand}${GrantsRadialMapping.ipRatingDefaultOrderBy}`;
+    const filterString = getFilterString(this.req.query, datasource);
+    const filterStringPF = getFilterStringPF(this.req.query, datasource);
+    const grantsUrl = `${_.get(urls, datasource).grantsNoCount}?${filterString}${_.get(GrantsRadialMapping, datasource).grantAgreementsSelect}`;
+    const periodsUrl = `${_.get(urls, datasource).vgrantPeriods}?${filterString}${_.get(GrantsRadialMapping, datasource).implementationPeriodsSelect}`;
+    const ipRatingUrl = `${_.get(urls, datasource).performancerating}?${filterStringPF}${_.get(GrantsRadialMapping, datasource).ipRatingDefaultExpand}${_.get(GrantsRadialMapping, datasource).ipRatingDefaultOrderBy}`;
 
     return axios
       .all([
@@ -219,22 +219,22 @@ export class GrantsController {
         axios.spread((...responses) => {
           const periodsData = _.get(
             responses[0].data,
-            GrantsRadialMapping.dataPath,
+            _.get(GrantsRadialMapping, datasource).dataPath,
             [],
           );
           const grantsData = _.get(
             responses[1].data,
-            GrantsRadialMapping.dataPath,
+            _.get(GrantsRadialMapping, datasource).dataPath,
             [],
           );
           const ipRatingData = _.get(
             responses[2].data,
-            GrantsRadialMapping.dataPath,
+            _.get(GrantsRadialMapping, datasource).dataPath,
             [],
           );
           const groupedGrants = _.groupBy(
             periodsData,
-            GrantsRadialMapping.name,
+            _.get(GrantsRadialMapping, datasource).name,
           );
           const results: any[] = [];
           Object.keys(groupedGrants).forEach(grant => {
@@ -243,22 +243,22 @@ export class GrantsController {
               grantAgreementNumber: grant,
             });
             results.push({
-              title: _.get(fGrant, GrantsRadialMapping.title, ''),
-              name: _.get(items[0], GrantsRadialMapping.name, ''),
+              title: _.get(fGrant, _.get(GrantsRadialMapping, datasource).title, ''),
+              name: _.get(items[0], _.get(GrantsRadialMapping, datasource).name, ''),
               years: [
                 parseInt(
-                  _.get(items[0], GrantsRadialMapping.start, '').slice(0, 4),
+                  _.get(items[0], _.get(GrantsRadialMapping, datasource).start, '').slice(0, 4),
                   10,
                 ),
                 parseInt(
-                  _.get(items[0], GrantsRadialMapping.end, '').slice(0, 4),
+                  _.get(items[0], _.get(GrantsRadialMapping, datasource).end, '').slice(0, 4),
                   10,
                 ),
               ],
-              value: _.sumBy(items, GrantsRadialMapping.value),
-              component: _.get(items[0], GrantsRadialMapping.component, ''),
-              status: _.get(items[0], GrantsRadialMapping.status, ''),
-              rating: _.get(fGrant, GrantsRadialMapping.rating, 'None'),
+              value: _.sumBy(items, _.get(GrantsRadialMapping, datasource).value),
+              component: _.get(items[0], _.get(GrantsRadialMapping, datasource).component, ''),
+              status: _.get(items[0], _.get(GrantsRadialMapping, datasource).status, ''),
+              rating: _.get(fGrant, _.get(GrantsRadialMapping, datasource).rating, 'None'),
               implementationPeriods: _.sortBy(
                 items.map(item => {
                   const fRatingData = _.find(
@@ -267,42 +267,42 @@ export class GrantsController {
                       return (
                         _.get(
                           ipRatingDataItem,
-                          GrantsRadialMapping.ipRatingGrantNumber,
+                          _.get(GrantsRadialMapping, datasource).ipRatingGrantNumber,
                           null,
-                        ) === _.get(items[0], GrantsRadialMapping.name, '') &&
+                        ) === _.get(items[0], _.get(GrantsRadialMapping, datasource).name, '') &&
                         _.get(
                           ipRatingDataItem,
-                          GrantsRadialMapping.ipRatingPeriodNumber,
+                          _.get(GrantsRadialMapping, datasource).ipRatingPeriodNumber,
                           null,
-                        ) === _.get(item, GrantsRadialMapping.ipNumber, '') &&
+                        ) === _.get(item, _.get(GrantsRadialMapping, datasource).ipNumber, '') &&
                         _.get(
                           ipRatingDataItem,
-                          GrantsRadialMapping.ipRatingValue,
+                          _.get(GrantsRadialMapping, datasource).ipRatingValue,
                           null,
                         ) !== null
                       );
                     },
                   );
                   return {
-                    name: _.get(item, GrantsRadialMapping.ipNumber, ''),
+                    name: _.get(item, _.get(GrantsRadialMapping, datasource).ipNumber, ''),
                     years: [
                       parseInt(
-                        _.get(item, GrantsRadialMapping.ipStart, '').slice(
+                        _.get(item, _.get(GrantsRadialMapping, datasource).ipStart, '').slice(
                           0,
                           4,
                         ),
                         10,
                       ),
                       parseInt(
-                        _.get(item, GrantsRadialMapping.ipEnd, '').slice(0, 4),
+                        _.get(item, _.get(GrantsRadialMapping, datasource).ipEnd, '').slice(0, 4),
                         10,
                       ),
                     ],
-                    value: _.get(item, GrantsRadialMapping.value, ''),
-                    status: _.get(item, GrantsRadialMapping.ipStatus, ''),
+                    value: _.get(item, _.get(GrantsRadialMapping, datasource).value, ''),
+                    status: _.get(item, _.get(GrantsRadialMapping, datasource).ipStatus, ''),
                     rating: _.get(
                       fRatingData,
-                      GrantsRadialMapping.ipRatingValue,
+                      _.get(GrantsRadialMapping, datasource).ipRatingValue,
                       'None',
                     ),
                   };

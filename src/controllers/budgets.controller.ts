@@ -89,41 +89,42 @@ export class BudgetsController {
   @get('/budgets/flow')
   @response(200, BUDGETS_FLOW_RESPONSE)
   flow(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      BudgetsFlowFieldsMapping.budgetsFlowAggregation,
+      datasource,
+      _.get(BudgetsFlowFieldsMapping, datasource).budgetsFlowAggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, BudgetsFlowFieldsMapping.dataPath, []);
+        const rawData = _.get(resp.data, _.get(BudgetsFlowFieldsMapping, datasource).dataPath, []);
         let formattedRawData = [];
-        if (_.get(rawData, `[0].${BudgetsFlowFieldsMapping.level1}`, null)) {
+        if (_.get(rawData, `[0].${_.get(BudgetsFlowFieldsMapping, datasource).level1}`, null)) {
           formattedRawData = rawData.map((item: any) => ({
-            amount: _.get(item, BudgetsFlowFieldsMapping.amount, 0),
-            count: _.get(item, BudgetsFlowFieldsMapping.count, 0),
-            level1: _.get(item, BudgetsFlowFieldsMapping.level1, ''),
-            level2: _.get(item, BudgetsFlowFieldsMapping.level2, ''),
-            costCategory: _.get(item, BudgetsFlowFieldsMapping.costCategory, '')
+            amount: _.get(item, _.get(BudgetsFlowFieldsMapping, datasource).amount, 0),
+            count: _.get(item, _.get(BudgetsFlowFieldsMapping, datasource).count, 0),
+            level1: _.get(item, _.get(BudgetsFlowFieldsMapping, datasource).level1, ''),
+            level2: _.get(item, _.get(BudgetsFlowFieldsMapping, datasource).level2, ''),
+            costCategory: _.get(item, _.get(BudgetsFlowFieldsMapping, datasource).costCategory, '')
               .replace(/\(/g, '- ')
               .replace(/\)/g, ''),
             rawCostCategory: _.get(
               item,
-              BudgetsFlowFieldsMapping.costCategory,
+              _.get(BudgetsFlowFieldsMapping, datasource).costCategory,
               '',
             ),
-            component: _.get(item, BudgetsFlowFieldsMapping.component, ''),
+            component: _.get(item, _.get(BudgetsFlowFieldsMapping, datasource).component, ''),
           }));
         }
         const totalBudget = _.sumBy(formattedRawData, 'amount');
@@ -157,7 +158,7 @@ export class BudgetsController {
                 return {
                   id: componentKey,
                   color: _.get(
-                    BudgetsFlowFieldsMapping.componentColors,
+                    _.get(BudgetsFlowFieldsMapping, datasource).componentColors,
                     componentKey,
                     '',
                   ),
@@ -194,7 +195,7 @@ export class BudgetsController {
                 return {
                   id: componentKey,
                   color: _.get(
-                    BudgetsFlowFieldsMapping.componentColors,
+                    _.get(BudgetsFlowFieldsMapping, datasource).componentColors,
                     componentKey,
                     '',
                   ),
@@ -248,7 +249,7 @@ export class BudgetsController {
                 return {
                   id: componentKey,
                   color: _.get(
-                    BudgetsFlowFieldsMapping.componentColors,
+                    _.get(BudgetsFlowFieldsMapping, datasource).componentColors,
                     componentKey,
                     '',
                   ),
@@ -300,7 +301,7 @@ export class BudgetsController {
               return {
                 id: componentKey,
                 color: _.get(
-                  BudgetsFlowFieldsMapping.componentColors,
+                  _.get(BudgetsFlowFieldsMapping, datasource).componentColors,
                   componentKey,
                   '',
                 ),
@@ -327,19 +328,20 @@ export class BudgetsController {
   @get('/budgets/time-cycle')
   @response(200, BUDGETS_TIME_CYCLE_RESPONSE)
   timeCycle(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      BudgetsTimeCycleFieldsMapping.budgetsTimeCycleAggregation,
+      datasource,
+      _.get(BudgetsTimeCycleFieldsMapping, datasource).budgetsTimeCycleAggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
@@ -347,20 +349,20 @@ export class BudgetsController {
       .then((resp: AxiosResponse) => {
         let rawData = _.get(
           resp.data,
-          BudgetsTimeCycleFieldsMapping.dataPath,
+          _.get(BudgetsTimeCycleFieldsMapping, datasource).dataPath,
           [],
         );
         if (rawData.length > 0) {
           if (
-            _.get(rawData[0], BudgetsTimeCycleFieldsMapping.year, '').length > 4
+            _.get(rawData[0], _.get(BudgetsTimeCycleFieldsMapping, datasource).year, '').length > 4
           ) {
             rawData = _.filter(
               rawData,
-              (item: any) => item[BudgetsTimeCycleFieldsMapping.year],
+              (item: any) => item[_.get(BudgetsTimeCycleFieldsMapping, datasource).year],
             ).map((item: any) => ({
               ...item,
-              [BudgetsTimeCycleFieldsMapping.year]: item[
-                BudgetsTimeCycleFieldsMapping.year
+              [_.get(BudgetsTimeCycleFieldsMapping, datasource).year]: item[
+                _.get(BudgetsTimeCycleFieldsMapping, datasource).year
               ].slice(0, 4),
             }));
           }
@@ -368,24 +370,24 @@ export class BudgetsController {
         const returnData: BudgetsTimeCycleData = {data: []};
         const groupedYears = _.groupBy(
           rawData,
-          BudgetsTimeCycleFieldsMapping.year,
+          _.get(BudgetsTimeCycleFieldsMapping, datasource).year,
         );
         Object.keys(groupedYears).forEach(yKey => {
           const instance = groupedYears[yKey];
           let components = {};
           const groupedYComponents = _.groupBy(
             instance,
-            BudgetsTimeCycleFieldsMapping.component,
+            _.get(BudgetsTimeCycleFieldsMapping, datasource).component,
           );
           Object.keys(groupedYComponents).forEach(ycKey => {
             components = {
               ...components,
               [ycKey]: _.sumBy(
                 groupedYComponents[ycKey],
-                BudgetsTimeCycleFieldsMapping.amount,
+                _.get(BudgetsTimeCycleFieldsMapping, datasource).amount,
               ),
               [`${ycKey}Color`]: _.get(
-                BudgetsTimeCycleFieldsMapping.componentColors,
+                _.get(BudgetsTimeCycleFieldsMapping, datasource).componentColors,
                 ycKey,
                 '#000',
               ),
@@ -394,7 +396,7 @@ export class BudgetsController {
           returnData.data.push({
             year: yKey,
             ...components,
-            amount: _.sumBy(instance, BudgetsTimeCycleFieldsMapping.amount),
+            amount: _.sumBy(instance, _.get(BudgetsTimeCycleFieldsMapping, datasource).amount),
           });
         });
         return returnData;
@@ -405,6 +407,7 @@ export class BudgetsController {
   @get('/budgets/drilldown')
   @response(200, BUDGETS_FLOW_RESPONSE)
   flowDrilldown(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (!this.req.query.levelParam) {
       return {
         count: 0,
@@ -414,25 +417,26 @@ export class BudgetsController {
     }
     const filterString = getDrilldownFilterString(
       this.req.query,
-      BudgetsFlowDrilldownFieldsMapping.aggregation,
+      datasource,
+      _.get(BudgetsFlowDrilldownFieldsMapping, datasource).aggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
+        const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, BudgetsFlowDrilldownFieldsMapping.dataPath, []),
-          BudgetsFlowDrilldownFieldsMapping.component,
+          _.get(resp.data, _.get(BudgetsFlowDrilldownFieldsMapping, datasource).dataPath, []),
+          _.get(BudgetsFlowDrilldownFieldsMapping, datasource).component,
         );
         const data: BudgetsTreemapDataItem[] = [];
         Object.keys(groupedDataByComponent).forEach((component: string) => {
@@ -440,10 +444,10 @@ export class BudgetsController {
           const children: BudgetsTreemapDataItem[] = [];
           dataItems.forEach((item: any) => {
             children.push({
-              name: _.get(item, BudgetsFlowDrilldownFieldsMapping.child, ''),
-              value: item[BudgetsFlowDrilldownFieldsMapping.amount],
+              name: _.get(item, _.get(BudgetsFlowDrilldownFieldsMapping, datasource).child, ''),
+              value: item[_.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount],
               formattedValue: formatFinancialValue(
-                item[BudgetsFlowDrilldownFieldsMapping.amount],
+                item[_.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount],
               ),
               color: '#595C70',
               tooltip: {
@@ -452,13 +456,13 @@ export class BudgetsController {
                   {
                     name: _.get(
                       item,
-                      BudgetsFlowDrilldownFieldsMapping.child,
+                      _.get(BudgetsFlowDrilldownFieldsMapping, datasource).child,
                       '',
                     ),
-                    value: item[BudgetsFlowDrilldownFieldsMapping.amount],
+                    value: item[_.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount],
                   },
                 ],
-                value: item[BudgetsFlowDrilldownFieldsMapping.amount],
+                value: item[_.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount],
               },
             });
           });
@@ -499,19 +503,20 @@ export class BudgetsController {
         message: '"levelParam" and "activityAreaName" parameters are required.',
       };
     }
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getDrilldownFilterString(
       this.req.query,
-      BudgetsFlowDrilldownFieldsMapping.aggregation2,
+      datasource,
+      _.get(BudgetsFlowDrilldownFieldsMapping, datasource).aggregation2,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
@@ -519,12 +524,12 @@ export class BudgetsController {
       .then((resp: AxiosResponse) => {
         const rawData = _.get(
           resp.data,
-          BudgetsFlowDrilldownFieldsMapping.dataPath,
+          _.get(BudgetsFlowDrilldownFieldsMapping, datasource).dataPath,
           [],
         );
         const totalValue = _.sumBy(
           rawData,
-          BudgetsFlowDrilldownFieldsMapping.amount,
+          _.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount,
         );
         const areaName = this.req.query.activityAreaName as string;
         const data: BudgetsTreemapDataItem[] = [
@@ -535,10 +540,10 @@ export class BudgetsController {
             formattedValue: formatFinancialValue(totalValue),
             _children: _.orderBy(
               rawData.map((item: any) => ({
-                name: _.get(item, BudgetsFlowDrilldownFieldsMapping.grant, ''),
-                value: item[BudgetsFlowDrilldownFieldsMapping.amount],
+                name: _.get(item, _.get(BudgetsFlowDrilldownFieldsMapping, datasource).grant, ''),
+                value: item[_.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount],
                 formattedValue: formatFinancialValue(
-                  item[BudgetsFlowDrilldownFieldsMapping.amount],
+                  item[_.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount],
                 ),
                 color: '#595C70',
                 tooltip: {
@@ -547,13 +552,13 @@ export class BudgetsController {
                     {
                       name: _.get(
                         item,
-                        BudgetsFlowDrilldownFieldsMapping.grant,
+                        _.get(BudgetsFlowDrilldownFieldsMapping, datasource).grant,
                         '',
                       ),
-                      value: item[BudgetsFlowDrilldownFieldsMapping.amount],
+                      value: item[_.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount],
                     },
                   ],
-                  value: item[BudgetsFlowDrilldownFieldsMapping.amount],
+                  value: item[_.get(BudgetsFlowDrilldownFieldsMapping, datasource).amount],
                 },
               })),
               'value',
@@ -582,19 +587,20 @@ export class BudgetsController {
   @get('/budgets/geomap')
   @response(200, BUDGETS_FLOW_RESPONSE)
   geomap(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      BudgetsGeomapFieldsMapping.aggregation,
+      datasource,
+      _.get(BudgetsGeomapFieldsMapping, datasource).aggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
@@ -605,15 +611,15 @@ export class BudgetsController {
           const data: any = [];
           const groupedDataByLocation = _.groupBy(
             responses[0].data.value,
-            BudgetsGeomapFieldsMapping.locationCode,
+            _.get(BudgetsGeomapFieldsMapping, datasource).locationCode,
           );
           Object.keys(groupedDataByLocation).forEach((iso3: string) => {
             const dataItems = groupedDataByLocation[iso3];
             const locationComponents: any = [];
             dataItems.forEach((item: any) => {
               locationComponents.push({
-                name: _.get(item, BudgetsGeomapFieldsMapping.component, ''),
-                value: item[BudgetsGeomapFieldsMapping.amount],
+                name: _.get(item, _.get(BudgetsGeomapFieldsMapping, datasource).component, ''),
+                value: item[_.get(BudgetsGeomapFieldsMapping, datasource).amount],
               });
             });
             data.push({
@@ -738,20 +744,22 @@ export class BudgetsController {
   @get('/budgets/geomap/multicountries')
   @response(200, BUDGETS_FLOW_RESPONSE)
   geomapMulticountries(): object {
+
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      BudgetsGeomapFieldsMapping.aggregationMulticountry,
+      datasource,
+      _.get(BudgetsGeomapFieldsMapping, datasource).aggregationMulticountry,
       'grantAgreementImplementationPeriod/grantAgreement/multiCountry/multiCountryName ne null',
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).budgets}?${params}${filterString}`;
 
     return axios
@@ -760,18 +768,18 @@ export class BudgetsController {
         axios.spread((...responses) => {
           const rawData = _.get(
             responses[0].data,
-            BudgetsGeomapFieldsMapping.dataPath,
+            _.get(BudgetsGeomapFieldsMapping, datasource).dataPath,
             [],
           );
           const mcGeoData = _.get(
             responses[1].data,
-            BudgetsGeomapFieldsMapping.dataPath,
+            _.get(BudgetsGeomapFieldsMapping, datasource).dataPath,
             [],
           );
           const data: any = [];
           const groupedByMulticountry = _.groupBy(
             rawData,
-            BudgetsGeomapFieldsMapping.multicountry,
+            _.get(BudgetsGeomapFieldsMapping, datasource).multicountry,
           );
           Object.keys(groupedByMulticountry).forEach((mc: string) => {
             const fMCGeoItem = _.find(
@@ -779,7 +787,7 @@ export class BudgetsController {
               (mcGeoItem: any) =>
                 _.get(
                   mcGeoItem,
-                  BudgetsGeomapFieldsMapping.geodatamulticountry,
+                  _.get(BudgetsGeomapFieldsMapping, datasource).geodatamulticountry,
                   '',
                 ) === mc,
             );
@@ -789,13 +797,13 @@ export class BudgetsController {
               const coordinates: Position[] = [];
               const composition = _.get(
                 fMCGeoItem,
-                BudgetsGeomapFieldsMapping.multiCountryComposition,
+                _.get(BudgetsGeomapFieldsMapping, datasource).multiCountryComposition,
                 [],
               );
               composition.forEach((item: any) => {
                 const iso3 = _.get(
                   item,
-                  BudgetsGeomapFieldsMapping.multiCountryCompositionItem,
+                  _.get(BudgetsGeomapFieldsMapping, datasource).multiCountryCompositionItem,
                   '',
                 );
                 const fCountry = _.find(staticCountries, {iso3: iso3});
@@ -816,16 +824,16 @@ export class BudgetsController {
               components: groupedByMulticountry[mc].map((item: any) => ({
                 name: _.get(
                   item,
-                  BudgetsGeomapFieldsMapping.multicountryComponent,
+                  _.get(BudgetsGeomapFieldsMapping, datasource).multicountryComponent,
                   '',
                 ),
-                value: _.get(item, BudgetsGeomapFieldsMapping.amount, 0),
+                value: _.get(item, _.get(BudgetsGeomapFieldsMapping, datasource).amount, 0),
               })),
               latitude: latitude,
               longitude: longitude,
               value: _.sumBy(
                 groupedByMulticountry[mc],
-                BudgetsGeomapFieldsMapping.amount,
+                _.get(BudgetsGeomapFieldsMapping, datasource).amount,
               ),
             });
           });

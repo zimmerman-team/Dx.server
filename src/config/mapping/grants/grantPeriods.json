@@ -1,8 +1,10 @@
-[
-  "value[]",
-  {
-    "number": "implementationPeriodNumber",
-    "startDate": "implementationPeriodStartDate",
-    "endDate": "implementationPeriodEndDate"
-  }
-]
+{
+  "TGFOData": [
+    "value[]",
+    {
+      "number": "implementationPeriodNumber",
+      "startDate": "implementationPeriodStartDate",
+      "endDate": "implementationPeriodEndDate"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 {
-  "donorCategory": "donor/donorParentId",
-  "donors": "donor/donorId",
-  "period": "replenishmentPeriod/replenishmentPeriodName"
+  "TGFOData": {
+    "donorCategory": "donor/donorParentId",
+    "donors": "donor/donorId",
+    "period": "replenishmentPeriod/replenishmentPeriodName"
+  }
 }

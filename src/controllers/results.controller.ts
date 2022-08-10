@@ -89,10 +89,10 @@ export class ResultsController {
   @get('/results')
   @response(200, RESULTS_RESPONSE)
   results(): object {
-    const mapper = mapTransform(resultsMap);
-    const filterString = getFilterString(this.req.query);
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).results}?${resultsUtils.defaultSelect}${filterString}`;
+    const mapper = mapTransform(_.get(resultsMap, datasource));
+    const filterString = getFilterString(this.req.query, datasource);
+    const url = `${_.get(urls, datasource).results}?${_.get(resultsUtils, datasource).defaultSelect}${filterString}`;
 
     return axios
       .get(url)
@@ -135,7 +135,7 @@ export class ResultsController {
   @response(200, RESULTS_RESPONSE)
   resultYears(): object {
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).results}?${ResultsYearsMappingFields.aggregation}`;
+    const url = `${_.get(urls, datasource).results}?${_.get(ResultsYearsMappingFields, datasource).aggregation}`;
 
     return axios
       .get(url)
@@ -143,9 +143,9 @@ export class ResultsController {
         return {
           data: _.get(
             resp.data,
-            ResultsYearsMappingFields.dataPath,
+            _.get(ResultsYearsMappingFields, datasource).dataPath,
             [],
-          ).map((item: any) => _.get(item, ResultsYearsMappingFields.year, '')),
+          ).map((item: any) => _.get(item, _.get(ResultsYearsMappingFields, datasource).year, '')),
         };
       })
       .catch(handleDataApiError);
@@ -154,23 +154,24 @@ export class ResultsController {
   @get('/results-stats')
   @response(200, RESULT_STATS_RESPONSE)
   resultStats(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterStringForStats(
       this.req.query,
-      resultStatsMap.ResultStatsAggregation,
+      datasource,
+      _.get(resultStatsMap, datasource).ResultStatsAggregation,
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).results}?${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, resultStatsMap.dataPath, []);
+        const rawData = _.get(resp.data, _.get(resultStatsMap, datasource).dataPath, []);
         return {
           count: rawData.length,
           data: rawData.map((item: any) => ({
-            name: _.get(item, resultStatsMap.name, ''),
-            value: _.get(item, resultStatsMap.value, ''),
-            description: _.get(item, resultStatsMap.description, ''),
+            name: _.get(item, _.get(resultStatsMap, datasource).name, ''),
+            value: _.get(item, _.get(resultStatsMap, datasource).value, ''),
+            description: _.get(item, _.get(resultStatsMap, datasource).description, ''),
           })),
         };
       })

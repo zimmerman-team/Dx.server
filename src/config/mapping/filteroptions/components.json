@@ -1,5 +1,7 @@
 {
-  "dataPath": "value",
-  "label": "componentName",
-  "value": "componentName"
+  "TGFOData": {
+    "dataPath": "value",
+    "label": "componentName",
+    "value": "componentName"
+  }
 }

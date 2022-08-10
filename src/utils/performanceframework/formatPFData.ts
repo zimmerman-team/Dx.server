@@ -1,9 +1,6 @@
 import _ from 'lodash';
 import performanceframeworkMappingUtils from '../../config/mapping/performanceframework/utils.json';
 
-const rateColors = performanceframeworkMappingUtils.valueAchievementRateColors;
-
-const indicatorSetOrder = performanceframeworkMappingUtils.indicatorSetOrder;
 
 export function getColorBasedOnValue(
   value: number,
@@ -11,7 +8,10 @@ export function getColorBasedOnValue(
   isReversed: boolean,
   isWPTM: boolean,
   result: any,
+  datasource: string,
 ) {
+  const rateColors = _.get(performanceframeworkMappingUtils, datasource).valueAchievementRateColors;
+
   if (value === null && !result) return '#fff';
   if (isWPTM) {
     if (value === 1) return !isReversed ? rateColors[0] : rateColors[4];
@@ -54,7 +54,8 @@ export function getColorBasedOnValue(
   return '#E2E2E2';
 }
 
-export function getAchievementRateLegendValues() {
+export function getAchievementRateLegendValues(datasource: string) {
+  const rateColors = _.get(performanceframeworkMappingUtils, datasource).valueAchievementRateColors;
   return [
     {
       value: 0,
@@ -101,9 +102,11 @@ export function formatPFData(
     formatted: string;
     number: number;
   }[],
+  datasource: string,
 ) {
-  const nodes: {id: string; [key: string]: any}[] = [];
-  const links: {source: string; target: string; [key: string]: any}[] = [];
+  const indicatorSetOrder = _.get(performanceframeworkMappingUtils, datasource).indicatorSetOrder;
+  const nodes: {id: string;[key: string]: any}[] = [];
+  const links: {source: string; target: string;[key: string]: any}[] = [];
 
   let data: any[] = [];
   let filteredRawData = rawData;
@@ -246,7 +249,7 @@ export function formatPFData(
     });
   });
 
-  const achievementRatesLegendValues = getAchievementRateLegendValues();
+  const achievementRatesLegendValues = getAchievementRateLegendValues(datasource);
   data = data
     .sort(
       (a, b) =>
@@ -263,14 +266,15 @@ export function formatPFData(
             color: getColorBasedOnValue(
               aaModule.name === 'Process indicator / WPTM'
                 ? indicator.result.valueNumerator ||
-                    indicator.target.valueNumerator
+                indicator.target.valueNumerator
                 : indicator.result.achievementRate ||
-                    indicator.target.achievementRate,
+                indicator.target.achievementRate,
               achievementRatesLegendValues,
               _.get(indicator.result, 'instance.isIndicatorReversed', false) ||
-                _.get(indicator.target, 'instance.isIndicatorReversed', false),
+              _.get(indicator.target, 'instance.isIndicatorReversed', false),
               aaModule.name === 'Process indicator / WPTM',
               indicator.result.instance,
+              datasource,
             ),
             target: {
               ...indicator.target,
@@ -282,6 +286,7 @@ export function formatPFData(
                 _.get(indicator.target, 'instance.isIndicatorReversed', false),
                 aaModule.name === 'Process indicator / WPTM',
                 indicator.target.instance,
+                datasource,
               ),
             },
             result: {
@@ -294,6 +299,7 @@ export function formatPFData(
                 _.get(indicator.result, 'instance.isIndicatorReversed', false),
                 aaModule.name === 'Process indicator / WPTM',
                 indicator.result.instance,
+                datasource,
               ),
             },
             baseline: {
@@ -310,6 +316,7 @@ export function formatPFData(
                 ),
                 aaModule.name === 'Process indicator / WPTM',
                 indicator.baseline.instance,
+                datasource,
               ),
             },
           };

@@ -1,8 +1,10 @@
 {
-  "dataPath": "value",
-  "label": "donorName",
-  "value": "donorId",
-  "children": "members",
-  "childLabel": "donorName",
-  "childValue": "donorId"
+  "TGFOData": {
+    "dataPath": "value",
+    "label": "donorName",
+    "value": "donorId",
+    "children": "members",
+    "childLabel": "donorName",
+    "childValue": "donorId"
+  }
 }

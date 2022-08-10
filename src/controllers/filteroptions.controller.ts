@@ -80,44 +80,44 @@ export class FilteroptionsController {
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, mappingLocations.dataPath, []);
+        const rawData = _.get(resp.data, _.get(mappingLocations, datasource).dataPath, []);
         const data: FilterGroupOption[] = [];
 
         rawData.forEach((item1: any) => {
-          const subOptions = _.get(item1, mappingLocations.children, []);
+          const subOptions = _.get(item1, _.get(mappingLocations, datasource).children, []);
           data.push({
-            label: _.get(item1, mappingLocations.label, ''),
-            value: _.get(item1, mappingLocations.value, ''),
+            label: _.get(item1, _.get(mappingLocations, datasource).label, ''),
+            value: _.get(item1, _.get(mappingLocations, datasource).value, ''),
             subOptions:
               subOptions && subOptions.length > 0
                 ? _.orderBy(
                   subOptions.map((item2: any) => {
                     const item2SubOptions = _.get(
                       item2,
-                      mappingLocations.children,
+                      _.get(mappingLocations, datasource).children,
                       [],
                     );
                     return {
-                      label: _.get(item2, mappingLocations.label, ''),
-                      value: _.get(item2, mappingLocations.value, ''),
+                      label: _.get(item2, _.get(mappingLocations, datasource).label, ''),
+                      value: _.get(item2, _.get(mappingLocations, datasource).value, ''),
                       subOptions:
                         item2SubOptions && item2SubOptions.length > 0
                           ? _.orderBy(
                             item2SubOptions.map((item3: any) => {
                               const item3SubOptions = _.get(
                                 item3,
-                                mappingLocations.children,
+                                _.get(mappingLocations, datasource).children,
                                 [],
                               );
                               return {
                                 label: _.get(
                                   item3,
-                                  mappingLocations.label,
+                                  _.get(mappingLocations, datasource).label,
                                   '',
                                 ),
                                 value: _.get(
                                   item3,
-                                  mappingLocations.value,
+                                  _.get(mappingLocations, datasource).value,
                                   '',
                                 ),
                                 subOptions:
@@ -129,12 +129,12 @@ export class FilteroptionsController {
                                           return {
                                             label: _.get(
                                               item4,
-                                              mappingLocations.label,
+                                              _.get(mappingLocations, datasource).label,
                                               '',
                                             ),
                                             value: _.get(
                                               item4,
-                                              mappingLocations.value,
+                                              _.get(mappingLocations, datasource).value,
                                               '',
                                             ),
                                           };
@@ -165,30 +165,30 @@ export class FilteroptionsController {
             .then((resp2: AxiosResponse) => {
               const mcRawData = _.get(
                 resp2.data,
-                mappingMulticountries.dataPath,
+                _.get(mappingMulticountries, datasource).dataPath,
                 [],
               );
 
               mcRawData.forEach((item: any) => {
                 data.forEach((region: FilterGroupOption) => {
                   const fRegion = _.find(region.subOptions, {
-                    value: _.get(item, mappingMulticountries.regionCode),
+                    value: _.get(item, _.get(mappingMulticountries, datasource).regionCode),
                   });
                   if (fRegion) {
                     region.subOptions?.push({
-                      label: _.get(item, mappingMulticountries.label, ''),
-                      value: _.get(item, mappingMulticountries.value, ''),
+                      label: _.get(item, _.get(mappingMulticountries, datasource).label, ''),
+                      value: _.get(item, _.get(mappingMulticountries, datasource).value, ''),
                     });
                   } else {
                     region.subOptions?.forEach(
                       (subRegion: FilterGroupOption) => {
                         const fSubRegion = _.find(subRegion.subOptions, {
-                          value: _.get(item, mappingMulticountries.regionCode),
+                          value: _.get(item, _.get(mappingMulticountries, datasource).regionCode),
                         });
                         if (fSubRegion) {
                           subRegion.subOptions?.push({
-                            label: _.get(item, mappingMulticountries.label, ''),
-                            value: _.get(item, mappingMulticountries.value, ''),
+                            label: _.get(item, _.get(mappingMulticountries, datasource).label, ''),
+                            value: _.get(item, _.get(mappingMulticountries, datasource).value, ''),
                           });
                         }
                       },
@@ -222,13 +222,13 @@ export class FilteroptionsController {
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, mappingComponents.dataPath, []);
+        const rawData = _.get(resp.data, _.get(mappingComponents, datasource).dataPath, []);
 
         return {
           name: 'Components',
           options: rawData.map((item: any) => ({
-            label: _.get(item, mappingComponents.label, ''),
-            value: _.get(item, mappingComponents.value, ''),
+            label: _.get(item, _.get(mappingComponents, datasource).label, ''),
+            value: _.get(item, _.get(mappingComponents, datasource).value, ''),
           })),
         };
       })
@@ -244,11 +244,11 @@ export class FilteroptionsController {
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, mappingPartnertypes.dataPath, []);
+        const rawData = _.get(resp.data, _.get(mappingPartnertypes, datasource).dataPath, []);
 
         const groupedByPartnerType = _.groupBy(
           rawData,
-          mappingPartnertypes.partnerType,
+          _.get(mappingPartnertypes, datasource).partnerType,
         );
 
         const options: FilterGroupOption[] = [];
@@ -256,7 +256,7 @@ export class FilteroptionsController {
         Object.keys(groupedByPartnerType).forEach((partnerType: string) => {
           const groupedBySubPartnerType = _.groupBy(
             groupedByPartnerType[partnerType],
-            mappingPartnertypes.partnerSubType,
+            _.get(mappingPartnertypes, datasource).partnerSubType,
           );
           const subOptions: FilterGroupOption[] = [];
           Object.keys(groupedBySubPartnerType).forEach(
@@ -268,14 +268,14 @@ export class FilteroptionsController {
                     : 'Not Classified',
                 value: _.get(
                   groupedBySubPartnerType[subPartnerType][0],
-                  mappingPartnertypes.partnerSubTypeId,
+                  _.get(mappingPartnertypes, datasource).partnerSubTypeId,
                   '',
                 ),
                 subOptions: _.orderBy(
                   groupedBySubPartnerType[subPartnerType].map(
                     (partner: any) => ({
-                      label: _.get(partner, mappingPartnertypes.partner, ''),
-                      value: _.get(partner, mappingPartnertypes.partnerId, ''),
+                      label: _.get(partner, _.get(mappingPartnertypes, datasource).partner, ''),
+                      value: _.get(partner, _.get(mappingPartnertypes, datasource).partnerId, ''),
                     }),
                   ),
                   'label',
@@ -291,7 +291,7 @@ export class FilteroptionsController {
                 : 'Not Classified',
             value: _.get(
               groupedByPartnerType[partnerType][0],
-              mappingPartnertypes.partnerTypeId,
+              _.get(mappingPartnertypes, datasource).partnerTypeId,
               '',
             ),
             subOptions: _.orderBy(subOptions, 'label', 'asc'),
@@ -315,14 +315,14 @@ export class FilteroptionsController {
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, mappingStatus.dataPath, []);
+        const rawData = _.get(resp.data, _.get(mappingStatus, datasource).dataPath, []);
 
         return {
           name: 'Grant status',
           options: _.orderBy(
             rawData.map((item: any) => ({
-              label: _.get(item, mappingStatus.label, ''),
-              value: _.get(item, mappingStatus.value, ''),
+              label: _.get(item, _.get(mappingStatus, datasource).label, ''),
+              value: _.get(item, _.get(mappingStatus, datasource).value, ''),
             })),
             'label',
             'asc',
@@ -343,7 +343,7 @@ export class FilteroptionsController {
       .then((resp: AxiosResponse) => {
         const rawData = _.get(
           resp.data,
-          mappingReplenishmentperiods.dataPath,
+          _.get(mappingReplenishmentperiods, datasource).dataPath,
           [],
         );
 
@@ -351,8 +351,8 @@ export class FilteroptionsController {
           name: 'Replenishment periods',
           options: _.orderBy(
             rawData.map((item: any) => ({
-              label: _.get(item, mappingReplenishmentperiods.label, ''),
-              value: _.get(item, mappingReplenishmentperiods.value, ''),
+              label: _.get(item, _.get(mappingReplenishmentperiods, datasource).label, ''),
+              value: _.get(item, _.get(mappingReplenishmentperiods, datasource).value, ''),
             })),
             'label',
             'asc',
@@ -373,30 +373,30 @@ export class FilteroptionsController {
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, mappingDonors.dataPath, []);
+        const rawData = _.get(resp.data, _.get(mappingDonors, datasource).dataPath, []);
         const options: FilterGroupOption[] = [];
 
         rawData.forEach((item: any) => {
           const type: FilterGroupOption = {
-            label: _.get(item, mappingDonors.label, ''),
-            value: _.get(item, mappingDonors.value, ''),
+            label: _.get(item, _.get(mappingDonors, datasource).label, ''),
+            value: _.get(item, _.get(mappingDonors, datasource).value, ''),
             subOptions: [],
           };
 
-          _.get(item, mappingDonors.children, []).forEach((child: any) => {
-            if (_.get(child, mappingDonors.children, []).length > 0) {
-              _.get(child, mappingDonors.children, []).forEach(
+          _.get(item, _.get(mappingDonors, datasource).children, []).forEach((child: any) => {
+            if (_.get(child, _.get(mappingDonors, datasource).children, []).length > 0) {
+              _.get(child, _.get(mappingDonors, datasource).children, []).forEach(
                 (gchild: any) => {
                   type.subOptions?.push({
-                    label: _.get(gchild, mappingDonors.label, ''),
-                    value: _.get(gchild, mappingDonors.value, ''),
+                    label: _.get(gchild, _.get(mappingDonors, datasource).label, ''),
+                    value: _.get(gchild, _.get(mappingDonors, datasource).value, ''),
                   });
                 },
               );
             } else {
               type.subOptions?.push({
-                label: _.get(child, mappingDonors.label, ''),
-                value: _.get(child, mappingDonors.value, ''),
+                label: _.get(child, _.get(mappingDonors, datasource).label, ''),
+                value: _.get(child, _.get(mappingDonors, datasource).value, ''),
               });
             }
           });

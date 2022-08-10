@@ -42,27 +42,29 @@ export class LocationController {
     }
     const location = locations.split(',')[0];
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const multicountriesUrl = `${_.get(urls, datasource).multicountries}?${locationMappingFields[
+    const multicountriesUrl = `${_.get(urls, datasource).multicountries}?${_.get(locationMappingFields, datasource)[
       location.length > 3
         ? 'countriesFilterString'
         : 'multiCountriesFilterString'
     ].replace('<location>', location as string)}`;
     const filterString = getFilterString(
       this.req.query,
-      locationMappingFields.locationFinancialAggregation,
+      datasource,
+      _.get(locationMappingFields, datasource).locationFinancialAggregation,
     );
     const financialUrl = `${_.get(urls, datasource).grantsNoCount}?${filterString}`;
-    const indicatorsUrl = `${_.get(urls, datasource).indicators}?${filtering.filter_operator}${filtering.param_assign_operator
-      }${locationMappingFields.locationIndicatorsDefaultFilter} ${filtering.and_operator
-      } ${locationMappingFields.locationIndicatorsLocationFilter.replace(
+    const indicatorsUrl = `${_.get(urls, datasource).indicators}?${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator
+      }${_.get(locationMappingFields, datasource).locationIndicatorsDefaultFilter} ${_.get(filtering, datasource).and_operator
+      } ${_.get(locationMappingFields, datasource).locationIndicatorsLocationFilter.replace(
         '<location>',
         location as string,
-      )}&${filtering.orderby}${filtering.param_assign_operator}${locationMappingFields.locationIndicatorsDefaultOrder
-      }&${filtering.page_size}${filtering.param_assign_operator}${locationMappingFields.locationIndicatorsDefaultCap
+      )}&${_.get(filtering, datasource).orderby}${_.get(filtering, datasource).param_assign_operator}${_.get(locationMappingFields, datasource).locationIndicatorsDefaultOrder
+      }&${_.get(filtering, datasource).page_size}${_.get(filtering, datasource).param_assign_operator}${_.get(locationMappingFields, datasource).locationIndicatorsDefaultCap
       }`;
     const principalRecipientsFilterString = getFilterString(
       this.req.query,
-      locationMappingFields.principalRecipientAggregation,
+      datasource,
+      _.get(locationMappingFields, datasource).principalRecipientAggregation,
     );
     const principalRecipientsUrl = `${_.get(urls, datasource).grantsNoCount}?${principalRecipientsFilterString}`;
 
@@ -77,17 +79,17 @@ export class LocationController {
         axios.spread((...responses) => {
           const multicountriesResp = _.get(
             responses[0].data,
-            locationMappingFields.multiCountriesDataPath,
+            _.get(locationMappingFields, datasource).multiCountriesDataPath,
             [],
           );
           const countriesResp = _.get(
             responses[0].data,
-            locationMappingFields.countriesDataPath,
+            _.get(locationMappingFields, datasource).countriesDataPath,
             [],
           );
           const locationFinancialResp = _.get(
             responses[1].data,
-            locationMappingFields.locationFinancialDataPath,
+            _.get(locationMappingFields, datasource).locationFinancialDataPath,
             {
               locationName: '',
               multiCountryName: '',
@@ -102,12 +104,12 @@ export class LocationController {
           );
           const locationIndicatorsResp = _.get(
             responses[2].data,
-            locationMappingFields.locationIndicatorsDataPath,
+            _.get(locationMappingFields, datasource).locationIndicatorsDataPath,
             [],
           );
           const principalRecipientsResp = _.get(
             responses[3].data,
-            locationMappingFields.multiCountriesDataPath,
+            _.get(locationMappingFields, datasource).multiCountriesDataPath,
             [],
           );
 
@@ -117,40 +119,40 @@ export class LocationController {
                 id: _.get(
                   locationFinancialResp,
                   location.length > 3
-                    ? locationMappingFields.multiCountryId
-                    : locationMappingFields.geoId,
+                    ? _.get(locationMappingFields, datasource).multiCountryId
+                    : _.get(locationMappingFields, datasource).geoId,
                   '',
                 ),
                 locationName: _.get(
                   locationFinancialResp,
                   location.length > 3
-                    ? locationMappingFields.multiCountryName
-                    : locationMappingFields.locationName,
+                    ? _.get(locationMappingFields, datasource).multiCountryName
+                    : _.get(locationMappingFields, datasource).locationName,
                   '',
                 ),
                 disbursed: _.get(
                   locationFinancialResp,
-                  locationMappingFields.disbursed,
+                  _.get(locationMappingFields, datasource).disbursed,
                   0,
                 ),
                 committed: _.get(
                   locationFinancialResp,
-                  locationMappingFields.committed,
+                  _.get(locationMappingFields, datasource).committed,
                   0,
                 ),
                 signed: _.get(
                   locationFinancialResp,
-                  locationMappingFields.signed,
+                  _.get(locationMappingFields, datasource).signed,
                   0,
                 ),
                 portfolioManager: _.get(
                   locationFinancialResp,
-                  locationMappingFields.portfolioManager,
+                  _.get(locationMappingFields, datasource).portfolioManager,
                   '',
                 ),
                 portfolioManagerEmail: _.get(
                   locationFinancialResp,
-                  locationMappingFields.portfolioManagerEmail,
+                  _.get(locationMappingFields, datasource).portfolioManagerEmail,
                   '',
                 ),
                 multicountries:
@@ -160,12 +162,12 @@ export class LocationController {
                       multicountriesResp.map((mc: any) => ({
                         name: _.get(
                           mc,
-                          locationMappingFields.multiCountryName,
+                          _.get(locationMappingFields, datasource).multiCountryName,
                           '',
                         ),
                         code: _.get(
                           mc,
-                          locationMappingFields.multiCountryName,
+                          _.get(locationMappingFields, datasource).multiCountryName,
                           '',
                         ).replace(/\//g, '|'),
                       })),
@@ -178,12 +180,12 @@ export class LocationController {
                       countriesResp.map((loc: any) => ({
                         name: _.get(
                           loc,
-                          locationMappingFields.countryName,
+                          _.get(locationMappingFields, datasource).countryName,
                           '',
                         ),
                         code: _.get(
                           loc,
-                          locationMappingFields.countryCode,
+                          _.get(locationMappingFields, datasource).countryCode,
                           '',
                         ),
                       })),
@@ -194,34 +196,34 @@ export class LocationController {
                 indicators: locationIndicatorsResp.map((indicator: any) => ({
                   name: _.get(
                     indicator,
-                    locationMappingFields.locationIndicatorName,
+                    _.get(locationMappingFields, datasource).locationIndicatorName,
                     '',
                   ),
                   year: _.get(
                     indicator,
-                    locationMappingFields.locationIndicatorYear,
+                    _.get(locationMappingFields, datasource).locationIndicatorYear,
                     '',
                   ),
                   value: _.get(
                     indicator,
-                    locationMappingFields.locationIndicatorValue,
+                    _.get(locationMappingFields, datasource).locationIndicatorValue,
                     '',
                   ),
                 })),
                 principalRecipients: principalRecipientsResp.map((pr: any) => {
                   const fullName = _.get(
                     pr,
-                    locationMappingFields.principalRecipientName,
+                    _.get(locationMappingFields, datasource).principalRecipientName,
                     '',
                   );
                   const shortName = _.get(
                     pr,
-                    locationMappingFields.principalRecipientShortName,
+                    _.get(locationMappingFields, datasource).principalRecipientShortName,
                     '',
                   );
                   const id = _.get(
                     pr,
-                    locationMappingFields.principalRecipientId,
+                    _.get(locationMappingFields, datasource).principalRecipientId,
                     '',
                   );
 

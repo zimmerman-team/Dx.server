@@ -64,6 +64,7 @@ export class PerformanceframeworkController {
   @get('/performance-framework')
   @response(200, PERFORMANCE_FRAMEWORK_RESPONSE)
   performancerating(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (!this.req.query.grantId || !this.req.query.IPnumber) {
       return {
         data: [],
@@ -72,18 +73,17 @@ export class PerformanceframeworkController {
     }
     const filterString = getFilterString(
       this.req.query,
-      `${performanceframeworkMappingUtils.defaultSelect}${performanceframeworkMappingUtils.defaultExpand}${performanceframeworkMappingUtils.defaultFilter}`,
+      `${_.get(performanceframeworkMappingUtils, datasource).defaultSelect}${_.get(performanceframeworkMappingUtils, datasource).defaultExpand}${_.get(performanceframeworkMappingUtils, datasource).defaultFilter}`,
     );
-    const mapper = mapTransform(performanceframeworkMap);
+    const mapper = mapTransform(_.get(performanceframeworkMap, datasource));
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).performanceframework}?${filterString}&${params}`;
 
     return axios
@@ -138,7 +138,7 @@ export class PerformanceframeworkController {
           ];
         }
 
-        const data = formatPFData(mappedData, selectedTimeframes);
+        const data = formatPFData(mappedData, selectedTimeframes, datasource);
 
         const periods: string[][] = timeframes.map((group: any) => [
           group.startFormatted,
@@ -157,6 +157,7 @@ export class PerformanceframeworkController {
   @get('/performance-framework/expand')
   @response(200, PERFORMANCE_FRAMEWORK_RESPONSE)
   performanceratingexpand(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (
       !this.req.query.indicatorSet ||
       !this.req.query.moduleName ||
@@ -170,18 +171,17 @@ export class PerformanceframeworkController {
     }
     const filterString = getFilterString(
       this.req.query,
-      `${performanceframeworkMappingUtilsExpand.defaultSelect}${performanceframeworkMappingUtilsExpand.defaultExpand}${performanceframeworkMappingUtilsExpand.defaultFilter}`,
+      `${_.get(performanceframeworkMappingUtilsExpand, datasource).defaultSelect}${_.get(performanceframeworkMappingUtilsExpand, datasource).defaultExpand}${_.get(performanceframeworkMappingUtilsExpand, datasource).defaultFilter}`,
     );
-    const mapper = mapTransform(performanceframeworkExpandMap);
+    const mapper = mapTransform(_.get(performanceframeworkExpandMap, datasource));
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).performanceframework}?${filterString}&${params}`;
 
     return axios
@@ -269,11 +269,12 @@ export class PerformanceframeworkController {
                 achievementRate,
                 color: getColorBasedOnValue(
                   achievementRate,
-                  getAchievementRateLegendValues(),
+                  getAchievementRateLegendValues(datasource),
                   resultInstance.isIndicatorReversed ||
                   targetInstance.isIndicatorReversed,
                   this.req.query.moduleName === 'Process indicator / WPTM',
                   resultInstance,
+                  datasource,
                 ),
                 period: `${(
                   resultInstance.startDate || targetInstance.startDate

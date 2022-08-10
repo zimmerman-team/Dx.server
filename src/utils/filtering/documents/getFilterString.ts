@@ -2,7 +2,7 @@ import _ from 'lodash';
 import filteringDocuments from '../../../config/filtering/documents.json';
 import filtering from '../../../config/filtering/index.json';
 
-export function getFilterString(params: any, defaultFilter?: string) {
+export function getFilterString(params: any, datasource: string, defaultFilter?: string) {
   let str = defaultFilter ?? '';
 
   const locations = _.filter(
@@ -10,9 +10,8 @@ export function getFilterString(params: any, defaultFilter?: string) {
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringDocuments.country}${
-      filtering.in
-    }(${locations.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringDocuments, datasource).country}${_.get(filtering, datasource).in
+      }(${locations.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const components = _.filter(
@@ -20,16 +19,14 @@ export function getFilterString(params: any, defaultFilter?: string) {
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringDocuments.component}${
-      filtering.in
-    }(${components.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringDocuments, datasource).component}${_.get(filtering, datasource).in
+      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const grantId = _.get(params, 'grantId', null);
   if (grantId) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringDocuments.grantId}${
-      filtering.eq
-    }${grantId}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringDocuments, datasource).grantId}${_.get(filtering, datasource).eq
+      }${grantId}`;
   }
 
   const multicountries = _.filter(
@@ -37,21 +34,20 @@ export function getFilterString(params: any, defaultFilter?: string) {
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (multicountries.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringDocuments.multicountry}${
-      filtering.in
-    }(${multicountries.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringDocuments, datasource).multicountry}${_.get(filtering, datasource).in
+      }(${multicountries.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const search = _.get(params, 'q', '');
   if (search.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringDocuments.search.replace(
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringDocuments, datasource).search.replace(
       /<value>/g,
       `'${search}'`,
     )}`;
   }
 
   if (str.length > 0) {
-    str = `${filtering.filter_operator}${filtering.param_assign_operator}${str}&`;
+    str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
   }
 
   return str;

@@ -32,6 +32,7 @@ export class PartnerController {
   @get('/partner/detail')
   @response(200, PARTNER_INFO_RESPONSE)
   partnerDetail(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const partners = _.get(this.req.query, 'partners', '') as string;
     if (partners.length === 0) {
       return {
@@ -41,27 +42,27 @@ export class PartnerController {
     }
     const filterString = getFilterString(
       this.req.query,
-      partnerMappingFields.url,
+      datasource,
+      _.get(partnerMappingFields, datasource).url,
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).grantsNoCount}?${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, partnerMappingFields.dataPath, []);
+        const rawData = _.get(resp.data, _.get(partnerMappingFields, datasource).dataPath, []);
         let partnerName = '';
-        if (_.get(rawData, partnerMappingFields.partnerShortName, '')) {
+        if (_.get(rawData, _.get(partnerMappingFields, datasource).partnerShortName, '')) {
           partnerName = _.get(
             rawData,
-            partnerMappingFields.partnerShortName,
+            _.get(partnerMappingFields, datasource).partnerShortName,
             '',
           );
         }
-        if (_.get(rawData, partnerMappingFields.partnerLongName, '')) {
+        if (_.get(rawData, _.get(partnerMappingFields, datasource).partnerLongName, '')) {
           partnerName += `${partnerName ? ' | ' : ''}${_.get(
             rawData,
-            partnerMappingFields.partnerLongName,
+            _.get(partnerMappingFields, datasource).partnerLongName,
             '',
           )}`;
         }

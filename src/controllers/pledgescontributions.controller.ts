@@ -53,19 +53,20 @@ export class PledgescontributionsController {
   @get('/pledges-contributions/time-cycle')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
   timeCycle(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      PledgesContributionsTimeCycleFieldsMapping.pledgescontributionsTimeCycleAggregation,
+      datasource,
+      _.get(PledgesContributionsTimeCycleFieldsMapping, datasource).pledgescontributionsTimeCycleAggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
     return axios
@@ -73,12 +74,12 @@ export class PledgescontributionsController {
       .then((resp: AxiosResponse) => {
         const rawData = _.get(
           resp.data,
-          PledgesContributionsTimeCycleFieldsMapping.dataPath,
+          _.get(PledgesContributionsTimeCycleFieldsMapping, datasource).dataPath,
           [],
         );
         const groupByYear = _.groupBy(
           rawData,
-          PledgesContributionsTimeCycleFieldsMapping.year,
+          _.get(PledgesContributionsTimeCycleFieldsMapping, datasource).year,
         );
         const data: Record<string, unknown>[] = [];
 
@@ -87,25 +88,25 @@ export class PledgescontributionsController {
             const pledge = _.find(
               groupByYear[year],
               (item: any) =>
-                item[PledgesContributionsTimeCycleFieldsMapping.indicator] ===
+                item[_.get(PledgesContributionsTimeCycleFieldsMapping, datasource).indicator] ===
                 'Pledge',
             );
             const contribution = _.find(
               groupByYear[year],
               (item: any) =>
-                item[PledgesContributionsTimeCycleFieldsMapping.indicator] ===
+                item[_.get(PledgesContributionsTimeCycleFieldsMapping, datasource).indicator] ===
                 'Contribution',
             );
             data.push({
               year,
               pledge: _.get(
                 pledge,
-                PledgesContributionsTimeCycleFieldsMapping.amount,
+                _.get(PledgesContributionsTimeCycleFieldsMapping, datasource).amount,
                 0,
               ),
               contribution: _.get(
                 contribution,
-                PledgesContributionsTimeCycleFieldsMapping.amount,
+                _.get(PledgesContributionsTimeCycleFieldsMapping, datasource).amount,
                 0,
               ),
               pledgeColor: '#BFCFEE',
@@ -125,32 +126,33 @@ export class PledgescontributionsController {
   @get('/pledges-contributions/geomap')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
   geomap(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      PledgesContributionsGeoFieldsMapping.pledgescontributionsGeoMapAggregation,
+      datasource,
+      _.get(PledgesContributionsGeoFieldsMapping, datasource).pledgescontributionsGeoMapAggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
     const valueType = (
-      this.req.query.valueType ?? PledgesContributionsGeoFieldsMapping.pledge
+      this.req.query.valueType ?? _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
     ).toString();
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
     return axios
       .all([
         axios.get(url),
         axios.get(
-          PledgesContributionsGeoFieldsMapping.inAppDonorsFilterOptionsURL,
+          _.get(PledgesContributionsGeoFieldsMapping, datasource).inAppDonorsFilterOptionsURL,
         ),
         axios.get(_.get(urls, datasource).geojson),
-        axios.get(PledgesContributionsGeoFieldsMapping.d2hspatialshapesURL),
+        axios.get(_.get(PledgesContributionsGeoFieldsMapping, datasource).d2hspatialshapesURL),
       ])
       .then(
         axios.spread((...responses) => {
@@ -166,45 +168,45 @@ export class PledgescontributionsController {
 
           const rawData = _.get(
             responses[0].data,
-            PledgesContributionsGeoFieldsMapping.dataPath,
+            _.get(PledgesContributionsGeoFieldsMapping, datasource).dataPath,
             [],
           );
           const donorCountries = _.groupBy(
             rawData,
-            PledgesContributionsGeoFieldsMapping.countryDonors,
+            _.get(PledgesContributionsGeoFieldsMapping, datasource).countryDonors,
           );
           const publicSectorCountries: any[] = [];
           const nonCountrySectorDonors: any[] = [];
 
           Object.keys(donorCountries).forEach((iso3: string) => {
             if (iso3 !== 'undefined') {
-              const items = donorCountries[iso3];
+              const items: [any, ...any] = donorCountries[iso3];
               const pledges = _.filter(items, {
-                [PledgesContributionsGeoFieldsMapping.indicator]:
-                  PledgesContributionsGeoFieldsMapping.pledge,
+                [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
+                  _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge,
               });
               const contributions = _.filter(items, {
-                [PledgesContributionsGeoFieldsMapping.indicator]:
-                  PledgesContributionsGeoFieldsMapping.contribution,
+                [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
+                  _.get(PledgesContributionsGeoFieldsMapping, datasource).contribution,
               });
               publicSectorCountries.push({
                 code: iso3,
                 geoName: items[0].donor.geographicArea.geographicAreaName,
                 id: items[0].donorId,
                 amounts: [
-                  valueType === PledgesContributionsGeoFieldsMapping.pledge
+                  valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                     ? {
                       label: 'Pledge',
                       value: _.sumBy(
                         pledges,
-                        PledgesContributionsGeoFieldsMapping.amount,
+                        _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                       ),
                     }
                     : {
                       label: 'Contribution',
                       value: _.sumBy(
                         contributions,
-                        PledgesContributionsGeoFieldsMapping.amount,
+                        _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                       ),
                     },
                 ],
@@ -212,29 +214,29 @@ export class PledgescontributionsController {
             } else {
               const nonPublicDonors = _.groupBy(
                 donorCountries[iso3],
-                PledgesContributionsGeoFieldsMapping.nonCountryDonors,
+                _.get(PledgesContributionsGeoFieldsMapping, datasource).nonCountryDonors,
               );
               Object.keys(nonPublicDonors).forEach(
                 (donor: string, index: number) => {
                   const donorData = nonPublicDonors[donor][0];
                   const lat = _.get(
                     donorData,
-                    PledgesContributionsGeoFieldsMapping.donorLat,
+                    _.get(PledgesContributionsGeoFieldsMapping, datasource).donorLat,
                     null,
                   );
                   const long = _.get(
                     donorData,
-                    PledgesContributionsGeoFieldsMapping.donorLong,
+                    _.get(PledgesContributionsGeoFieldsMapping, datasource).donorLong,
                     null,
                   );
                   if (lat && long) {
                     const pledges = _.filter(nonPublicDonors[donor], {
-                      [PledgesContributionsGeoFieldsMapping.indicator]:
-                        PledgesContributionsGeoFieldsMapping.pledge,
+                      [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
+                        _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge,
                     });
                     const contributions = _.filter(nonPublicDonors[donor], {
-                      [PledgesContributionsGeoFieldsMapping.indicator]:
-                        PledgesContributionsGeoFieldsMapping.contribution,
+                      [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
+                        _.get(PledgesContributionsGeoFieldsMapping, datasource).contribution,
                     });
                     let subType = '';
                     donorFilterOptions.forEach((option: FilterGroupOption) => {
@@ -251,7 +253,7 @@ export class PledgescontributionsController {
                       geoName: donor,
                       id: _.get(
                         donorData,
-                        PledgesContributionsGeoFieldsMapping.donorId,
+                        _.get(PledgesContributionsGeoFieldsMapping, datasource).donorId,
                       ),
                       latitude: parseFloat(
                         multiCoordinates ? multiCoordinates[0][0] : lat,
@@ -261,19 +263,19 @@ export class PledgescontributionsController {
                       ),
                       amounts: [
                         valueType ===
-                          PledgesContributionsGeoFieldsMapping.pledge
+                          _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                           ? {
                             label: 'Pledge',
                             value: _.sumBy(
                               pledges,
-                              PledgesContributionsGeoFieldsMapping.amount,
+                              _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                             ),
                           }
                           : {
                             label: 'Contribution',
                             value: _.sumBy(
                               contributions,
-                              PledgesContributionsGeoFieldsMapping.amount,
+                              _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                             ),
                           },
                       ],
@@ -409,6 +411,7 @@ export class PledgescontributionsController {
   @get('/pledges-contributions/time-cycle/drilldown')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
   timeCycleDrilldown(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const valueType =
       (_.get(this.req.query, 'levelParam', '') as string)
         .split('-')
@@ -417,17 +420,17 @@ export class PledgescontributionsController {
         : 'contribution';
     const filterString = getFilterString(
       this.req.query,
-      PledgesContributionsTimeCycleDrilldownFieldsMapping.aggregation,
+      datasource,
+      _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).aggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
     return axios
@@ -436,22 +439,22 @@ export class PledgescontributionsController {
         const rawData = _.filter(
           _.get(
             resp.data,
-            PledgesContributionsTimeCycleDrilldownFieldsMapping.dataPath,
+            _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).dataPath,
             [],
           ),
           {
-            [PledgesContributionsTimeCycleDrilldownFieldsMapping.indicator]:
-              PledgesContributionsTimeCycleDrilldownFieldsMapping[valueType],
+            [_.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).indicator]:
+              _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource)[valueType],
           },
         );
         const levelComponent = _.get(
           rawData,
-          `[0].${PledgesContributionsTimeCycleDrilldownFieldsMapping.year}`,
+          `[0].${_.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).year}`,
           '',
         );
         const value = _.sumBy(
           rawData,
-          PledgesContributionsTimeCycleDrilldownFieldsMapping.amount,
+          _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).amount,
         );
         const data: PledgesContributionsTreemapDataItem[] = [
           {
@@ -463,18 +466,18 @@ export class PledgescontributionsController {
               rawData.map((item: any) => ({
                 name: _.get(
                   item,
-                  PledgesContributionsTimeCycleDrilldownFieldsMapping.donor,
+                  _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).donor,
                   '',
                 ),
                 value: _.get(
                   item,
-                  PledgesContributionsTimeCycleDrilldownFieldsMapping.amount,
+                  _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).amount,
                   0,
                 ),
                 formattedValue: formatFinancialValue(
                   _.get(
                     item,
-                    PledgesContributionsTimeCycleDrilldownFieldsMapping.amount,
+                    _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).amount,
                     0,
                   ),
                 ),
@@ -485,19 +488,19 @@ export class PledgescontributionsController {
                     {
                       name: _.get(
                         item,
-                        PledgesContributionsTimeCycleDrilldownFieldsMapping.donor,
+                        _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).donor,
                         '',
                       ),
                       value: _.get(
                         item,
-                        PledgesContributionsTimeCycleDrilldownFieldsMapping.amount,
+                        _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).amount,
                         0,
                       ),
                     },
                   ],
                   value: _.get(
                     item,
-                    PledgesContributionsTimeCycleDrilldownFieldsMapping.amount,
+                    _.get(PledgesContributionsTimeCycleDrilldownFieldsMapping, datasource).amount,
                     0,
                   ),
                 },
@@ -527,22 +530,23 @@ export class PledgescontributionsController {
   @get('/pledges-contributions/treemap')
   @response(200, PLEDGES_AND_CONTRIBUTIONS_TIME_CYCLE_RESPONSE)
   treemap(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      PledgesContributionsGeoFieldsMapping.pledgescontributionsGeoMapAggregation,
+      datasource,
+      _.get(PledgesContributionsGeoFieldsMapping, datasource).pledgescontributionsGeoMapAggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
     const valueType = (
-      this.req.query.valueType ?? PledgesContributionsGeoFieldsMapping.pledge
+      this.req.query.valueType ?? _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
     ).toString();
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
     return axios
@@ -550,50 +554,50 @@ export class PledgescontributionsController {
       .then((resp: AxiosResponse) => {
         const rawData = _.get(
           resp.data,
-          PledgesContributionsGeoFieldsMapping.dataPath,
+          _.get(PledgesContributionsGeoFieldsMapping, datasource).dataPath,
           [],
         );
 
         const donorCountries = _.groupBy(
           rawData,
-          PledgesContributionsGeoFieldsMapping.countryDonors,
+          _.get(PledgesContributionsGeoFieldsMapping, datasource).countryDonors,
         );
         const publicSectorCountries: BudgetsTreemapDataItem[] = [];
         const nonCountrySectorDonors: BudgetsTreemapDataItem[] = [];
 
         Object.keys(donorCountries).forEach((iso3: string) => {
           if (iso3 !== 'undefined') {
-            const items = donorCountries[iso3];
+            const items: [any, ...any] = donorCountries[iso3];
             const pledges = _.filter(items, {
-              [PledgesContributionsGeoFieldsMapping.indicator]:
-                PledgesContributionsGeoFieldsMapping.pledge,
+              [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
+                _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge,
             });
             const contributions = _.filter(items, {
-              [PledgesContributionsGeoFieldsMapping.indicator]:
-                PledgesContributionsGeoFieldsMapping.contribution,
+              [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
+                _.get(PledgesContributionsGeoFieldsMapping, datasource).contribution,
             });
             publicSectorCountries.push({
               // code: items[0].donorId,
               name: items[0].donor.geographicArea.geographicAreaName,
               value:
-                valueType === PledgesContributionsGeoFieldsMapping.pledge
+                valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                   ? _.sumBy(
                     pledges,
-                    PledgesContributionsGeoFieldsMapping.amount,
+                    _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                   )
                   : _.sumBy(
                     contributions,
-                    PledgesContributionsGeoFieldsMapping.amount,
+                    _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                   ),
               formattedValue: formatFinancialValue(
-                valueType === PledgesContributionsGeoFieldsMapping.pledge
+                valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                   ? _.sumBy(
                     pledges,
-                    PledgesContributionsGeoFieldsMapping.amount,
+                    _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                   )
                   : _.sumBy(
                     contributions,
-                    PledgesContributionsGeoFieldsMapping.amount,
+                    _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                   ),
               ),
               color: '#DFE3E5',
@@ -603,70 +607,70 @@ export class PledgescontributionsController {
                   {
                     name: valueType,
                     value:
-                      valueType === PledgesContributionsGeoFieldsMapping.pledge
+                      valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                         ? _.sumBy(
                           pledges,
-                          PledgesContributionsGeoFieldsMapping.amount,
+                          _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                         )
                         : _.sumBy(
                           contributions,
-                          PledgesContributionsGeoFieldsMapping.amount,
+                          _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                         ),
                   },
                 ],
                 value:
-                  valueType === PledgesContributionsGeoFieldsMapping.pledge
+                  valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                     ? _.sumBy(
                       pledges,
-                      PledgesContributionsGeoFieldsMapping.amount,
+                      _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                     )
                     : _.sumBy(
                       contributions,
-                      PledgesContributionsGeoFieldsMapping.amount,
+                      _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                     ),
               },
             });
           } else {
             const nonPublicDonors = _.groupBy(
               donorCountries[iso3],
-              PledgesContributionsGeoFieldsMapping.nonCountryDonors,
+              _.get(PledgesContributionsGeoFieldsMapping, datasource).nonCountryDonors,
             );
             Object.keys(nonPublicDonors).forEach((donor: string) => {
               // const donorData = nonPublicDonors[donor][0];
 
               const pledges = _.filter(nonPublicDonors[donor], {
-                [PledgesContributionsGeoFieldsMapping.indicator]:
-                  PledgesContributionsGeoFieldsMapping.pledge,
+                [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
+                  _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge,
               });
               const contributions = _.filter(nonPublicDonors[donor], {
-                [PledgesContributionsGeoFieldsMapping.indicator]:
-                  PledgesContributionsGeoFieldsMapping.contribution,
+                [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
+                  _.get(PledgesContributionsGeoFieldsMapping, datasource).contribution,
               });
               nonCountrySectorDonors.push({
                 // code: _.get(
                 //   donorData,
-                //   PledgesContributionsGeoFieldsMapping.donorId,
+                //   _.get(PledgesContributionsGeoFieldsMapping, datasource).donorId,
                 // ),
                 name: donor,
                 value:
-                  valueType === PledgesContributionsGeoFieldsMapping.pledge
+                  valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                     ? _.sumBy(
                       pledges,
-                      PledgesContributionsGeoFieldsMapping.amount,
+                      _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                     )
                     : _.sumBy(
                       contributions,
-                      PledgesContributionsGeoFieldsMapping.amount,
+                      _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                     ),
                 formattedValue: formatFinancialValue(
-                  valueType === PledgesContributionsGeoFieldsMapping.pledge
+                  valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                     ? _.sumBy(
                       pledges,
-                      PledgesContributionsGeoFieldsMapping.amount,
+                      _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                     )
                     : _.sumBy(
                       contributions,
-                      PledgesContributionsGeoFieldsMapping.amount,
+                      _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                     ),
                 ),
                 color: '#DFE3E5',
@@ -677,26 +681,26 @@ export class PledgescontributionsController {
                       name: valueType,
                       value:
                         valueType ===
-                          PledgesContributionsGeoFieldsMapping.pledge
+                          _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                           ? _.sumBy(
                             pledges,
-                            PledgesContributionsGeoFieldsMapping.amount,
+                            _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                           )
                           : _.sumBy(
                             contributions,
-                            PledgesContributionsGeoFieldsMapping.amount,
+                            _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                           ),
                     },
                   ],
                   value:
-                    valueType === PledgesContributionsGeoFieldsMapping.pledge
+                    valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                       ? _.sumBy(
                         pledges,
-                        PledgesContributionsGeoFieldsMapping.amount,
+                        _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                       )
                       : _.sumBy(
                         contributions,
-                        PledgesContributionsGeoFieldsMapping.amount,
+                        _.get(PledgesContributionsGeoFieldsMapping, datasource).amount,
                       ),
                 },
               });

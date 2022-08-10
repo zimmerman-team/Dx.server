@@ -3,7 +3,7 @@ import filtering from '../../../config/filtering/index.json';
 import filteringPledgesContributions from '../../../config/filtering/pledgescontributions.json';
 import PledgesContributionsTimeCycleFieldsMapping from '../../../config/mapping/pledgescontributions/timeCycle.json';
 
-export function getFilterString(params: any, aggregationString?: string) {
+export function getFilterString(params: any, datasource: string, aggregationString?: string) {
   let str = '';
 
   const donors = _.filter(
@@ -11,15 +11,12 @@ export function getFilterString(params: any, aggregationString?: string) {
     (loc: string) => loc.length > 0,
   ).map((donor: string) => `'${donor}'`);
   if (donors.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringPledgesContributions.donors
-    }${filtering.in}(${donors.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPledgesContributions, datasource).donors
+      }${_.get(filtering, datasource).in}(${donors.join(_.get(filtering, datasource).multi_param_separator)})`;
   } else {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringPledgesContributions.donors
-    }${filtering.in}(${
-      PledgesContributionsTimeCycleFieldsMapping.defaultDonorFilter
-    })`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPledgesContributions, datasource).donors
+      }${_.get(filtering, datasource).in}(${_.get(PledgesContributionsTimeCycleFieldsMapping, datasource).defaultDonorFilter
+      })`;
   }
 
   const donorCategories = _.filter(
@@ -27,9 +24,8 @@ export function getFilterString(params: any, aggregationString?: string) {
     (loc: string) => loc.length > 0,
   ).map((donorCat: string) => `'${donorCat}'`);
   if (donorCategories.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringPledgesContributions.donorCategory
-    }${filtering.in}(${donorCategories.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPledgesContributions, datasource).donorCategory
+      }${_.get(filtering, datasource).in}(${donorCategories.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const periods = _.filter(
@@ -37,9 +33,8 @@ export function getFilterString(params: any, aggregationString?: string) {
     (period: string) => period.length > 0,
   ).map((period: string) => `'${period}'`);
   if (periods.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringPledgesContributions.period
-    }${filtering.in}(${periods.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPledgesContributions, datasource).period
+      }${_.get(filtering, datasource).in}(${periods.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   if (_.get(params, 'levelParam', '').length > 0) {

@@ -1,5 +1,7 @@
 {
-  "dataPath": "value",
-  "year": "reportingResultYear",
-  "aggregation": "$apply=groupby((reportingResultYear))&$orderby=reportingResultYear desc"
+  "TGFOData": {
+    "dataPath": "value",
+    "year": "reportingResultYear",
+    "aggregation": "$apply=groupby((reportingResultYear))&$orderby=reportingResultYear desc"
+  }
 }

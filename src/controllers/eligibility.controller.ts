@@ -95,32 +95,32 @@ export class EligibilityController {
   @get('/eligibility')
   @response(200, ELIGIBILITY_RESPONSE)
   eligibility(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const aggregateByField =
       this.req.query.aggregateBy ??
-      EligibilityFieldsMapping.aggregateByFields[0];
+      _.get(EligibilityFieldsMapping, datasource).aggregateByFields[0];
     const nonAggregateByField = (this.req.query.nonAggregateBy
       ? this.req.query.nonAggregateBy
       : this.req.query.aggregateBy ===
-        EligibilityFieldsMapping.aggregateByFields[0]
-        ? EligibilityFieldsMapping.aggregateByFields[1]
-        : EligibilityFieldsMapping.aggregateByFields[0]
+        _.get(EligibilityFieldsMapping, datasource).aggregateByFields[0]
+        ? _.get(EligibilityFieldsMapping, datasource).aggregateByFields[1]
+        : _.get(EligibilityFieldsMapping, datasource).aggregateByFields[0]
     ).toString();
-    const filterString = getFilterString(this.req.query);
+    const filterString = getFilterString(this.req.query, datasource);
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).eligibility}?${params}${filterString}&${EligibilityFieldsMapping.defaultSelect}`;
+    const url = `${_.get(urls, datasource).eligibility}?${params}${filterString}&${_.get(EligibilityFieldsMapping, datasource).defaultSelect}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const apiData = _.get(resp.data, EligibilityFieldsMapping.dataPath, []);
+        const apiData = _.get(resp.data, _.get(EligibilityFieldsMapping, datasource).dataPath, []);
         const aggregatedData = _.groupBy(apiData, aggregateByField);
         const data: EligibilityDotDataItem[] = [];
 
@@ -138,11 +138,11 @@ export class EligibilityController {
             ).map(item => ({
               name: _.get(item, nonAggregateByField, ''),
               status: _.get(
-                EligibilityFieldsMapping,
-                _.get(item, EligibilityFieldsMapping.status, '')
+                _.get(EligibilityFieldsMapping, datasource),
+                _.get(item, _.get(EligibilityFieldsMapping, datasource).status, '')
                   .toLowerCase()
                   .trim(),
-                _.get(item, EligibilityFieldsMapping.status, ''),
+                _.get(item, _.get(EligibilityFieldsMapping, datasource).status, ''),
               ),
             })),
           });
@@ -160,7 +160,7 @@ export class EligibilityController {
   @response(200, ELIGIBILITY_RESPONSE)
   eligibilityYears(): object {
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).eligibility}?${EligibilityYearsFieldsMapping.aggregation}`;
+    const url = `${_.get(urls, datasource).eligibility}?${_.get(EligibilityYearsFieldsMapping, datasource).aggregation}`;
 
     return axios
       .get(url)
@@ -168,10 +168,10 @@ export class EligibilityController {
         return {
           data: _.get(
             resp.data,
-            EligibilityYearsFieldsMapping.dataPath,
+            _.get(EligibilityYearsFieldsMapping, datasource).dataPath,
             [],
           ).map((item: any) =>
-            _.get(item, EligibilityYearsFieldsMapping.year, ''),
+            _.get(item, _.get(EligibilityYearsFieldsMapping, datasource).year, ''),
           ),
         };
       })
@@ -181,39 +181,39 @@ export class EligibilityController {
   @get('/eligibility/country')
   @response(200, ELIGIBILITY_COUNTRY_RESPONSE)
   eligibilityCountry(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (_.get(this.req.query, 'locations', '').length === 0) {
       return {
         count: 0,
         data: [],
       };
     }
-    const filterString = getFilterString(this.req.query);
+    const filterString = getFilterString(this.req.query, datasource);
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).eligibility}?${params}${filterString}&${ScatterplotFieldsMapping.defaultSelect}`;
+    const url = `${_.get(urls, datasource).eligibility}?${params}${filterString}&${_.get(ScatterplotFieldsMapping, datasource).defaultSelect}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const apiData = _.get(resp.data, ScatterplotFieldsMapping.dataPath, []);
+        const apiData = _.get(resp.data, _.get(ScatterplotFieldsMapping, datasource).dataPath, []);
         const aggregatedData = _.groupBy(
           apiData,
-          ScatterplotFieldsMapping.aggregateByField,
+          _.get(ScatterplotFieldsMapping, datasource).aggregateByField,
         );
         const aggregatedDataByYear = _.groupBy(
           apiData,
-          ScatterplotFieldsMapping.year,
+          _.get(ScatterplotFieldsMapping, datasource).year,
         );
         const years: number[] = _.sortBy(
           _.uniq(
-            Object.keys(_.groupBy(apiData, ScatterplotFieldsMapping.year)),
+            Object.keys(_.groupBy(apiData, _.get(ScatterplotFieldsMapping, datasource).year)),
           ).map((key: string) => parseInt(key, 10)),
         );
         years.push(years[years.length - 1] + 1);
@@ -241,42 +241,42 @@ export class EligibilityController {
             id: key,
             data: _.orderBy(
               aggregatedData[key],
-              ScatterplotFieldsMapping.year,
+              _.get(ScatterplotFieldsMapping, datasource).year,
               'asc',
             ).map(item => ({
               y: key,
-              x: _.get(item, ScatterplotFieldsMapping.year, ''),
+              x: _.get(item, _.get(ScatterplotFieldsMapping, datasource).year, ''),
               eligibility: _.get(
                 ScatterplotFieldsMapping,
-                _.get(item, ScatterplotFieldsMapping.status, '')
+                _.get(item, _.get(ScatterplotFieldsMapping, datasource).status, '')
                   .toLowerCase()
                   .trim(),
-                _.get(item, ScatterplotFieldsMapping.status, ''),
+                _.get(item, _.get(ScatterplotFieldsMapping, datasource).status, ''),
               ),
               incomeLevel:
-                _.get(item, ScatterplotFieldsMapping.incomeLevel, null) === null
+                _.get(item, _.get(ScatterplotFieldsMapping, datasource).incomeLevel, null) === null
                   ? 0
                   : _.findIndex(
-                    ScatterplotFieldsMapping.incomeLevels,
+                    _.get(ScatterplotFieldsMapping, datasource).incomeLevels,
                     (incomeLevel: string) =>
                       incomeLevel ===
                       _.get(
                         item,
-                        ScatterplotFieldsMapping.incomeLevel,
+                        _.get(ScatterplotFieldsMapping, datasource).incomeLevel,
                         'None',
                       ),
                   ),
               diseaseBurden:
-                _.get(item, ScatterplotFieldsMapping.diseaseBurden, null) ===
+                _.get(item, _.get(ScatterplotFieldsMapping, datasource).diseaseBurden, null) ===
                   null
                   ? 0
                   : _.findIndex(
-                    ScatterplotFieldsMapping.diseaseBurdens,
+                    _.get(ScatterplotFieldsMapping, datasource).diseaseBurdens,
                     (diseaseBurden: string) =>
                       diseaseBurden ===
                       _.get(
                         item,
-                        ScatterplotFieldsMapping.diseaseBurden,
+                        _.get(ScatterplotFieldsMapping, datasource).diseaseBurden,
                         'None',
                       ),
                   ),
@@ -302,17 +302,17 @@ export class EligibilityController {
               const incomeLevel: number =
                 _.get(
                   fItemWithData,
-                  ScatterplotFieldsMapping.incomeLevel,
+                  _.get(ScatterplotFieldsMapping, datasource).incomeLevel,
                   null,
                 ) === null
                   ? 0
                   : _.findIndex(
-                    ScatterplotFieldsMapping.incomeLevels,
+                    _.get(ScatterplotFieldsMapping, datasource).incomeLevels,
                     (il: string) =>
                       il ===
                       _.get(
                         fItemWithData,
-                        ScatterplotFieldsMapping.incomeLevel,
+                        _.get(ScatterplotFieldsMapping, datasource).incomeLevel,
                         'None',
                       ),
                   );
@@ -343,17 +343,17 @@ export class EligibilityController {
             const incomeLevel: number =
               _.get(
                 fItemWithData,
-                ScatterplotFieldsMapping.incomeLevel,
+                _.get(ScatterplotFieldsMapping, datasource).incomeLevel,
                 null,
               ) === null
                 ? 0
                 : _.findIndex(
-                  ScatterplotFieldsMapping.incomeLevels,
+                  _.get(ScatterplotFieldsMapping, datasource).incomeLevels,
                   (il: string) =>
                     il ===
                     _.get(
                       fItemWithData,
-                      ScatterplotFieldsMapping.incomeLevel,
+                      _.get(ScatterplotFieldsMapping, datasource).incomeLevel,
                       'None',
                     ),
                 );

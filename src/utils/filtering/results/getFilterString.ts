@@ -2,7 +2,7 @@ import _ from 'lodash';
 import filtering from '../../../config/filtering/index.json';
 import filteringResults from '../../../config/filtering/results.json';
 
-export function getFilterString(params: any, defaultFilter?: string) {
+export function getFilterString(params: any, datasource: string, defaultFilter?: string) {
   let str = defaultFilter ?? '';
 
   const locations = _.filter(
@@ -10,9 +10,8 @@ export function getFilterString(params: any, defaultFilter?: string) {
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringResults.country}${
-      filtering.in
-    }(${locations.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringResults, datasource).country}${_.get(filtering, datasource).in
+      }(${locations.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const components = _.filter(
@@ -20,9 +19,8 @@ export function getFilterString(params: any, defaultFilter?: string) {
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringResults.component}${
-      filtering.in
-    }(${components.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringResults, datasource).component}${_.get(filtering, datasource).in
+      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const periods = _.filter(
@@ -30,14 +28,13 @@ export function getFilterString(params: any, defaultFilter?: string) {
     (period: string) => period.length > 0,
   ).map((period: string) => period);
   if (periods.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringResults.period}${
-      filtering.in
-    }(${periods.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringResults, datasource).period}${_.get(filtering, datasource).in
+      }(${periods.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const search = _.get(params, 'q', '');
   if (search.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringResults.search.replace(
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringResults, datasource).search.replace(
       '<value>',
       `'${search}'`,
     )}`;
@@ -45,7 +42,7 @@ export function getFilterString(params: any, defaultFilter?: string) {
 
   if (str.length > 0) {
     if (!defaultFilter) {
-      str = `${filtering.filter_operator}${filtering.param_assign_operator}${str}&`;
+      str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
     }
   }
 
@@ -54,6 +51,7 @@ export function getFilterString(params: any, defaultFilter?: string) {
 
 export function getFilterStringForStats(
   params: any,
+  datasource: string,
   aggregationString?: string,
 ) {
   let str = '';
@@ -63,9 +61,8 @@ export function getFilterStringForStats(
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringResults.country}${
-      filtering.in
-    }(${locations.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringResults, datasource).country}${_.get(filtering, datasource).in
+      }(${locations.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const components = _.filter(
@@ -73,9 +70,8 @@ export function getFilterStringForStats(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringResults.component}${
-      filtering.in
-    }(${components.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringResults, datasource).component}${_.get(filtering, datasource).in
+      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const periods = _.filter(
@@ -83,9 +79,8 @@ export function getFilterStringForStats(
     (period: string) => period.length > 0,
   ).map((period: string) => period);
   if (periods.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringResults.period}${
-      filtering.in
-    }(${periods.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringResults, datasource).period}${_.get(filtering, datasource).in
+      }(${periods.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   if (str.length > 0) {

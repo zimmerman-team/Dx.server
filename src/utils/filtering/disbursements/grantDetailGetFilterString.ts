@@ -5,32 +5,31 @@ import filtering from '../../../config/filtering/index.json';
 
 export function grantDetailGetFilterString(
   params: any,
+  datasource: string,
   aggregationString?: string,
 ) {
   let str = '';
 
   const grantId = _.get(params, 'grantId', null);
   if (grantId) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringGrantDetailDisbursements.grantId
-    }${filtering.eq}${grantId}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrantDetailDisbursements, datasource).grantId
+      }${_.get(filtering, datasource).eq}${grantId}`;
   }
 
   const IPnumber = _.get(params, 'IPnumber', null);
   if (IPnumber) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringGrantDetailDisbursements.IPnumber
-    }${filtering.eq}${IPnumber}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrantDetailDisbursements, datasource).IPnumber
+      }${_.get(filtering, datasource).eq}${IPnumber}`;
   }
 
   if (str.length > 0) {
-    str = `${filtering.filter_operator}${filtering.param_assign_operator}${str}&`;
+    str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
     if (aggregationString) {
       str = aggregationString.replace(
         '<filterString>',
         `${str
           .replace(
-            `${filtering.filter_operator}${filtering.param_assign_operator}`,
+            `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}`,
             'filter(',
           )
           .replace('&', ')/')}`,
@@ -45,32 +44,31 @@ export function grantDetailGetFilterString(
 
 export function grantDetailTreemapGetFilterString(
   params: any,
+  datasource: string,
   aggregationString?: string,
 ) {
   let str = '';
 
   const grantId = _.get(params, 'grantId', null);
   if (grantId) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringGrantDetailTreemapDisbursements.grantId
-    }${filtering.eq}${grantId}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrantDetailTreemapDisbursements, datasource).grantId
+      }${_.get(filtering, datasource).eq}${grantId}`;
   }
 
   const IPnumber = _.get(params, 'IPnumber', null);
   if (IPnumber) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringGrantDetailTreemapDisbursements.IPnumber
-    }${filtering.eq}${IPnumber}`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrantDetailTreemapDisbursements, datasource).IPnumber
+      }${_.get(filtering, datasource).eq}${IPnumber}`;
   }
 
   if (str.length > 0) {
-    str = `${filtering.filter_operator}${filtering.param_assign_operator}${str}&`;
+    str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
     if (aggregationString) {
       str = aggregationString.replace(
         '<filterString>',
         `${str
           .replace(
-            `${filtering.filter_operator}${filtering.param_assign_operator}`,
+            `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}`,
             'filter(',
           )
           .replace('&', ')/')}`,

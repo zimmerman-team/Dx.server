@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings,
+  RestBindings
 } from '@loopback/rest';
 import axios from 'axios';
 import _ from 'lodash';
@@ -65,7 +65,7 @@ function getLocationSearchResultType(
 }
 
 export class GlobalSearchController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/global-search')
   @response(200, GLOBAL_SEARCH_RESPONSE)
@@ -78,8 +78,9 @@ export class GlobalSearchController {
       };
     }
     const keywords = keyword.split(' ');
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const calls = _.filter(
-      globalSearchMapping.categories,
+      _.get(globalSearchMapping, datasource).categories,
       (category: any) => category.url.length > 0,
     ).map((category: any) => {
       return axios.get(
@@ -90,6 +91,7 @@ export class GlobalSearchController {
               category.filterFields,
               category.filterTemplate,
               keywords,
+              datasource,
             ),
           )
           .replace('<keyword>', keyword),
@@ -100,44 +102,44 @@ export class GlobalSearchController {
       .then(
         axios.spread((...responses) => {
           const results: SearchResultsTabModel[] = [];
-          globalSearchMapping.categories.map((cat: any, index: number) => {
+          _.get(globalSearchMapping, datasource).categories.map((cat: any, index: number) => {
             const mapper = mapTransform(cat.mappings);
             const categoryResults =
               cat.url.length > 0
                 ? _.filter(
-                    mapper(responses[index].data) as never[],
-                    (item: any) => item.code && item.code !== null,
-                  ).map((item: any) => ({
-                    type:
-                      cat.type === '<type>'
-                        ? item.type
-                        : getLocationSearchResultType(
-                            cat.name,
-                            cat.type,
-                            item.altCode || item.code,
-                          ),
-                    label:
-                      cat.itemname.length > 0
-                        ? stringReplaceKeyValue(cat.itemname, item)
-                        : item.altName || item.name,
-                    value: item.altCode || item.code,
-                    link: cat.link.replace('<code>', item.altCode || item.code),
-                  }))
-                : _.filter(
-                    cat.options,
-                    (option: any) =>
-                      option.type.toLowerCase().indexOf(keyword.toLowerCase()) >
-                        -1 ||
-                      option.value
-                        .toLowerCase()
-                        .indexOf(keyword.toLowerCase()) > -1 ||
-                      _.find(
-                        option.terms,
-                        (term: string) =>
-                          term.toLowerCase().indexOf(keyword.toLowerCase()) >
-                          -1,
+                  mapper(responses[index].data) as never[],
+                  (item: any) => item.code && item.code !== null,
+                ).map((item: any) => ({
+                  type:
+                    cat.type === '<type>'
+                      ? item.type
+                      : getLocationSearchResultType(
+                        cat.name,
+                        cat.type,
+                        item.altCode || item.code,
                       ),
-                  );
+                  label:
+                    cat.itemname.length > 0
+                      ? stringReplaceKeyValue(cat.itemname, item)
+                      : item.altName || item.name,
+                  value: item.altCode || item.code,
+                  link: cat.link.replace('<code>', item.altCode || item.code),
+                }))
+                : _.filter(
+                  cat.options,
+                  (option: any) =>
+                    option.type.toLowerCase().indexOf(keyword.toLowerCase()) >
+                    -1 ||
+                    option.value
+                      .toLowerCase()
+                      .indexOf(keyword.toLowerCase()) > -1 ||
+                    _.find(
+                      option.terms,
+                      (term: string) =>
+                        term.toLowerCase().indexOf(keyword.toLowerCase()) >
+                        -1,
+                    ),
+                );
             results.push({
               name: cat.name,
               results: _.uniqBy(categoryResults, 'value'),

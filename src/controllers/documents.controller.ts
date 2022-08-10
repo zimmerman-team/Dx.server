@@ -59,10 +59,12 @@ export class DocumentsController {
   @get('/documents')
   @response(200, RESULTS_RESPONSE)
   documents(): object {
-    const mapper = mapTransform(docsMap);
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const mapper = mapTransform(_.get(docsMap, datasource));
     const filterString = getFilterString(
       this.req.query,
-      docsUtils.defaultFilter,
+      datasource,
+      _.get(docsUtils, datasource).defaultFilter,
     );
     // const params = querystring.stringify(
     //   {
@@ -75,8 +77,7 @@ export class DocumentsController {
     //     encodeURIComponent: (str: string) => str,
     //   },
     // );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).documents}?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
+    const url = `${_.get(urls, datasource).documents}?${_.get(docsUtils, datasource).defaultSelect}${_.get(docsUtils, datasource).defaultOrderBy}${filterString}`;
 
     return axios
       .get(url)
@@ -192,10 +193,10 @@ export class DocumentsController {
   @get('/grant-documents')
   @response(200, RESULTS_RESPONSE)
   grantDocuments(): object {
-    const mapper = mapTransform(docsMap);
-    const filterString = getFilterString(this.req.query);
     const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).documents}?${docsUtils.defaultSelect}${docsUtils.defaultOrderBy}${filterString}`;
+    const mapper = mapTransform(_.get(docsMap, datasource));
+    const filterString = getFilterString(this.req.query, datasource);
+    const url = `${_.get(urls, datasource).documents}?${_.get(docsUtils, datasource).defaultSelect}${_.get(docsUtils, datasource).defaultOrderBy}${filterString}`;
 
     return axios
       .get(url)

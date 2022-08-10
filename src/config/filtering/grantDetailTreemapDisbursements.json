@@ -1,4 +1,6 @@
 {
-  "grantId": "grantAgreement/grantAgreementNumber",
-  "IPnumber": "implementationPeriodNumber"
+  "TGFOData": {
+    "grantId": "grantAgreement/grantAgreementNumber",
+    "IPnumber": "implementationPeriodNumber"
+  }
 }

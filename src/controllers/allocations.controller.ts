@@ -52,41 +52,43 @@ export class AllocationsController {
   @get('/allocations')
   @response(200, ALLOCATIONS_RESPONSE)
   allocations(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      AllocationsFieldsMapping.allocationsAggregation,
+      datasource,
+      _.get(AllocationsFieldsMapping, datasource).allocationsAggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
+        const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
         const rawData = _.orderBy(
-          _.get(resp.data, AllocationsFieldsMapping.dataPath, []),
-          AllocationsFieldsMapping.amount,
+          _.get(resp.data, _.get(AllocationsFieldsMapping, datasource).dataPath, []),
+          _.get(AllocationsFieldsMapping, datasource).amount,
           'desc',
         );
         return {
           total: _.sumBy(rawData, 'amount'),
           values: rawData.map((item: any) =>
-            _.get(item, AllocationsFieldsMapping.amount),
+            _.get(item, _.get(AllocationsFieldsMapping, datasource).amount),
           ),
           keys: rawData.map((item: any) =>
-            _.get(item, AllocationsFieldsMapping.component),
+            _.get(item, _.get(AllocationsFieldsMapping, datasource).component),
           ),
           colors: rawData.map((item: any) =>
             _.get(
-              AllocationsFieldsMapping.componentColors,
-              _.get(item, AllocationsFieldsMapping.component),
+              _.get(AllocationsFieldsMapping, datasource).componentColors,
+              _.get(item, _.get(AllocationsFieldsMapping, datasource).component),
               '',
             ),
           ),
@@ -98,19 +100,20 @@ export class AllocationsController {
   @get('/allocations/periods')
   @response(200, ALLOCATIONS_RESPONSE)
   allocationsPeriods(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      AllocationsPeriodsFieldsMapping.aggregation,
+      datasource,
+      _.get(AllocationsPeriodsFieldsMapping, datasource).aggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
@@ -119,17 +122,17 @@ export class AllocationsController {
         return {
           data: _.get(
             resp.data,
-            AllocationsPeriodsFieldsMapping.dataPath,
+            _.get(AllocationsPeriodsFieldsMapping, datasource).dataPath,
             [],
           ).map(
             (item: any) =>
               `${_.get(
                 item,
-                AllocationsPeriodsFieldsMapping.periodStart,
+                _.get(AllocationsPeriodsFieldsMapping, datasource).periodStart,
                 '',
               )} - ${_.get(
                 item,
-                AllocationsPeriodsFieldsMapping.periodEnd,
+                _.get(AllocationsPeriodsFieldsMapping, datasource).periodEnd,
                 '',
               )}`,
           ),
@@ -141,19 +144,20 @@ export class AllocationsController {
   @get('/allocations/drilldown')
   @response(200, ALLOCATIONS_RESPONSE)
   allocationsDrilldown(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      AllocationsDrilldownFieldsMapping.aggregation,
+      datasource,
+      _.get(AllocationsDrilldownFieldsMapping, datasource).aggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
@@ -161,18 +165,18 @@ export class AllocationsController {
       .then((resp: AxiosResponse) => {
         const rawData = _.get(
           resp.data,
-          AllocationsDrilldownFieldsMapping.dataPath,
+          _.get(AllocationsDrilldownFieldsMapping, datasource).dataPath,
           [],
         );
         const data: AllocationsTreemapDataItem[] = [];
         const groupedByComponent = _.groupBy(
           rawData,
-          AllocationsDrilldownFieldsMapping.component,
+          _.get(AllocationsDrilldownFieldsMapping, datasource).component,
         );
         Object.keys(groupedByComponent).forEach((component: string) => {
           const value = _.sumBy(
             groupedByComponent[component],
-            AllocationsDrilldownFieldsMapping.amount,
+            _.get(AllocationsDrilldownFieldsMapping, datasource).amount,
           );
           data.push({
             name: component,
@@ -184,17 +188,17 @@ export class AllocationsController {
                 name:
                   _.get(
                     item,
-                    AllocationsDrilldownFieldsMapping.multicountry,
+                    _.get(AllocationsDrilldownFieldsMapping, datasource).multicountry,
                     null,
                   ) ??
                   _.get(
                     item,
-                    AllocationsDrilldownFieldsMapping.locationName,
+                    _.get(AllocationsDrilldownFieldsMapping, datasource).locationName,
                     '',
                   ),
-                value: _.get(item, AllocationsDrilldownFieldsMapping.amount, 0),
+                value: _.get(item, _.get(AllocationsDrilldownFieldsMapping, datasource).amount, 0),
                 formattedValue: formatFinancialValue(
-                  _.get(item, AllocationsDrilldownFieldsMapping.amount, 0),
+                  _.get(item, _.get(AllocationsDrilldownFieldsMapping, datasource).amount, 0),
                 ),
                 color: '#595C70',
                 tooltip: {
@@ -204,24 +208,24 @@ export class AllocationsController {
                       name:
                         _.get(
                           item,
-                          AllocationsDrilldownFieldsMapping.multicountry,
+                          _.get(AllocationsDrilldownFieldsMapping, datasource).multicountry,
                           null,
                         ) ??
                         _.get(
                           item,
-                          AllocationsDrilldownFieldsMapping.locationName,
+                          _.get(AllocationsDrilldownFieldsMapping, datasource).locationName,
                           '',
                         ),
                       value: _.get(
                         item,
-                        AllocationsDrilldownFieldsMapping.amount,
+                        _.get(AllocationsDrilldownFieldsMapping, datasource).amount,
                         0,
                       ),
                     },
                   ],
                   value: _.get(
                     item,
-                    AllocationsDrilldownFieldsMapping.amount,
+                    _.get(AllocationsDrilldownFieldsMapping, datasource).amount,
                     0,
                   ),
                 },
@@ -251,19 +255,20 @@ export class AllocationsController {
   @get('/allocations/geomap')
   @response(200, ALLOCATIONS_RESPONSE)
   geomap(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      AllocationsGeomapFieldsMapping.aggregation,
+      datasource,
+      _.get(AllocationsGeomapFieldsMapping, datasource).aggregation,
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
@@ -274,15 +279,15 @@ export class AllocationsController {
           const data: any = [];
           const groupedDataByLocation = _.groupBy(
             responses[0].data.value,
-            AllocationsGeomapFieldsMapping.locationCode,
+            _.get(AllocationsGeomapFieldsMapping, datasource).locationCode,
           );
           Object.keys(groupedDataByLocation).forEach((iso3: string) => {
             const dataItems = groupedDataByLocation[iso3];
             const locationComponents: any = [];
             dataItems.forEach((item: any) => {
               locationComponents.push({
-                name: _.get(item, AllocationsGeomapFieldsMapping.component, ''),
-                value: item[AllocationsGeomapFieldsMapping.amount],
+                name: _.get(item, _.get(AllocationsGeomapFieldsMapping, datasource).component, ''),
+                value: item[_.get(AllocationsGeomapFieldsMapping, datasource).amount],
               });
             });
             data.push({
@@ -407,20 +412,21 @@ export class AllocationsController {
   @get('/allocations/geomap/multicountries')
   @response(200, ALLOCATIONS_RESPONSE)
   geomapMulticountries(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
-      AllocationsGeomapFieldsMapping.aggregationMulticountry,
+      datasource,
+      _.get(AllocationsGeomapFieldsMapping, datasource).aggregationMulticountry,
       'multiCountryName ne null',
     );
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const url = `${_.get(urls, datasource).allocations}?${params}${filterString}`;
 
     return axios
@@ -429,18 +435,18 @@ export class AllocationsController {
         axios.spread((...responses) => {
           const rawData = _.get(
             responses[0].data,
-            AllocationsGeomapFieldsMapping.dataPath,
+            _.get(AllocationsGeomapFieldsMapping, datasource).dataPath,
             [],
           );
           const mcGeoData = _.get(
             responses[1].data,
-            AllocationsGeomapFieldsMapping.dataPath,
+            _.get(AllocationsGeomapFieldsMapping, datasource).dataPath,
             [],
           );
           const data: any = [];
           const groupedByMulticountry = _.groupBy(
             rawData,
-            AllocationsGeomapFieldsMapping.multicountry,
+            _.get(AllocationsGeomapFieldsMapping, datasource).multicountry,
           );
           Object.keys(groupedByMulticountry).forEach((mc: string) => {
             const fMCGeoItem = _.find(
@@ -448,7 +454,7 @@ export class AllocationsController {
               (mcGeoItem: any) =>
                 _.get(
                   mcGeoItem,
-                  AllocationsGeomapFieldsMapping.multicountry,
+                  _.get(AllocationsGeomapFieldsMapping, datasource).multicountry,
                   '',
                 ) === mc,
             );
@@ -458,13 +464,13 @@ export class AllocationsController {
               const coordinates: Position[] = [];
               const composition = _.get(
                 fMCGeoItem,
-                AllocationsGeomapFieldsMapping.multiCountryComposition,
+                _.get(AllocationsGeomapFieldsMapping, datasource).multiCountryComposition,
                 [],
               );
               composition.forEach((item: any) => {
                 const iso3 = _.get(
                   item,
-                  AllocationsGeomapFieldsMapping.multiCountryCompositionItem,
+                  _.get(AllocationsGeomapFieldsMapping, datasource).multiCountryCompositionItem,
                   '',
                 );
                 const fCountry = _.find(staticCountries, {iso3: iso3});
@@ -485,16 +491,16 @@ export class AllocationsController {
               components: groupedByMulticountry[mc].map((item: any) => ({
                 name: _.get(
                   item,
-                  AllocationsGeomapFieldsMapping.multicountryComponent,
+                  _.get(AllocationsGeomapFieldsMapping, datasource).multicountryComponent,
                   '',
                 ),
-                value: _.get(item, AllocationsGeomapFieldsMapping.amount, 0),
+                value: _.get(item, _.get(AllocationsGeomapFieldsMapping, datasource).amount, 0),
               })),
               latitude: latitude,
               longitude: longitude,
               value: _.sumBy(
                 groupedByMulticountry[mc],
-                AllocationsGeomapFieldsMapping.amount,
+                _.get(AllocationsGeomapFieldsMapping, datasource).amount,
               ),
             });
           });

@@ -4,6 +4,7 @@ import filteringMulticountries from '../../../../config/filtering/multicountries
 
 export function getGeoMultiCountriesFilterString(
   params: any,
+  datasource: string,
   aggregationString?: string,
   extraFilterString?: string,
 ) {
@@ -14,8 +15,8 @@ export function getGeoMultiCountriesFilterString(
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `${filteringMulticountries.country}${filtering.in}(${locations.join(
-      filtering.multi_param_separator,
+    str += `${_.get(filteringMulticountries, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
+      _.get(filtering, datasource).multi_param_separator,
     )})`;
   }
 
@@ -24,9 +25,8 @@ export function getGeoMultiCountriesFilterString(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringMulticountries.component
-    }${filtering.in}(${components.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringMulticountries, datasource).component
+      }${_.get(filtering, datasource).in}(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const statuses = _.filter(
@@ -34,9 +34,8 @@ export function getGeoMultiCountriesFilterString(
     (stat: string) => stat.length > 0,
   ).map((stat: string) => `'${stat}'`);
   if (statuses.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringMulticountries.status}${
-      filtering.in
-    }(${statuses.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringMulticountries, datasource).status}${_.get(filtering, datasource).in
+      }(${statuses.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partners = _.filter(
@@ -44,9 +43,8 @@ export function getGeoMultiCountriesFilterString(
     (partner: string) => partner.length > 0,
   ).map((partner: string) => `'${partner}'`);
   if (partners.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${filteringMulticountries.partner}${
-      filtering.in
-    }(${partners.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringMulticountries, datasource).partner}${_.get(filtering, datasource).in
+      }(${partners.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partnerSubTypes = _.filter(
@@ -54,9 +52,8 @@ export function getGeoMultiCountriesFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerSubTypes.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringMulticountries.partner_sub_type
-    }${filtering.in}(${partnerSubTypes.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringMulticountries, datasource).partner_sub_type
+      }${_.get(filtering, datasource).in}(${partnerSubTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const partnerTypes = _.filter(
@@ -64,19 +61,18 @@ export function getGeoMultiCountriesFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerTypes.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${
-      filteringMulticountries.partner_type
-    }${filtering.in}(${partnerTypes.join(filtering.multi_param_separator)})`;
+    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringMulticountries, datasource).partner_type
+      }${_.get(filtering, datasource).in}(${partnerTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   if (str.length > 0) {
-    str = `${filtering.filter_operator}${filtering.param_assign_operator}${str}&`;
+    str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
     if (aggregationString) {
       str = aggregationString.replace(
         '<filterString>',
         `${str
           .replace(
-            `${filtering.filter_operator}${filtering.param_assign_operator}`,
+            `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}`,
             'filter(',
           )
           .replace('&', ')/')}`,

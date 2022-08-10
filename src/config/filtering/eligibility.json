@@ -1,5 +1,7 @@
 {
-  "country": "geographicAreaCode_ISO3",
-  "component": "componentName",
-  "period": "eligibilityYear"
+  "TGFOData": {
+    "country": "geographicAreaCode_ISO3",
+    "component": "componentName",
+    "period": "eligibilityYear"
+  }
 }

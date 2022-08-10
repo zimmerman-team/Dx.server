@@ -45,6 +45,7 @@ export class PerformanceratingController {
   @get('/performance-rating')
   @response(200, PERFORMANCE_RATING_RESPONSE)
   performancerating(): object {
+    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
     if (!this.req.query.grantId && !this.req.query.IPnumber) {
       return {
         data: [],
@@ -54,24 +55,23 @@ export class PerformanceratingController {
     const params = querystring.stringify(
       {},
       '&',
-      filtering.param_assign_operator,
+      _.get(filtering, datasource).param_assign_operator,
       {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const datasource: string = this.req.body?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    const url = `${_.get(urls, datasource).performancerating}?${performanceratingMapping.defaultSelect}${performanceratingMapping.defaultOrderBy}${performanceratingMapping.defaultExpand}&$filter=performanceRating/performanceRatingCode ne null and grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber eq ${this.req.query.grantId} and grantAgreementImplementationPeriod/implementationPeriodNumber eq ${this.req.query.IPnumber}&${filtering.default_q_param}${params}`;
+    const url = `${_.get(urls, datasource).performancerating}?${_.get(performanceratingMapping, datasource).defaultSelect}${_.get(performanceratingMapping, datasource).defaultOrderBy}${_.get(performanceratingMapping, datasource).defaultExpand}&$filter=performanceRating/performanceRatingCode ne null and grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber eq ${this.req.query.grantId} and grantAgreementImplementationPeriod/implementationPeriodNumber eq ${this.req.query.IPnumber}&${_.get(filtering, datasource).default_q_param}${params}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        const rawData = _.get(resp.data, performanceratingMapping.dataPath, []);
+        const rawData = _.get(resp.data, _.get(performanceratingMapping, datasource).dataPath, []);
         const data: Record<string, unknown>[] = [];
 
         rawData.forEach((item: any) => {
           const dates = [
-            new Date(_.get(item, performanceratingMapping.startDate, null)),
-            new Date(_.get(item, performanceratingMapping.endDate, null)),
+            new Date(_.get(item, _.get(performanceratingMapping, datasource).startDate, null)),
+            new Date(_.get(item, _.get(performanceratingMapping, datasource).endDate, null)),
           ];
           data.push({
             year: `${dates[0].toLocaleString('default', {
@@ -81,8 +81,8 @@ export class PerformanceratingController {
               {month: 'short'},
             )} ${dates[1].getUTCFullYear()}`,
             rating: _.get(
-              performanceratingMapping.ratingValues,
-              _.get(item, performanceratingMapping.rating, 'N/A'),
+              _.get(performanceratingMapping, datasource).ratingValues,
+              _.get(item, _.get(performanceratingMapping, datasource).rating, 'N/A'),
               0,
             ),
           });

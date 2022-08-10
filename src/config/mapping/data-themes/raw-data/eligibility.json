@@ -1,4 +1,6 @@
 {
-  "dataPath": "value",
-  "select": "$select=geographicAreaName,geographicAreaCode_ISO3,componentName,diseaseBurdenName,isEligible,eligibilityYear,allocationCycleName,fundingRoundName,eligibilityPolicyReference"
+  "TGFOData": {
+    "dataPath": "value",
+    "select": "$select=geographicAreaName,geographicAreaCode_ISO3,componentName,diseaseBurdenName,isEligible,eligibilityYear,allocationCycleName,fundingRoundName,eligibilityPolicyReference"
+  }
 }
