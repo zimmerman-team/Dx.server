@@ -121,7 +121,7 @@
         "name": "Document(s)",
         "type": "<type>",
         "link": "<code>",
-        "url": "https://data-service.theglobalfund.org/v3.3/odata/VProgramDocuments?$select=programDocumentId,geographicAreaName,organizationName,processName,componentName,processYear,processWindow,fileURL,documentTypeDescription,fileLanguage&$filter=documentTypeDescription in ('Application','Country Profiles') AND (<filterStr>)&$orderby=processYear desc, processWindow desc",
+        "url": "https://data-service.theglobalfund.org/v3.3/odata/VProgramDocuments?$select=programDocumentId,geographicAreaName,organizationName,processName,componentName,processYear,processWindow,fileURL,documentTypeDescription,fileLanguage&$filter=documentTypeDescription in ('Application','Country Profiles') and (<filterStr>)&$orderby=processYear desc, processWindow desc",
         "itemname": "<geographicAreaName> <organizationName> - <processName> <componentName> - <processYear> <processWindow> - <fileLanguage>",
         "filterFields": [
           "GeographicAreaCode_ISO3",

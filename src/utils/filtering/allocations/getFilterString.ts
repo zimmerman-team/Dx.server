@@ -17,7 +17,7 @@ export function getFilterString(
   if (locations.length > 0) {
     str += `(${_.get(filteringAllocations, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
       _.get(filtering, datasource).multi_param_separator,
-    )}) OR ${_.get(filteringAllocations, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
+    )}) or ${_.get(filteringAllocations, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
       _.get(filtering, datasource).multi_param_separator,
     )}))`;
   }
@@ -27,7 +27,7 @@ export function getFilterString(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringAllocations, datasource).component}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringAllocations, datasource).component}${_.get(filtering, datasource).in
       }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
@@ -42,13 +42,13 @@ export function getFilterString(
     const endPeriods = periods.map((period: string) =>
       period.split('-')[1].trim(),
     );
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringAllocations, datasource).periodStart
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringAllocations, datasource).periodStart
       }${_.get(filtering, datasource).in}(${startPeriods.join(_.get(filtering, datasource).multi_param_separator)})`;
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringAllocations, datasource).periodEnd}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringAllocations, datasource).periodEnd}${_.get(filtering, datasource).in
       }(${endPeriods.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
-  str += `${str.length > 0 && _.get(params, 'levelParam', '').length > 0 ? ' AND ' : ''
+  str += `${str.length > 0 && _.get(params, 'levelParam', '').length > 0 ? ' and ' : ''
     }${_.get(params, 'levelParam', '')}`;
 
   if (str.length > 0) {

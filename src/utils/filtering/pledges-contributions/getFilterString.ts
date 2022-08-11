@@ -11,10 +11,10 @@ export function getFilterString(params: any, datasource: any, aggregationString?
     (loc: string) => loc.length > 0,
   ).map((donor: string) => `'${donor}'`);
   if (donors.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPledgesContributions, datasource).donors
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringPledgesContributions, datasource).donors
       }${_.get(filtering, datasource).in}(${donors.join(_.get(filtering, datasource).multi_param_separator)})`;
   } else {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPledgesContributions, datasource).donors
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringPledgesContributions, datasource).donors
       }${_.get(filtering, datasource).in}(${_.get(PledgesContributionsTimeCycleFieldsMapping, datasource).defaultDonorFilter
       })`;
   }
@@ -24,7 +24,7 @@ export function getFilterString(params: any, datasource: any, aggregationString?
     (loc: string) => loc.length > 0,
   ).map((donorCat: string) => `'${donorCat}'`);
   if (donorCategories.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPledgesContributions, datasource).donorCategory
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringPledgesContributions, datasource).donorCategory
       }${_.get(filtering, datasource).in}(${donorCategories.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
@@ -33,14 +33,14 @@ export function getFilterString(params: any, datasource: any, aggregationString?
     (period: string) => period.length > 0,
   ).map((period: string) => `'${period}'`);
   if (periods.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPledgesContributions, datasource).period
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringPledgesContributions, datasource).period
       }${_.get(filtering, datasource).in}(${periods.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   if (_.get(params, 'levelParam', '').length > 0) {
     const lParam = _.get(params, 'levelParam', '').split('-');
     if (lParam.length === 1 || lParam.length > 2) {
-      str += `${str.length > 0 ? ' AND ' : ''}${_.get(
+      str += `${str.length > 0 ? ' and ' : ''}${_.get(
         lParam,
         '[0]',
         '',
@@ -50,7 +50,7 @@ export function getFilterString(params: any, datasource: any, aggregationString?
 
   if (str.length > 0) {
     if (aggregationString) {
-      str = aggregationString.replace('<filterString>', ` AND ${str}`);
+      str = aggregationString.replace('<filterString>', ` and ${str}`);
     }
   } else if (aggregationString) {
     str = aggregationString.replace('<filterString>', '');

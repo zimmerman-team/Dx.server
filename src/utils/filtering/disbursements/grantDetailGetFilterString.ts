@@ -12,13 +12,13 @@ export function grantDetailGetFilterString(
 
   const grantId = _.get(params, 'grantId', null);
   if (grantId) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrantDetailDisbursements, datasource).grantId
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringGrantDetailDisbursements, datasource).grantId
       }${_.get(filtering, datasource).eq}${grantId}`;
   }
 
   const IPnumber = _.get(params, 'IPnumber', null);
   if (IPnumber) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrantDetailDisbursements, datasource).IPnumber
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringGrantDetailDisbursements, datasource).IPnumber
       }${_.get(filtering, datasource).eq}${IPnumber}`;
   }
 
@@ -51,13 +51,13 @@ export function grantDetailTreemapGetFilterString(
 
   const grantId = _.get(params, 'grantId', null);
   if (grantId) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrantDetailTreemapDisbursements, datasource).grantId
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringGrantDetailTreemapDisbursements, datasource).grantId
       }${_.get(filtering, datasource).eq}${grantId}`;
   }
 
   const IPnumber = _.get(params, 'IPnumber', null);
   if (IPnumber) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringGrantDetailTreemapDisbursements, datasource).IPnumber
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringGrantDetailTreemapDisbursements, datasource).IPnumber
       }${_.get(filtering, datasource).eq}${IPnumber}`;
   }
 

@@ -12,7 +12,7 @@ export function getFilterString(params: any, datasource: any) {
   if (locations.length > 0) {
     str += `(${_.get(filteringPF, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
       _.get(filtering, datasource).multi_param_separator,
-    )}) OR ${_.get(filteringPF, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
+    )}) or ${_.get(filteringPF, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
       _.get(filtering, datasource).multi_param_separator,
     )}))`;
   }
@@ -22,7 +22,7 @@ export function getFilterString(params: any, datasource: any) {
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPF, datasource).component}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringPF, datasource).component}${_.get(filtering, datasource).in
       }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
@@ -31,7 +31,7 @@ export function getFilterString(params: any, datasource: any) {
     (stat: string) => stat.length > 0,
   ).map((stat: string) => `'${stat}'`);
   if (statuses.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPF, datasource).status}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringPF, datasource).status}${_.get(filtering, datasource).in
       }(${statuses.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
@@ -40,7 +40,7 @@ export function getFilterString(params: any, datasource: any) {
     (partner: string) => partner.length > 0,
   ).map((partner: string) => `'${partner}'`);
   if (partners.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringPF, datasource).partner}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringPF, datasource).partner}${_.get(filtering, datasource).in
       }(${partners.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 

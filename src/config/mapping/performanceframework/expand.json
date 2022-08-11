@@ -3,7 +3,7 @@
     "dataPath": "value",
     "defaultSelect": "$select=reportingPeriodStartDate,reportingPeriodEndDate,indicatorName,valueAchievementRate,disaggregationValue,disaggregationGroup,valueType,isIndicatorReversed,indicatorAggregationTypeName,geographicCoverage,valueNumerator,valueDenominator,valuePercentage,valueYear,valueText",
     "defaultExpand": "&$expand=ActivityAreaIntervention",
-    "defaultFilter": "&$filter=(indicatorSet eq <indicatorSet> AND activityAreaModule/activityAreaName eq <moduleName> AND grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber eq <grantId> AND grantAgreementImplementationPeriod/implementationPeriodNumber eq <IPnumber>)",
+    "defaultFilter": "&$filter=(indicatorSet eq <indicatorSet> and activityAreaModule/activityAreaName eq <moduleName> and grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber eq <grantId> and grantAgreementImplementationPeriod/implementationPeriodNumber eq <IPnumber>)",
     "valueAchievementRateColors": [
       "#fa7355",
       "#fa9a55",

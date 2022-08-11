@@ -7,8 +7,8 @@
     "fields": "$select",
     "orderby": "$orderby",
     "filter_operator": "$filter",
-    "and_operator": "AND",
-    "or_operator": "OR",
+    "and_operator": "and",
+    "or_operator": "or",
     "eq": " eq ",
     "in": " in ",
     "multi_param_separator": ","

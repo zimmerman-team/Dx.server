@@ -16,7 +16,7 @@ export function getDrilldownFilterString(
   if (locations.length > 0) {
     str += `(${_.get(filteringBudgets, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
       _.get(filtering, datasource).multi_param_separator,
-    )}) OR ${_.get(filteringBudgets, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
+    )}) or ${_.get(filteringBudgets, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
       _.get(filtering, datasource).multi_param_separator,
     )}))`;
   }
@@ -26,7 +26,7 @@ export function getDrilldownFilterString(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).component}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).component}${_.get(filtering, datasource).in
       }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
@@ -35,7 +35,7 @@ export function getDrilldownFilterString(
     (stat: string) => stat.length > 0,
   ).map((stat: string) => `'${stat}'`);
   if (statuses.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).status}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).status}${_.get(filtering, datasource).in
       }(${statuses.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
@@ -44,7 +44,7 @@ export function getDrilldownFilterString(
     (partner: string) => partner.length > 0,
   ).map((partner: string) => `'${partner}'`);
   if (partners.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).partner}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).partner}${_.get(filtering, datasource).in
       }(${partners.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
@@ -53,29 +53,29 @@ export function getDrilldownFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerTypes.length > 0) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).partner_type}${_.get(filtering, datasource).in
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).partner_type}${_.get(filtering, datasource).in
       }(${partnerTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
   }
 
   const grantId = _.get(params, 'grantId', null);
   if (grantId) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).grantId}${_.get(filtering, datasource).eq
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).grantId}${_.get(filtering, datasource).eq
       }${grantId}`;
   }
 
   const IPnumber = _.get(params, 'IPnumber', null);
   if (IPnumber) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).IPnumber}${_.get(filtering, datasource).eq
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).IPnumber}${_.get(filtering, datasource).eq
       }${IPnumber}`;
   }
 
   const activityAreaName = _.get(params, 'activityAreaName', null);
   if (activityAreaName) {
-    str += `${str.length > 0 ? ' AND ' : ''}${_.get(filteringBudgets, datasource).activityAreaName
+    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).activityAreaName
       }${_.get(filtering, datasource).eq}'${activityAreaName}'`;
   }
 
-  str += `${str.length > 0 ? ' AND ' : ''}${_.get(params, 'levelParam', '')}`;
+  str += `${str.length > 0 ? ' and ' : ''}${_.get(params, 'levelParam', '')}`;
 
   if (str.length > 0) {
     str = `${_.get(filtering, datasource).filter_operator}${_.get(filtering, datasource).param_assign_operator}${str}&`;
