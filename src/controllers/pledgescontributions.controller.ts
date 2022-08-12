@@ -68,7 +68,6 @@ export class PledgescontributionsController {
       },
     );
     const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
-
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
@@ -191,8 +190,8 @@ export class PledgescontributionsController {
               });
               publicSectorCountries.push({
                 code: iso3,
-                geoName: items[0][_.get(PledgesContributionsGeoFieldsMapping, datasource).countryDonors],
-                id: items[0][_.get(PledgesContributionsGeoFieldsMapping, datasource).donorId],
+                geoName: items[0].donor.geographicArea.geographicAreaName,
+                id: items[0].donorId,
                 amounts: [
                   valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                     ? {
@@ -549,6 +548,8 @@ export class PledgescontributionsController {
     ).toString();
     const url = `${_.get(urls, datasource).pledgescontributions}?${params}${filterString}`;
 
+    console.log("Accessing pledges and contributions from:\n", url)
+
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
@@ -710,7 +711,6 @@ export class PledgescontributionsController {
         });
 
         const data = [...publicSectorCountries, ...nonCountrySectorDonors];
-
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
