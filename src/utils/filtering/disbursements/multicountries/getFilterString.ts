@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import filtering from '../../../../config/filtering/index.json';
 import filteringMulticountries from '../../../../config/filtering/multicountries.json';
+import {dataExplorerInQuery} from '../../../../utils/dataExplorerInQuery';
 
 export function getGeoMultiCountriesFilterString(
   params: any,
@@ -15,9 +16,7 @@ export function getGeoMultiCountriesFilterString(
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `${_.get(filteringMulticountries, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
-      _.get(filtering, datasource).multi_param_separator,
-    )})`;
+    str += `${dataExplorerInQuery(datasource, _.get(filteringMulticountries, datasource).country, locations, true)}`;
   }
 
   const components = _.filter(
@@ -25,8 +24,7 @@ export function getGeoMultiCountriesFilterString(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringMulticountries, datasource).component
-      }${_.get(filtering, datasource).in}(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringMulticountries, datasource).component, components, true)}`;
   }
 
   const statuses = _.filter(
@@ -34,8 +32,7 @@ export function getGeoMultiCountriesFilterString(
     (stat: string) => stat.length > 0,
   ).map((stat: string) => `'${stat}'`);
   if (statuses.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringMulticountries, datasource).status}${_.get(filtering, datasource).in
-      }(${statuses.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringMulticountries, datasource).status, statuses, true)}`;
   }
 
   const partners = _.filter(
@@ -43,8 +40,7 @@ export function getGeoMultiCountriesFilterString(
     (partner: string) => partner.length > 0,
   ).map((partner: string) => `'${partner}'`);
   if (partners.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringMulticountries, datasource).partner}${_.get(filtering, datasource).in
-      }(${partners.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringMulticountries, datasource).partner, partners, true)}`;
   }
 
   const partnerSubTypes = _.filter(
@@ -52,8 +48,7 @@ export function getGeoMultiCountriesFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerSubTypes.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringMulticountries, datasource).partner_sub_type
-      }${_.get(filtering, datasource).in}(${partnerSubTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringMulticountries, datasource).partner_sub_type, partnerSubTypes, true)}`;
   }
 
   const partnerTypes = _.filter(
@@ -61,8 +56,7 @@ export function getGeoMultiCountriesFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerTypes.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringMulticountries, datasource).partner_type
-      }${_.get(filtering, datasource).in}(${partnerTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringMulticountries, datasource).partner_type, partnerTypes, true)}`;
   }
 
   if (str.length > 0) {

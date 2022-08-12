@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import filtering from '../../../config/filtering/index.json';
 import filteringResults from '../../../config/filtering/results.json';
+import {dataExplorerInQuery} from '../../../utils/dataExplorerInQuery';
 
 export function getFilterString(params: any, datasource: any, defaultFilter?: string) {
   let str = defaultFilter ?? '';
@@ -10,8 +11,7 @@ export function getFilterString(params: any, datasource: any, defaultFilter?: st
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringResults, datasource).country}${_.get(filtering, datasource).in
-      }(${locations.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringResults, datasource).country, locations, true)}`;
   }
 
   const components = _.filter(
@@ -19,8 +19,7 @@ export function getFilterString(params: any, datasource: any, defaultFilter?: st
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringResults, datasource).component}${_.get(filtering, datasource).in
-      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringResults, datasource).component, components, true)}`;
   }
 
   const periods = _.filter(
@@ -28,8 +27,7 @@ export function getFilterString(params: any, datasource: any, defaultFilter?: st
     (period: string) => period.length > 0,
   ).map((period: string) => period);
   if (periods.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringResults, datasource).period}${_.get(filtering, datasource).in
-      }(${periods.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringResults, datasource).period, periods, true)}`;
   }
 
   const search = _.get(params, 'q', '');
@@ -61,8 +59,7 @@ export function getFilterStringForStats(
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringResults, datasource).country}${_.get(filtering, datasource).in
-      }(${locations.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringResults, datasource).country, locations, true)}`;
   }
 
   const components = _.filter(
@@ -70,8 +67,7 @@ export function getFilterStringForStats(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringResults, datasource).component}${_.get(filtering, datasource).in
-      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringResults, datasource).component, components, true)}`;
   }
 
   const periods = _.filter(
@@ -79,8 +75,7 @@ export function getFilterStringForStats(
     (period: string) => period.length > 0,
   ).map((period: string) => period);
   if (periods.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringResults, datasource).period}${_.get(filtering, datasource).in
-      }(${periods.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringResults, datasource).period, periods, true)}`;
   }
 
   if (str.length > 0) {

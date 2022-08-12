@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import filteringAllocations from '../../../config/filtering/allocations.json';
 import filtering from '../../../config/filtering/index.json';
+import {dataExplorerInQuery} from '../../../utils/dataExplorerInQuery';
 
 export function getFilterString(
   params: any,
@@ -15,11 +16,8 @@ export function getFilterString(
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `(${_.get(filteringAllocations, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
-      _.get(filtering, datasource).multi_param_separator,
-    )}) or ${_.get(filteringAllocations, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
-      _.get(filtering, datasource).multi_param_separator,
-    )}))`;
+    str += `(${dataExplorerInQuery(datasource, _.get(filteringAllocations, datasource).country, locations, true)
+      } or ${dataExplorerInQuery(datasource, _.get(filteringAllocations, datasource).multicountry, locations, true)})`;
   }
 
   const components = _.filter(
@@ -27,8 +25,7 @@ export function getFilterString(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringAllocations, datasource).component}${_.get(filtering, datasource).in
-      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringAllocations, datasource).component, components, true)}`;
   }
 
   const periods = _.filter(
@@ -42,10 +39,8 @@ export function getFilterString(
     const endPeriods = periods.map((period: string) =>
       period.split('-')[1].trim(),
     );
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringAllocations, datasource).periodStart
-      }${_.get(filtering, datasource).in}(${startPeriods.join(_.get(filtering, datasource).multi_param_separator)})`;
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringAllocations, datasource).periodEnd}${_.get(filtering, datasource).in
-      }(${endPeriods.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringAllocations, datasource).periodStart, startPeriods, true)}`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringAllocations, datasource).periodEnd, endPeriods, true)}`;
   }
 
   str += `${str.length > 0 && _.get(params, 'levelParam', '').length > 0 ? ' and ' : ''

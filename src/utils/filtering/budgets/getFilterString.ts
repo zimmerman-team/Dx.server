@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import filteringBudgets from '../../../config/filtering/budgets.json';
 import filtering from '../../../config/filtering/index.json';
+import {dataExplorerInQuery} from '../../../utils/dataExplorerInQuery';
 
 export function getFilterString(
   params: any,
@@ -15,11 +16,8 @@ export function getFilterString(
     (loc: string) => loc.length > 0,
   ).map((loc: string) => `'${loc}'`);
   if (locations.length > 0) {
-    str += `(${_.get(filteringBudgets, datasource).country}${_.get(filtering, datasource).in}(${locations.join(
-      _.get(filtering, datasource).multi_param_separator,
-    )}) or ${_.get(filteringBudgets, datasource).multicountry}${_.get(filtering, datasource).in}(${locations.join(
-      _.get(filtering, datasource).multi_param_separator,
-    )}))`;
+    str += `(${dataExplorerInQuery(datasource, _.get(filteringBudgets, datasource).country, locations, true)
+      } or ${dataExplorerInQuery(datasource, _.get(filteringBudgets, datasource).multicountry, locations, true)})`;
   }
 
   const components = _.filter(
@@ -27,8 +25,7 @@ export function getFilterString(
     (comp: string) => comp.length > 0,
   ).map((comp: string) => `'${comp}'`);
   if (components.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).component}${_.get(filtering, datasource).in
-      }(${components.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringBudgets, datasource).component, components, true)}`;
   }
 
   const statuses = _.filter(
@@ -36,8 +33,7 @@ export function getFilterString(
     (stat: string) => stat.length > 0,
   ).map((stat: string) => `'${stat}'`);
   if (statuses.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).status}${_.get(filtering, datasource).in
-      }(${statuses.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringBudgets, datasource).status, statuses, true)}`;
   }
 
   const partners = _.filter(
@@ -45,8 +41,7 @@ export function getFilterString(
     (partner: string) => partner.length > 0,
   ).map((partner: string) => `'${partner}'`);
   if (partners.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).partner}${_.get(filtering, datasource).in
-      }(${partners.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringBudgets, datasource).partner, partners, true)}`;
   }
 
   const partnerSubTypes = _.filter(
@@ -54,8 +49,7 @@ export function getFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerSubTypes.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).partner_sub_type
-      }${_.get(filtering, datasource).in}(${partnerSubTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringBudgets, datasource).partner_sub_type, partnerSubTypes, true)}`;
   }
 
   const partnerTypes = _.filter(
@@ -63,8 +57,7 @@ export function getFilterString(
     (type: string) => type.length > 0,
   ).map((type: string) => `'${type}'`);
   if (partnerTypes.length > 0) {
-    str += `${str.length > 0 ? ' and ' : ''}${_.get(filteringBudgets, datasource).partner_type}${_.get(filtering, datasource).in
-      }(${partnerTypes.join(_.get(filtering, datasource).multi_param_separator)})`;
+    str += `${str.length > 0 ? ' and ' : ''}${dataExplorerInQuery(datasource, _.get(filteringBudgets, datasource).partner_type, partnerTypes, true)}`;
   }
 
   const grantId = _.get(params, 'grantId', null);
