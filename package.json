@@ -40,7 +40,7 @@
     "ignore": [
       "dist/*"
     ],
-    "ext": "ts",
+    "ext": "ts,json",
     "exec": "npm start"
   },
   "repository": {
