@@ -4,9 +4,12 @@ import filtering from '../config/filtering/index.json';
 // Due to limited support of odata 4.0.1 'in' query filter,
 // we can convert the in statement to equivalent eq statement.
 function inToEq(field: any, dataList: any) {
-  let str = '(';
+  if (dataList.length === 0) return '';
   // for each item in the dataList, add (field eq item) to the string
-  dataList.forEach((item: any, index: number) => {
+  const datalist = typeof dataList === 'string' ? dataList.split(',') : dataList;
+  if (datalist.length === 0) return '';
+  let str = '(';
+  datalist.forEach((item: any, index: number) => {
     if (index === 0) str += `${field} eq ${item}`;
     else str += ` or ${field} eq ${item}`;
   })
