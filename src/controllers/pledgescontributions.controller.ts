@@ -191,8 +191,8 @@ export class PledgescontributionsController {
               });
               publicSectorCountries.push({
                 code: iso3,
-                geoName: items[0].donor.geographicArea.geographicAreaName,
-                id: items[0].donorId,
+                geoName: items[0][_.get(PledgesContributionsGeoFieldsMapping, datasource).countryDonors],
+                id: items[0][_.get(PledgesContributionsGeoFieldsMapping, datasource).donorId],
                 amounts: [
                   valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                     ? {
@@ -576,9 +576,10 @@ export class PledgescontributionsController {
               [_.get(PledgesContributionsGeoFieldsMapping, datasource).indicator]:
                 _.get(PledgesContributionsGeoFieldsMapping, datasource).contribution,
             });
+
             publicSectorCountries.push({
               // code: items[0].donorId,
-              name: items[0].donor.geographicArea.geographicAreaName,
+              name: items[0][_.get(PledgesContributionsGeoFieldsMapping, datasource).countryDonors],
               value:
                 valueType === _.get(PledgesContributionsGeoFieldsMapping, datasource).pledge
                   ? _.sumBy(
@@ -602,7 +603,7 @@ export class PledgescontributionsController {
               ),
               color: '#DFE3E5',
               tooltip: {
-                header: items[0].donor.geographicArea.geographicAreaName,
+                header: items[0][_.get(PledgesContributionsGeoFieldsMapping, datasource).countryDonors],
                 componentsStats: [
                   {
                     name: valueType,
