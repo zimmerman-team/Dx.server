@@ -8,6 +8,7 @@ import {
 } from '@loopback/rest';
 import _ from 'lodash';
 import datasets from '../config/mapping/datasets.json';
+import datasources from '../config/mapping/datasources.json';
 
 const DATASETS_RESPONSE: ResponseObject = {
   description: 'Datasets Response',
@@ -46,6 +47,40 @@ export class DatasetsController {
     });
     return {
       data: mappedDatasetsList,
+    };
+  }
+}
+
+const DATASOURCES_RESPONSE: ResponseObject = {
+  description: 'Datasources Response',
+  content: {
+    'application/json': {
+      schema: {
+        type: 'object',
+        title: 'DatasourcesResponse',
+        properties: {
+          data: {
+            type: 'array',
+            items: {
+              type: 'string',
+            }
+          },
+        },
+      },
+    },
+  },
+};
+/**
+ * A simple controller return the available datasources
+ */
+export class DatasourcesController {
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
+
+  @get('/available-datasources')
+  @response(200, DATASOURCES_RESPONSE)
+  mappeddatasets(): object {
+    return {
+      data: datasources,
     };
   }
 }
