@@ -17,5 +17,81 @@
         "status": "grantAgreementImplementationPeriod.implementationPeriodStatusType.programStatusTypeName"
       }
     ]
+  },
+  "TGFPledgesContributions": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "budgetPeriodStartDate": "",
+        "budgetPeriodEndDate": "",
+        "budgetAmount": "",
+        "level1": "",
+        "level2": "",
+        "costCategory": "",
+        "activityArea": "",
+        "component": "",
+        "country": "",
+        "multiCountry": "",
+        "status": ""
+      }
+    ]
+  },
+  "IATIAllBudgets": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "budgetPeriodStartDate": "",
+        "budgetPeriodEndDate": "",
+        "budgetAmount": "",
+        "level1": "",
+        "level2": "",
+        "costCategory": "",
+        "activityArea": "",
+        "component": "",
+        "country": "",
+        "multiCountry": "",
+        "status": ""
+      }
+    ]
+  },
+  "IATICovidActivities": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "budgetPeriodStartDate": "",
+        "budgetPeriodEndDate": "",
+        "budgetAmount": "",
+        "level1": "",
+        "level2": "",
+        "costCategory": "",
+        "activityArea": "",
+        "component": "",
+        "country": "",
+        "multiCountry": "",
+        "status": ""
+      }
+    ]
+  },
+  "HXLPalestine": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "budgetPeriodStartDate": "",
+        "budgetPeriodEndDate": "",
+        "budgetAmount": "",
+        "level1": "",
+        "level2": "",
+        "costCategory": "",
+        "activityArea": "",
+        "component": "",
+        "country": "",
+        "multiCountry": "",
+        "status": ""
+      }
+    ]
   }
 }

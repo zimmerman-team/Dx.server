@@ -3,5 +3,25 @@
     "country": "geographicAreaCode_ISO3",
     "component": "componentName",
     "period": "eligibilityYear"
+  },
+  "TGFPledgesContributions": {
+    "country": "",
+    "component": "",
+    "period": ""
+  },
+  "IATIAllBudgets": {
+    "country": "",
+    "component": "",
+    "period": ""
+  },
+  "IATICovidActivities": {
+    "country": "",
+    "component": "",
+    "period": ""
+  },
+  "HXLPalestine": {
+    "country": "",
+    "component": "",
+    "period": ""
   }
 }

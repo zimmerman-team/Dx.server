@@ -2,5 +2,21 @@
   "TGFOData": {
     "dataPath": "value",
     "select": "$select=geographicAreaName,geographicAreaCode_ISO3,componentName,diseaseBurdenName,isEligible,eligibilityYear,allocationCycleName,fundingRoundName,eligibilityPolicyReference"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "select": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "select": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "select": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "select": ""
   }
 }

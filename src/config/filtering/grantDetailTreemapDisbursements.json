@@ -2,5 +2,21 @@
   "TGFOData": {
     "grantId": "grantAgreement/grantAgreementNumber",
     "IPnumber": "implementationPeriodNumber"
+  },
+  "TGFPledgesContributions": {
+    "grantId": "",
+    "IPnumber": ""
+  },
+  "IATIAllBudgets": {
+    "grantId": "",
+    "IPnumber": ""
+  },
+  "IATICovidActivities": {
+    "grantId": "",
+    "IPnumber": ""
+  },
+  "HXLPalestine": {
+    "grantId": "",
+    "IPnumber": ""
   }
 }

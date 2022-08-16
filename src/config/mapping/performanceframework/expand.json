@@ -14,5 +14,69 @@
       "#60ff46",
       "#11ad6b"
     ]
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "defaultSelect": "",
+    "defaultExpand": "",
+    "defaultFilter": "",
+    "valueAchievementRateColors": [
+      "#fa7355",
+      "#fa9a55",
+      "#ffaa46",
+      "#ffd646",
+      "#daff46",
+      "#97ff46",
+      "#60ff46",
+      "#11ad6b"
+    ]
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "defaultSelect": "",
+    "defaultExpand": "",
+    "defaultFilter": "",
+    "valueAchievementRateColors": [
+      "#fa7355",
+      "#fa9a55",
+      "#ffaa46",
+      "#ffd646",
+      "#daff46",
+      "#97ff46",
+      "#60ff46",
+      "#11ad6b"
+    ]
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "defaultSelect": "",
+    "defaultExpand": "",
+    "defaultFilter": "",
+    "valueAchievementRateColors": [
+      "#fa7355",
+      "#fa9a55",
+      "#ffaa46",
+      "#ffd646",
+      "#daff46",
+      "#97ff46",
+      "#60ff46",
+      "#11ad6b"
+    ]
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "defaultSelect": "",
+    "defaultExpand": "",
+    "defaultFilter": "",
+    "valueAchievementRateColors": [
+      "#fa7355",
+      "#fa9a55",
+      "#ffaa46",
+      "#ffd646",
+      "#daff46",
+      "#97ff46",
+      "#60ff46",
+      "#11ad6b"
+    ]
   }
 }

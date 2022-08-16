@@ -10,5 +10,53 @@
     "no": "Not Eligible",
     "transition funding": "Transition Funding",
     "defaultSelect": "$select=componentName,geographicAreaName,isEligible,incomeLevelClassificationName,diseaseBurdenName"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "aggregateByFields": [
+      "componentName",
+      "geographicAreaName"
+    ],
+    "status": "",
+    "yes": "",
+    "no": "",
+    "transition funding": "",
+    "defaultSelect": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "aggregateByFields": [
+      "componentName",
+      "geographicAreaName"
+    ],
+    "status": "",
+    "yes": "",
+    "no": "",
+    "transition funding": "",
+    "defaultSelect": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "aggregateByFields": [
+      "componentName",
+      "geographicAreaName"
+    ],
+    "status": "",
+    "yes": "",
+    "no": "",
+    "transition funding": "",
+    "defaultSelect": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "aggregateByFields": [
+      "componentName",
+      "geographicAreaName"
+    ],
+    "status": "",
+    "yes": "",
+    "no": "",
+    "transition funding": "",
+    "defaultSelect": ""
   }
 }

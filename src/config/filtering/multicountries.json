@@ -6,5 +6,37 @@
     "partner": "PrincipalRecipientId",
     "partner_sub_type": "PrincipalRecipientId",
     "partner_type": "PrincipalRecipientId"
+  },
+  "TGFPledgesContributions": {
+    "country": "",
+    "component": "",
+    "status": "",
+    "partner": "",
+    "partner_sub_type": "",
+    "partner_type": ""
+  },
+  "IATIAllBudgets": {
+    "country": "",
+    "component": "",
+    "status": "",
+    "partner": "",
+    "partner_sub_type": "",
+    "partner_type": ""
+  },
+  "IATICovidActivities": {
+    "country": "",
+    "component": "",
+    "status": "",
+    "partner": "",
+    "partner_sub_type": "",
+    "partner_type": ""
+  },
+  "HXLPalestine": {
+    "country": "",
+    "component": "",
+    "status": "",
+    "partner": "",
+    "partner_sub_type": "",
+    "partner_type": ""
   }
 }

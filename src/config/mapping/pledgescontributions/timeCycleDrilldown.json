@@ -8,5 +8,45 @@
     "pledge": "Pledge",
     "contribution": "Contribution",
     "aggregation": "$apply=filter(transactionType eq 'USD Equivalent'<filterString>)/groupby((replenishmentPeriod/replenishmentPeriodName,donor/donorName,indicator),aggregate(amount with sum as amount))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "year": "",
+    "amount": "",
+    "indicator": "",
+    "donor": "",
+    "pledge": "",
+    "contribution": "",
+    "aggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "year": "",
+    "amount": "",
+    "indicator": "",
+    "donor": "",
+    "pledge": "",
+    "contribution": "",
+    "aggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "year": "",
+    "amount": "",
+    "indicator": "",
+    "donor": "",
+    "pledge": "",
+    "contribution": "",
+    "aggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "year": "",
+    "amount": "",
+    "indicator": "",
+    "donor": "",
+    "pledge": "",
+    "contribution": "",
+    "aggregation": ""
   }
 }

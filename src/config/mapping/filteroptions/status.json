@@ -5,5 +5,33 @@
     "value": "grantAgreementStatusTypeName",
     "label1": "implementationPeriodStatusTypeName",
     "value2": "implementationPeriodStatusTypeName"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "label1": "",
+    "value2": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "label1": "",
+    "value2": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "label1": "",
+    "value2": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "label1": "",
+    "value2": ""
   }
 }

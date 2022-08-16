@@ -13,5 +13,65 @@
       "module": "activityAreaModule.activityAreaName",
       "intervention": "activityAreaIntervention.activityAreaName"
     }
+  ],
+  "TGFPledgesContributions": [
+    "value[]",
+    {
+      "indicatorSet": "",
+      "indicatorName": "",
+      "startDate": "",
+      "endDate": "",
+      "disaggregationGroup": "",
+      "disaggregationValue": "",
+      "valueType": "",
+      "valueAchievementRate": "",
+      "module": "",
+      "intervention": ""
+    }
+  ],
+  "IATIAllBudgets": [
+    "value[]",
+    {
+      "indicatorSet": "indicatorSet",
+      "indicatorName": "indicatorName",
+      "startDate": "reportingPeriodStartDate",
+      "endDate": "reportingPeriodEndDate",
+      "disaggregationGroup": "disaggregationGroup",
+      "disaggregationValue": "disaggregationValue",
+      "valueType": "valueType",
+      "valueAchievementRate": "valueAchievementRate",
+      "module": "activityAreaModule.activityAreaName",
+      "intervention": "activityAreaIntervention.activityAreaName"
+    }
+  ],
+  "IATICovidActivities": [
+    "value[]",
+    {
+      "indicatorSet": "indicatorSet",
+      "indicatorName": "indicatorName",
+      "startDate": "reportingPeriodStartDate",
+      "endDate": "reportingPeriodEndDate",
+      "disaggregationGroup": "disaggregationGroup",
+      "disaggregationValue": "disaggregationValue",
+      "valueType": "valueType",
+      "valueAchievementRate": "valueAchievementRate",
+      "module": "activityAreaModule.activityAreaName",
+      "intervention": "activityAreaIntervention.activityAreaName"
+    }
+  ],
+  "HXLPalestine": [
+    "value[]",
+    {
+      "indicatorSet": "indicatorSet",
+      "indicatorName": "indicatorName",
+      "startDate": "reportingPeriodStartDate",
+      "endDate": "reportingPeriodEndDate",
+      "disaggregationGroup": "disaggregationGroup",
+      "disaggregationValue": "disaggregationValue",
+      "valueType": "valueType",
+      "valueAchievementRate": "valueAchievementRate",
+      "module": "activityAreaModule.activityAreaName",
+      "intervention": "activityAreaIntervention.activityAreaName"
+    }
   ]
 }

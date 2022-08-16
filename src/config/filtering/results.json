@@ -4,5 +4,29 @@
     "component": "componentName",
     "search": "contains(reportingResultIndicatorName,<value>)",
     "period": "reportingResultYear"
+  },
+  "TGFPledgesContributions": {
+    "country": "",
+    "component": "",
+    "search": "",
+    "period": ""
+  },
+  "IATIAllBudgets": {
+    "country": "",
+    "component": "",
+    "search": "",
+    "period": ""
+  },
+  "IATICovidActivities": {
+    "country": "",
+    "component": "",
+    "search": "",
+    "period": ""
+  },
+  "HXLPalestine": {
+    "country": "",
+    "component": "",
+    "search": "",
+    "period": ""
   }
 }

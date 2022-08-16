@@ -10,5 +10,53 @@
     "aggregation": "$apply=<filterString>groupby((grantAgreementImplementationPeriod/grantAgreement/component/componentName,activityArea/activityAreaName),aggregate(budgetAmount with sum as amount))",
     "grant": "grantAgreementImplementationPeriod.grantAgreement.grantAgreementNumber",
     "aggregation2": "$apply=<filterString>groupby((grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber),aggregate(budgetAmount with sum as amount))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "amount": "",
+    "component": "",
+    "child": "",
+    "level1Filter": "",
+    "level2Filter": "",
+    "level3Filter": "",
+    "aggregation": "",
+    "grant": "",
+    "aggregation2": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "amount": "",
+    "component": "",
+    "child": "",
+    "level1Filter": "",
+    "level2Filter": "",
+    "level3Filter": "",
+    "aggregation": "",
+    "grant": "",
+    "aggregation2": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "amount": "",
+    "component": "",
+    "child": "",
+    "level1Filter": "",
+    "level2Filter": "",
+    "level3Filter": "",
+    "aggregation": "",
+    "grant": "",
+    "aggregation2": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "amount": "",
+    "component": "",
+    "child": "",
+    "level1Filter": "",
+    "level2Filter": "",
+    "level3Filter": "",
+    "aggregation": "",
+    "grant": "",
+    "aggregation2": ""
   }
 }

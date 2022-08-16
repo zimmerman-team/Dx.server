@@ -3,5 +3,25 @@
     "dataPath": "value",
     "year": "reportingResultYear",
     "aggregation": "$apply=groupby((reportingResultYear))&$orderby=reportingResultYear desc"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "year": "",
+    "aggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "year": "",
+    "aggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "year": "",
+    "aggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "year": "",
+    "aggregation": ""
   }
 }

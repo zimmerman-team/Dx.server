@@ -10,5 +10,53 @@
     "Grants": true,
     "Results": true,
     "Documents": true
+  },
+  "TGFPledgesContributions": {
+    "Pledges & Contributions": true,
+    "Signed": false,
+    "Commitments": false,
+    "Disbursements": false,
+    "Budgets": false,
+    "Eligibility": false,
+    "Allocations": false,
+    "Grants": false,
+    "Results": false,
+    "Documents": false
+  },
+  "IATIAllBudgets": {
+    "Pledges & Contributions": false,
+    "Signed": false,
+    "Commitments": false,
+    "Disbursements": false,
+    "Budgets": true,
+    "Eligibility": false,
+    "Allocations": false,
+    "Grants": false,
+    "Results": false,
+    "Documents": false
+  },
+  "IATICovidActivities": {
+    "Pledges & Contributions": false,
+    "Signed": false,
+    "Commitments": false,
+    "Disbursements": false,
+    "Budgets": false,
+    "Eligibility": false,
+    "Allocations": false,
+    "Grants": true,
+    "Results": false,
+    "Documents": false
+  },
+  "HXLPalestine": {
+    "Pledges & Contributions": false,
+    "Signed": false,
+    "Commitments": false,
+    "Disbursements": false,
+    "Budgets": false,
+    "Eligibility": false,
+    "Allocations": false,
+    "Grants": true,
+    "Results": false,
+    "Documents": false
   }
 }

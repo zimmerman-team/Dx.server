@@ -14,5 +14,69 @@
         "donor": "donor.donorName"
       }
     ]
+  },
+  "TGFPledgesContributions": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "indicator": "",
+        "year": "",
+        "month": "",
+        "sourceCurrency": "",
+        "transactionType": "",
+        "amount": "",
+        "replenishmentPeriod": "",
+        "donor": ""
+      }
+    ]
+  },
+  "IATIAllBudgets": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "indicator": "",
+        "year": "",
+        "month": "",
+        "sourceCurrency": "",
+        "transactionType": "",
+        "amount": "",
+        "replenishmentPeriod": "",
+        "donor": ""
+      }
+    ]
+  },
+  "IATICovidActivities": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "indicator": "",
+        "year": "",
+        "month": "",
+        "sourceCurrency": "",
+        "transactionType": "",
+        "amount": "",
+        "replenishmentPeriod": "",
+        "donor": ""
+      }
+    ]
+  },
+  "HXLPalestine": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "indicator": "",
+        "year": "",
+        "month": "",
+        "sourceCurrency": "",
+        "transactionType": "",
+        "amount": "",
+        "replenishmentPeriod": "",
+        "donor": ""
+      }
+    ]
   }
 }

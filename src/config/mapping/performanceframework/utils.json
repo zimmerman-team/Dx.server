@@ -17,5 +17,81 @@
       "Outcome indicator": 2,
       "Process indicator / WPTM": 3
     }
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "defaultSelect": "",
+    "defaultExpand": "",
+    "defaultFilter": "",
+    "valueAchievementRateColors": [
+      "#fa7355",
+      "#ffaa46",
+      "#daff46",
+      "#60ff46",
+      "#11ad6b"
+    ],
+    "indicatorSetOrder": {
+      "Coverage / Output indicator": "",
+      "Impact indicator": "",
+      "Outcome indicator": "",
+      "Process indicator / WPTM": ""
+    }
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "defaultSelect": "",
+    "defaultExpand": "",
+    "defaultFilter": "",
+    "valueAchievementRateColors": [
+      "#fa7355",
+      "#ffaa46",
+      "#daff46",
+      "#60ff46",
+      "#11ad6b"
+    ],
+    "indicatorSetOrder": {
+      "Coverage / Output indicator": "",
+      "Impact indicator": "",
+      "Outcome indicator": "",
+      "Process indicator / WPTM": ""
+    }
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "defaultSelect": "",
+    "defaultExpand": "",
+    "defaultFilter": "",
+    "valueAchievementRateColors": [
+      "#fa7355",
+      "#ffaa46",
+      "#daff46",
+      "#60ff46",
+      "#11ad6b"
+    ],
+    "indicatorSetOrder": {
+      "Coverage / Output indicator": "",
+      "Impact indicator": "",
+      "Outcome indicator": "",
+      "Process indicator / WPTM": ""
+    }
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "defaultSelect": "",
+    "defaultExpand": "",
+    "defaultFilter": "",
+    "valueAchievementRateColors": [
+      "#fa7355",
+      "#ffaa46",
+      "#daff46",
+      "#60ff46",
+      "#11ad6b"
+    ],
+    "indicatorSetOrder": {
+      "Coverage / Output indicator": "",
+      "Impact indicator": "",
+      "Outcome indicator": "",
+      "Process indicator / WPTM": ""
+    }
   }
 }

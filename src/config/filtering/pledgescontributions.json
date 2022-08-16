@@ -3,5 +3,25 @@
     "donorCategory": "donor/donorParentId",
     "donors": "donor/donorId",
     "period": "replenishmentPeriod/replenishmentPeriodName"
+  },
+  "TGFPledgesContributions": {
+    "donorCategory": "DonorName",
+    "donors": "DonorParentName",
+    "period": "ReplenishmentCycle"
+  },
+  "IATIAllBudgets": {
+    "donorCategory": "",
+    "donors": "",
+    "period": ""
+  },
+  "IATICovidActivities": {
+    "donorCategory": "",
+    "donors": "",
+    "period": ""
+  },
+  "HXLPalestine": {
+    "donorCategory": "",
+    "donors": "",
+    "period": ""
   }
 }

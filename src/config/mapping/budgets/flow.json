@@ -17,5 +17,81 @@
       "Emergency Response": "#2A3886"
     },
     "budgetsFlowAggregation": "$apply=<filterString>groupby((activityArea/activityAreaParent/activityAreaName,budgetCategory/budgetCategoryName,budgetCategory/budgetCategoryParent/budgetCategoryName,budgetCategory/budgetCategoryParent/budgetCategoryParent/budgetCategoryName),aggregate(budgetAmount with sum as amount, grantAgreementImplementationPeriod/grantAgreementId with countdistinct as grantsCount))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "amount": "",
+    "count": "",
+    "level1": "",
+    "level2": "",
+    "costCategory": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "RSSH": "",
+      "Multicomponent": "",
+      "Other": "",
+      "Emergency Response": ""
+    },
+    "budgetsFlowAggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "value",
+    "amount": "budget_value",
+    "count": "grantsCount",
+    "level1": "",
+    "level2": "",
+    "costCategory": "budget_type",
+    "component": "budget_type",
+    "componentColors": {
+      "HIV": "#252C34",
+      "Tuberculosis": "#595C70",
+      "Malaria": "#B2B2B2",
+      "RSSH": "#A598F3",
+      "Multicomponent": "#BFCFEE",
+      "Other": "#CDD4DF",
+      "Emergency Response": "#2A3886"
+    },
+    "budgetsFlowAggregation": "$apply=<filterString>groupby((recipient_country_code,budget_type),aggregate(budget_value with sum as amount,iati_identifier with countdistinct as grantsCount))"
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "amount": "",
+    "count": "",
+    "level1": "",
+    "level2": "",
+    "costCategory": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "RSSH": "",
+      "Multicomponent": "",
+      "Other": "",
+      "Emergency Response": ""
+    },
+    "budgetsFlowAggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "amount": "",
+    "count": "",
+    "level1": "",
+    "level2": "",
+    "costCategory": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "RSSH": "",
+      "Multicomponent": "",
+      "Other": "",
+      "Emergency Response": ""
+    },
+    "budgetsFlowAggregation": ""
   }
 }

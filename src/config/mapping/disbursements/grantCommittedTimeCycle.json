@@ -17,5 +17,81 @@
     "grantId": "grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber",
     "IPnumber": "grantAgreementImplementationPeriod/implementationPeriodNumber",
     "aggregation": "$apply=<filterString>groupby((CommitmentYear,grantAgreementImplementationPeriod/grantAgreement/component/componentName),aggregate(CommitmentAmount with sum as committed))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "committedYear": "",
+    "disbursed": "",
+    "committed": "",
+    "signed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "grantId": "",
+    "IPnumber": "",
+    "aggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "committedYear": "",
+    "disbursed": "",
+    "committed": "",
+    "signed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "grantId": "",
+    "IPnumber": "",
+    "aggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "committedYear": "",
+    "disbursed": "",
+    "committed": "",
+    "signed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "grantId": "",
+    "IPnumber": "",
+    "aggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "committedYear": "",
+    "disbursed": "",
+    "committed": "",
+    "signed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "grantId": "",
+    "IPnumber": "",
+    "aggregation": ""
   }
 }

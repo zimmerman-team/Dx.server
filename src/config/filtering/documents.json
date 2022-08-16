@@ -5,5 +5,33 @@
     "grantId": "grantAgreementNumber",
     "multicountry": "organizationId",
     "search": "(contains(tolower(processName),tolower(<value>)) or contains(tolower(componentName),tolower(<value>)) or contains(tolower(processWindow),tolower(<value>)) or contains(tolower(grantAgreementNumber),tolower(<value>)) or contains(tolower(geographicAreaName),tolower(<value>))) or contains(tolower(organizationName),tolower(<value>))"
+  },
+  "TGFPledgesContributions": {
+    "country": "",
+    "component": "",
+    "grantId": "",
+    "multicountry": "",
+    "search": ""
+  },
+  "IATIAllBudgets": {
+    "country": "",
+    "component": "",
+    "grantId": "",
+    "multicountry": "",
+    "search": ""
+  },
+  "IATICovidActivities": {
+    "country": "",
+    "component": "",
+    "grantId": "",
+    "multicountry": "",
+    "search": ""
+  },
+  "HXLPalestine": {
+    "country": "",
+    "component": "",
+    "grantId": "",
+    "multicountry": "",
+    "search": ""
   }
 }

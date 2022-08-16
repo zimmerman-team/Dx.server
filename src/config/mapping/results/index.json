@@ -8,5 +8,45 @@
       "component": "componentName",
       "country": "geographicAreaName"
     }
+  ],
+  "TGFPledgesContributions": [
+    "value[]",
+    {
+      "id": "",
+      "title": "",
+      "value": "",
+      "component": "",
+      "country": ""
+    }
+  ],
+  "IATIAllBudgets": [
+    "value[]",
+    {
+      "id": "reportingResultIndicatorId",
+      "title": "reportingResultIndicatorName",
+      "value": "reportingResultValue",
+      "component": "componentName",
+      "country": "geographicAreaName"
+    }
+  ],
+  "IATICovidActivities": [
+    "value[]",
+    {
+      "id": "reportingResultIndicatorId",
+      "title": "reportingResultIndicatorName",
+      "value": "reportingResultValue",
+      "component": "componentName",
+      "country": "geographicAreaName"
+    }
+  ],
+  "HXLPalestine": [
+    "value[]",
+    {
+      "id": "reportingResultIndicatorId",
+      "title": "reportingResultIndicatorName",
+      "value": "reportingResultValue",
+      "component": "componentName",
+      "country": "geographicAreaName"
+    }
   ]
 }

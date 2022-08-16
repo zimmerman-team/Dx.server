@@ -3,5 +3,25 @@
     "dataPath": "value",
     "label": "componentName",
     "value": "componentName"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "label": "",
+    "value": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "label": "",
+    "value": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "label": "",
+    "value": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "label": "",
+    "value": ""
   }
 }

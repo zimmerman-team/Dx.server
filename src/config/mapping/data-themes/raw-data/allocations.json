@@ -13,5 +13,65 @@
         "geographicAreaCode_ISO3": "geographicArea.geographicAreaCode_ISO3"
       }
     ]
+  },
+  "TGFPledgesContributions": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "periodStartYear": "",
+        "periodEndYear": "",
+        "allocationAmount": "",
+        "status": "",
+        "component": "",
+        "geographicAreaName": "",
+        "geographicAreaCode_ISO3": ""
+      }
+    ]
+  },
+  "IATIAllBudgets": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "periodStartYear": "",
+        "periodEndYear": "",
+        "allocationAmount": "",
+        "status": "",
+        "component": "",
+        "geographicAreaName": "",
+        "geographicAreaCode_ISO3": ""
+      }
+    ]
+  },
+  "IATICovidActivities": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "periodStartYear": "",
+        "periodEndYear": "",
+        "allocationAmount": "",
+        "status": "",
+        "component": "",
+        "geographicAreaName": "",
+        "geographicAreaCode_ISO3": ""
+      }
+    ]
+  },
+  "HXLPalestine": {
+    "expand": "",
+    "mapping": [
+      "value[]",
+      {
+        "periodStartYear": "",
+        "periodEndYear": "",
+        "allocationAmount": "",
+        "status": "",
+        "component": "",
+        "geographicAreaName": "",
+        "geographicAreaCode_ISO3": ""
+      }
+    ]
   }
 }

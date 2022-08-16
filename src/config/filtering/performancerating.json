@@ -5,5 +5,33 @@
     "component": "grantAgreementImplementationPeriod/grantAgreement/component/componentName",
     "status": "grantAgreementImplementationPeriod/grantAgreement/grantAgreementStatusType/programStatusTypeName",
     "partner": "grantAgreementImplementationPeriod/grantAgreement/principalRecipientId"
+  },
+  "TGFPledgesContributions": {
+    "country": "",
+    "multicountry": "",
+    "component": "",
+    "status": "",
+    "partner": ""
+  },
+  "IATIAllBudgets": {
+    "country": "",
+    "multicountry": "",
+    "component": "",
+    "status": "",
+    "partner": ""
+  },
+  "IATICovidActivities": {
+    "country": "",
+    "multicountry": "",
+    "component": "",
+    "status": "",
+    "partner": ""
+  },
+  "HXLPalestine": {
+    "country": "",
+    "multicountry": "",
+    "component": "",
+    "status": "",
+    "partner": ""
   }
 }

@@ -3,5 +3,25 @@
     "dataPath": "value",
     "year": "eligibilityYear",
     "aggregation": "$apply=groupby((eligibilityYear))&$orderby=eligibilityYear desc"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "year": "",
+    "aggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "year": "",
+    "aggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "year": "",
+    "aggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "year": "",
+    "aggregation": ""
   }
 }

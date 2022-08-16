@@ -12,5 +12,61 @@
     "eq": " eq ",
     "in": " in ",
     "multi_param_separator": ","
+  },
+  "TGFPledgesContributions": {
+    "page_size": "$top",
+    "page": "function-skip",
+    "param_assign_operator": "=",
+    "default_q_param": "",
+    "fields": "$select",
+    "orderby": "$orderby",
+    "filter_operator": "$filter",
+    "and_operator": "and",
+    "or_operator": "or",
+    "eq": " eq ",
+    "in": " in ",
+    "multi_param_separator": ","
+  },
+  "IATIAllBudgets": {
+    "page_size": "$top",
+    "page": "function-skip",
+    "param_assign_operator": "=",
+    "default_q_param": "",
+    "fields": "$select",
+    "orderby": "$orderby",
+    "filter_operator": "$filter",
+    "and_operator": "and",
+    "or_operator": "or",
+    "eq": " eq ",
+    "in": " in ",
+    "multi_param_separator": ","
+  },
+  "IATICovidActivities": {
+    "page_size": "$top",
+    "page": "function-skip",
+    "param_assign_operator": "=",
+    "default_q_param": "",
+    "fields": "$select",
+    "orderby": "$orderby",
+    "filter_operator": "$filter",
+    "and_operator": "and",
+    "or_operator": "or",
+    "eq": " eq ",
+    "in": " in ",
+    "multi_param_separator": ","
+  },
+  "HXLPalestine": {
+    "page_size": "$top",
+    "page": "function-skip",
+    "param_assign_operator": "=",
+    "default_q_param": "",
+    "fields": "$select",
+    "orderby": "$orderby",
+    "filter_operator": "$filter",
+    "and_operator": "and",
+    "or_operator": "or",
+    "eq": " eq ",
+    "in": " in ",
+    "multi_param_separator": ","
   }
 }

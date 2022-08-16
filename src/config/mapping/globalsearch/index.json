@@ -149,5 +149,609 @@
         "options": []
       }
     ]
+  },
+  "TGFPledgesContributions": {
+    "categories": [
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "MultiCountryName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "altName": "",
+            "code": "",
+            "altCode": "",
+            "count": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "PrincipalRecipientName",
+          "PrincipalRecipientShortName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "longName": "",
+            "shortName": "",
+            "code": "",
+            "count": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [],
+        "filterTemplate": "",
+        "mappings": [
+          "options[].subOptions",
+          {
+            "name": "",
+            "code": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "GrantAgreementTitle",
+          "GrantAgreementNumber",
+          "PrincipalRecipientName",
+          "PrincipalRecipientShortName",
+          "GrantAgreementStatusTypeName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": "",
+            "type": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "ReportingResultIndicatorName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ProcessName",
+          "ComponentName",
+          "OrganizationName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": "",
+            "type": "",
+            "organizationName": "",
+            "geographicAreaName": "",
+            "processName": "",
+            "componentName": "",
+            "processYear": "",
+            "processWindow": "",
+            "fileLanguage": ""
+          }
+        ],
+        "options": []
+      }
+    ]
+  },
+  "IATIAllBudgets": {
+    "categories": [
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "MultiCountryName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "altName": "",
+            "code": "",
+            "altCode": "",
+            "count": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "PrincipalRecipientName",
+          "PrincipalRecipientShortName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "longName": "",
+            "shortName": "",
+            "code": "",
+            "count": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [],
+        "filterTemplate": "",
+        "mappings": [
+          "options[].subOptions",
+          {
+            "name": "",
+            "code": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "GrantAgreementTitle",
+          "GrantAgreementNumber",
+          "PrincipalRecipientName",
+          "PrincipalRecipientShortName",
+          "GrantAgreementStatusTypeName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": "",
+            "type": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "ReportingResultIndicatorName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ProcessName",
+          "ComponentName",
+          "OrganizationName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": "",
+            "type": "",
+            "organizationName": "",
+            "geographicAreaName": "",
+            "processName": "",
+            "componentName": "",
+            "processYear": "",
+            "processWindow": "",
+            "fileLanguage": ""
+          }
+        ],
+        "options": []
+      }
+    ]
+  },
+  "IATICovidActivities": {
+    "categories": [
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "MultiCountryName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "altName": "",
+            "code": "",
+            "altCode": "",
+            "count": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "PrincipalRecipientName",
+          "PrincipalRecipientShortName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "longName": "",
+            "shortName": "",
+            "code": "",
+            "count": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [],
+        "filterTemplate": "",
+        "mappings": [
+          "options[].subOptions",
+          {
+            "name": "",
+            "code": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "GrantAgreementTitle",
+          "GrantAgreementNumber",
+          "PrincipalRecipientName",
+          "PrincipalRecipientShortName",
+          "GrantAgreementStatusTypeName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": "",
+            "type": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "ReportingResultIndicatorName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ProcessName",
+          "ComponentName",
+          "OrganizationName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": "",
+            "type": "",
+            "organizationName": "",
+            "geographicAreaName": "",
+            "processName": "",
+            "componentName": "",
+            "processYear": "",
+            "processWindow": "",
+            "fileLanguage": ""
+          }
+        ],
+        "options": []
+      }
+    ]
+  },
+  "HXLPalestine": {
+    "categories": [
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "MultiCountryName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "altName": "",
+            "code": "",
+            "altCode": "",
+            "count": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "PrincipalRecipientName",
+          "PrincipalRecipientShortName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "longName": "",
+            "shortName": "",
+            "code": "",
+            "count": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [],
+        "filterTemplate": "",
+        "mappings": [
+          "options[].subOptions",
+          {
+            "name": "",
+            "code": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "GrantAgreementTitle",
+          "GrantAgreementNumber",
+          "PrincipalRecipientName",
+          "PrincipalRecipientShortName",
+          "GrantAgreementStatusTypeName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": "",
+            "type": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ComponentName",
+          "ReportingResultIndicatorName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": ""
+          }
+        ],
+        "options": []
+      },
+      {
+        "name": "",
+        "type": "",
+        "link": "",
+        "url": "",
+        "itemname": "",
+        "filterFields": [
+          "GeographicAreaCode_ISO3",
+          "GeographicAreaName",
+          "ProcessName",
+          "ComponentName",
+          "OrganizationName"
+        ],
+        "filterTemplate": "",
+        "mappings": [
+          "value[]",
+          {
+            "name": "",
+            "code": "",
+            "type": "",
+            "organizationName": "",
+            "geographicAreaName": "",
+            "processName": "",
+            "componentName": "",
+            "processYear": "",
+            "processWindow": "",
+            "fileLanguage": ""
+          }
+        ],
+        "options": []
+      }
+    ]
   }
 }

@@ -15,5 +15,73 @@
       "organizationName": "organizationName",
       "organizationId": "organizationId"
     }
+  ],
+  "TGFPledgesContributions": [
+    "value[]",
+    {
+      "id": "",
+      "category": "",
+      "country": "",
+      "component": "",
+      "processName": "",
+      "processYear": "",
+      "processWindow": "",
+      "fileLanguage": "",
+      "fileIndex": "",
+      "fileURL": "",
+      "organizationName": "",
+      "organizationId": ""
+    }
+  ],
+  "IATIAllBudgets": [
+    "value[]",
+    {
+      "id": "programDocumentId",
+      "category": "documentTypeDescription",
+      "country": "geographicAreaName",
+      "component": "componentName",
+      "processName": "processName",
+      "processYear": "processYear",
+      "processWindow": "processWindow",
+      "fileLanguage": "fileLanguage",
+      "fileIndex": "fileIndex",
+      "fileURL": "fileURL",
+      "organizationName": "organizationName",
+      "organizationId": "organizationId"
+    }
+  ],
+  "IATICovidActivities": [
+    "value[]",
+    {
+      "id": "programDocumentId",
+      "category": "documentTypeDescription",
+      "country": "geographicAreaName",
+      "component": "componentName",
+      "processName": "processName",
+      "processYear": "processYear",
+      "processWindow": "processWindow",
+      "fileLanguage": "fileLanguage",
+      "fileIndex": "fileIndex",
+      "fileURL": "fileURL",
+      "organizationName": "organizationName",
+      "organizationId": "organizationId"
+    }
+  ],
+  "HXLPalestine": [
+    "value[]",
+    {
+      "id": "programDocumentId",
+      "category": "documentTypeDescription",
+      "country": "geographicAreaName",
+      "component": "componentName",
+      "processName": "processName",
+      "processYear": "processYear",
+      "processWindow": "processWindow",
+      "fileLanguage": "fileLanguage",
+      "fileIndex": "fileIndex",
+      "fileURL": "fileURL",
+      "organizationName": "organizationName",
+      "organizationId": "organizationId"
+    }
   ]
 }

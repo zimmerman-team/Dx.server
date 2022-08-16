@@ -13,5 +13,65 @@
       "Multicomponent": "#BFCFEE"
     },
     "disbursementsTimeCycleAggregation": "$apply=<filterString>groupby((DisbursementYear,grantAgreementImplementationPeriod/grantAgreement/component/componentName),aggregate(DisbursementAmount with sum as disbursed))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "year": "",
+    "disbursed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "disbursementsTimeCycleAggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "year": "",
+    "disbursed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "disbursementsTimeCycleAggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "year": "",
+    "disbursed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "disbursementsTimeCycleAggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "year": "",
+    "disbursed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "disbursementsTimeCycleAggregation": ""
   }
 }

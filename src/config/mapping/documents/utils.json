@@ -3,5 +3,25 @@
     "defaultFilter": "documentTypeDescription in ('Application','Country Profiles')",
     "defaultOrderBy": "$orderby=processYear desc, processWindow desc&",
     "defaultSelect": "$select=programDocumentId,processName,componentName,processWindow,processYear,fileURL,fileIndex,geographicAreaName,organizationName,organizationId,documentTypeDescription,fileLanguage&"
+  },
+  "TGFPledgesContributions": {
+    "defaultFilter": "",
+    "defaultOrderBy": "",
+    "defaultSelect": ""
+  },
+  "IATIAllBudgets": {
+    "defaultFilter": "",
+    "defaultOrderBy": "",
+    "defaultSelect": ""
+  },
+  "IATICovidActivities": {
+    "defaultFilter": "",
+    "defaultOrderBy": "",
+    "defaultSelect": ""
+  },
+  "HXLPalestine": {
+    "defaultFilter": "",
+    "defaultOrderBy": "",
+    "defaultSelect": ""
   }
 }

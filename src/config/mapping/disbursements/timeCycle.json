@@ -19,5 +19,89 @@
     "disbursementsTimeCycleAggregation": "$apply=<filterString>groupby((DisbursementYear,ComponentName),aggregate(DisbursementAmount with sum as disbursed))",
     "signedTimeCycleAggregation": "$select=SignatureDate,ComponentName,TotalSignedAmount&<filterString>",
     "commitmentTimeCycleAggregation": "$apply=<filterString>groupby((CommitmentYear,ComponentName),aggregate(CommitmentAmount with sum as committed))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "year": "",
+    "signedYear": "",
+    "committedYear": "",
+    "disbursed": "",
+    "committed": "",
+    "signed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "disbursementsTimeCycleAggregation": "",
+    "signedTimeCycleAggregation": "",
+    "commitmentTimeCycleAggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "year": "",
+    "signedYear": "",
+    "committedYear": "",
+    "disbursed": "",
+    "committed": "",
+    "signed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "disbursementsTimeCycleAggregation": "",
+    "signedTimeCycleAggregation": "",
+    "commitmentTimeCycleAggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "year": "",
+    "signedYear": "",
+    "committedYear": "",
+    "disbursed": "",
+    "committed": "",
+    "signed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "disbursementsTimeCycleAggregation": "",
+    "signedTimeCycleAggregation": "",
+    "commitmentTimeCycleAggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "year": "",
+    "signedYear": "",
+    "committedYear": "",
+    "disbursed": "",
+    "committed": "",
+    "signed": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "TB/HIV": "",
+      "RSSH": "",
+      "Multicomponent": ""
+    },
+    "disbursementsTimeCycleAggregation": "",
+    "signedTimeCycleAggregation": "",
+    "commitmentTimeCycleAggregation": ""
   }
 }

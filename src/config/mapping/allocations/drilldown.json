@@ -7,5 +7,41 @@
     "multicountry": "multiCountryName",
     "amount": "amount",
     "aggregation": "$apply=<filterString>groupby((component/componentName,geographicArea/geographicAreaCode_ISO3,geographicArea/geographicAreaName,multiCountryName),aggregate(allocationAmount with sum as amount))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "component": "",
+    "locationCode": "",
+    "locationName": "",
+    "multicountry": "",
+    "amount": "",
+    "aggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "component": "",
+    "locationCode": "",
+    "locationName": "",
+    "multicountry": "",
+    "amount": "",
+    "aggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "component": "",
+    "locationCode": "",
+    "locationName": "",
+    "multicountry": "",
+    "amount": "",
+    "aggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "component": "",
+    "locationCode": "",
+    "locationName": "",
+    "multicountry": "",
+    "amount": "",
+    "aggregation": ""
   }
 }

@@ -10,5 +10,53 @@
     "disbursementsTimeCycleDrilldownAggregation": "$apply=<filterString>groupby((GeographicAreaCode_ISO3,GeographicAreaName,ComponentName),aggregate(DisbursementAmount with sum as disbursed))",
     "signedTimeCycleDrilldownAggregation": "$apply=<filterString>groupby((GeographicAreaCode_ISO3,GeographicAreaName,ComponentName),aggregate(TotalSignedAmount with sum as signed))",
     "commitmentTimeCycleDrilldownAggregation": "$apply=<filterString>groupby((GeographicAreaCode_ISO3,GeographicAreaName,ComponentName),aggregate(CommitmentAmount with sum as committed))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "disbursed": "",
+    "signed": "",
+    "committed": "",
+    "component": "",
+    "locationName": "",
+    "locationCode": "",
+    "disbursementsTimeCycleDrilldownAggregation": "",
+    "signedTimeCycleDrilldownAggregation": "",
+    "commitmentTimeCycleDrilldownAggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "disbursed": "",
+    "signed": "",
+    "committed": "",
+    "component": "",
+    "locationName": "",
+    "locationCode": "",
+    "disbursementsTimeCycleDrilldownAggregation": "",
+    "signedTimeCycleDrilldownAggregation": "",
+    "commitmentTimeCycleDrilldownAggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "disbursed": "",
+    "signed": "",
+    "committed": "",
+    "component": "",
+    "locationName": "",
+    "locationCode": "",
+    "disbursementsTimeCycleDrilldownAggregation": "",
+    "signedTimeCycleDrilldownAggregation": "",
+    "commitmentTimeCycleDrilldownAggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "disbursed": "",
+    "signed": "",
+    "committed": "",
+    "component": "",
+    "locationName": "",
+    "locationCode": "",
+    "disbursementsTimeCycleDrilldownAggregation": "",
+    "signedTimeCycleDrilldownAggregation": "",
+    "commitmentTimeCycleDrilldownAggregation": ""
   }
 }

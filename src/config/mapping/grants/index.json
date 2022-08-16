@@ -14,5 +14,69 @@
       "recipientName": "principalRecipientName",
       "recipientShortName": "principalRecipientShortName"
     }
+  ],
+  "TGFPledgesContributions": [
+    "value[]",
+    {
+      "id": "",
+      "title": "",
+      "status": "",
+      "component": "",
+      "geoLocation": "",
+      "rating": "",
+      "disbursed": "",
+      "committed": "",
+      "signed": "",
+      "recipientName": "",
+      "recipientShortName": ""
+    }
+  ],
+  "IATIAllBudgets": [
+    "value[]",
+    {
+      "id": "",
+      "title": "",
+      "status": "",
+      "component": "",
+      "geoLocation": "",
+      "rating": "",
+      "disbursed": "",
+      "committed": "",
+      "signed": "",
+      "recipientName": "",
+      "recipientShortName": ""
+    }
+  ],
+  "IATICovidActivities": [
+    "value[]",
+    {
+      "id": "iati_identifier",
+      "title": "title_narrative",
+      "status": "title_narrative",
+      "component": "title_narrative",
+      "geoLocation": "title_narrative",
+      "rating": "title_narrative",
+      "disbursed": "title_narrative",
+      "committed": "title_narrative",
+      "signed": "reporting_org_type_code",
+      "recipientName": "reporting_org_type_code",
+      "recipientShortName": "reporting_org_type_code"
+    }
+  ],
+  "HXLPalestine": [
+    "value[]",
+    {
+      "id": "refCode",
+      "title": "description",
+      "status": "status",
+      "component": "method",
+      "geoLocation": "destLocations",
+      "rating": "status",
+      "disbursed": "amountUSD",
+      "committed": "amountUSD",
+      "signed": "amountUSD",
+      "recipientName": "destLocations",
+      "recipientShortName": "destLocations"
+    }
   ]
 }

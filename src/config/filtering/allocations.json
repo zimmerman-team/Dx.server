@@ -5,5 +5,33 @@
     "multicountry": "multiCountryName",
     "periodStart": "periodStartYear",
     "periodEnd": "periodEndYear"
+  },
+  "TGFPledgesContributions": {
+    "country": "",
+    "component": "",
+    "multicountry": "",
+    "periodStart": "",
+    "periodEnd": ""
+  },
+  "IATIAllBudgets": {
+    "country": "",
+    "component": "",
+    "multicountry": "",
+    "periodStart": "",
+    "periodEnd": ""
+  },
+  "IATICovidActivities": {
+    "country": "",
+    "component": "",
+    "multicountry": "",
+    "periodStart": "",
+    "periodEnd": ""
+  },
+  "HXLPalestine": {
+    "country": "",
+    "component": "",
+    "multicountry": "",
+    "periodStart": "",
+    "periodEnd": ""
   }
 }

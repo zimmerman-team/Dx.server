@@ -14,5 +14,69 @@
       "Emergency Response": "#2A3886"
     },
     "budgetsTimeCycleAggregation": "$apply=<filterString>groupby((activityArea/activityAreaParent/activityAreaName,budgetPeriodStartYear),aggregate(budgetAmount with sum as amount))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "year": "",
+    "amount": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "RSSH": "",
+      "Multicomponent": "",
+      "Other": "",
+      "Emergency Response": ""
+    },
+    "budgetsTimeCycleAggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "value",
+    "year": "budget_value_date",
+    "amount": "budget_value",
+    "component": "budget_type",
+    "componentColors": {
+      "HIV": "#252C34",
+      "Tuberculosis": "#595C70",
+      "Malaria": "#B2B2B2",
+      "RSSH": "#A598F3",
+      "Multicomponent": "#BFCFEE",
+      "Other": "#CDD4DF",
+      "Emergency Response": "#2A3886"
+    },
+    "budgetsTimeCycleAggregation": "$apply=<filterString>groupby((recipient_country_code,budget_value_date),aggregate(budget_value with sum as amount))"
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "year": "",
+    "amount": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "RSSH": "",
+      "Multicomponent": "",
+      "Other": "",
+      "Emergency Response": ""
+    },
+    "budgetsTimeCycleAggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "year": "",
+    "amount": "",
+    "component": "",
+    "componentColors": {
+      "HIV": "",
+      "Tuberculosis": "",
+      "Malaria": "",
+      "RSSH": "",
+      "Multicomponent": "",
+      "Other": "",
+      "Emergency Response": ""
+    },
+    "budgetsTimeCycleAggregation": ""
   }
 }

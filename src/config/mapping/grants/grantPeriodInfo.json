@@ -6,5 +6,37 @@
       "signed": "totalSignedAmount",
       "rating": "performanceRating.performanceRatingCode"
     }
+  ],
+  "TGFPledgesContributions": [
+    {
+      "disbursed": "",
+      "committed": "",
+      "signed": "",
+      "rating": ""
+    }
+  ],
+  "IATIAllBudgets": [
+    {
+      "disbursed": "totalDisbursedAmount",
+      "committed": "totalCommittedAmount",
+      "signed": "totalSignedAmount",
+      "rating": "performanceRating.performanceRatingCode"
+    }
+  ],
+  "IATICovidActivities": [
+    {
+      "disbursed": "totalDisbursedAmount",
+      "committed": "totalCommittedAmount",
+      "signed": "totalSignedAmount",
+      "rating": "performanceRating.performanceRatingCode"
+    }
+  ],
+  "HXLPalestine": [
+    {
+      "disbursed": "totalDisbursedAmount",
+      "committed": "totalCommittedAmount",
+      "signed": "totalSignedAmount",
+      "rating": "performanceRating.performanceRatingCode"
+    }
   ]
 }

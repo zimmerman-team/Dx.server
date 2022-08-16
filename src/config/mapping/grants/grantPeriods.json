@@ -6,5 +6,37 @@
       "startDate": "implementationPeriodStartDate",
       "endDate": "implementationPeriodEndDate"
     }
+  ],
+  "TGFPledgesContributions": [
+    "value[]",
+    {
+      "number": "",
+      "startDate": "",
+      "endDate": ""
+    }
+  ],
+  "IATIAllBudgets": [
+    "value[]",
+    {
+      "number": "implementationPeriodNumber",
+      "startDate": "implementationPeriodStartDate",
+      "endDate": "implementationPeriodEndDate"
+    }
+  ],
+  "IATICovidActivities": [
+    "value[]",
+    {
+      "number": "implementationPeriodNumber",
+      "startDate": "implementationPeriodStartDate",
+      "endDate": "implementationPeriodEndDate"
+    }
+  ],
+  "HXLPalestine": [
+    "value[]",
+    {
+      "number": "implementationPeriodNumber",
+      "startDate": "implementationPeriodStartDate",
+      "endDate": "implementationPeriodEndDate"
+    }
   ]
 }

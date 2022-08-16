@@ -11,5 +11,57 @@
     "multicountryComponent": "grantAgreementImplementationPeriod.grantAgreement.component.componentName",
     "aggregation": "$apply=<filterString>groupby((grantAgreementImplementationPeriod/grantAgreement/geographicArea/geographicAreaCode_ISO3,grantAgreementImplementationPeriod/grantAgreement/component/componentName),aggregate(budgetAmount with sum as amount))",
     "aggregationMulticountry": "$apply=<filterString>groupby((grantAgreementImplementationPeriod/grantAgreement/multiCountry/multiCountryName,grantAgreementImplementationPeriod/grantAgreement/component/componentName),aggregate(budgetAmount with sum as amount))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "amount": "",
+    "component": "",
+    "locationCode": "",
+    "multicountry": "",
+    "geodatamulticountry": "",
+    "multiCountryComposition": "",
+    "multiCountryCompositionItem": "",
+    "multicountryComponent": "",
+    "aggregation": "",
+    "aggregationMulticountry": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "amount": "",
+    "component": "",
+    "locationCode": "",
+    "multicountry": "",
+    "geodatamulticountry": "",
+    "multiCountryComposition": "",
+    "multiCountryCompositionItem": "",
+    "multicountryComponent": "",
+    "aggregation": "",
+    "aggregationMulticountry": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "amount": "",
+    "component": "",
+    "locationCode": "",
+    "multicountry": "",
+    "geodatamulticountry": "",
+    "multiCountryComposition": "",
+    "multiCountryCompositionItem": "",
+    "multicountryComponent": "",
+    "aggregation": "",
+    "aggregationMulticountry": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "amount": "",
+    "component": "",
+    "locationCode": "",
+    "multicountry": "",
+    "geodatamulticountry": "",
+    "multiCountryComposition": "",
+    "multiCountryCompositionItem": "",
+    "multicountryComponent": "",
+    "aggregation": "",
+    "aggregationMulticountry": ""
   }
 }

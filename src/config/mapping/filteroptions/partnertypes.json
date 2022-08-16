@@ -7,5 +7,41 @@
     "partnerSubTypeId": "principalRecipientSubClassificationId",
     "partnerType": "principalRecipientClassificationName",
     "partnerTypeId": "principalRecipientClassificationId"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "partner": "",
+    "partnerId": "",
+    "partnerSubType": "",
+    "partnerSubTypeId": "",
+    "partnerType": "",
+    "partnerTypeId": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "partner": "",
+    "partnerId": "",
+    "partnerSubType": "",
+    "partnerSubTypeId": "",
+    "partnerType": "",
+    "partnerTypeId": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "partner": "",
+    "partnerId": "",
+    "partnerSubType": "",
+    "partnerSubTypeId": "",
+    "partnerType": "",
+    "partnerTypeId": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "partner": "",
+    "partnerId": "",
+    "partnerSubType": "",
+    "partnerSubTypeId": "",
+    "partnerType": "",
+    "partnerTypeId": ""
   }
 }

@@ -6,5 +6,37 @@
     "children": "members",
     "childLabel": "donorName",
     "childValue": "donorId"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "children": "",
+    "childLabel": "",
+    "childValue": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "children": "",
+    "childLabel": "",
+    "childValue": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "children": "",
+    "childLabel": "",
+    "childValue": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "children": "",
+    "childLabel": "",
+    "childValue": ""
   }
 }

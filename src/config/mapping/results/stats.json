@@ -5,5 +5,33 @@
     "value": "reportingresultvalue",
     "description": "reportingResultIndicatorName",
     "ResultStatsAggregation": "$apply=filter(isTopThree eq true<filterString>)/groupby((reportingresultindicatorid,reportingResultIndicatorName,componentId,componentName,reportingresultyear),aggregate(reportingresultvalue with sum as reportingresultvalue))"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "name": "",
+    "value": "",
+    "description": "",
+    "ResultStatsAggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "name": "",
+    "value": "",
+    "description": "",
+    "ResultStatsAggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "name": "",
+    "value": "",
+    "description": "",
+    "ResultStatsAggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "name": "",
+    "value": "",
+    "description": "",
+    "ResultStatsAggregation": ""
   }
 }

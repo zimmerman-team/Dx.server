@@ -10,5 +10,53 @@
     "grantId": "grantAgreementImplementationPeriod/grantAgreement/grantAgreementNumber",
     "IPnumber": "grantAgreementImplementationPeriod/implementationPeriodNumber",
     "activityAreaName": "activityArea/activityAreaName"
+  },
+  "TGFPledgesContributions": {
+    "country": "",
+    "multicountry": "",
+    "component": "",
+    "status": "",
+    "partner_sub_type": "",
+    "partner_type": "",
+    "partner": "",
+    "grantId": "",
+    "IPnumber": "",
+    "activityAreaName": ""
+  },
+  "IATIAllBudgets": {
+    "country": "recipient_country_code",
+    "multicountry": "",
+    "component": "budget_type",
+    "status": "budget_status",
+    "partner_sub_type": "",
+    "partner_type": "reporting_org_type",
+    "partner": "reporting_org_ref",
+    "grantId": "iati_identifier",
+    "IPnumber": "budget_value_date",
+    "activityAreaName": "recipient_country_code"
+  },
+  "IATICovidActivities": {
+    "country": "",
+    "multicountry": "",
+    "component": "",
+    "status": "",
+    "partner_sub_type": "",
+    "partner_type": "",
+    "partner": "",
+    "grantId": "",
+    "IPnumber": "",
+    "activityAreaName": ""
+  },
+  "HXLPalestine": {
+    "country": "",
+    "multicountry": "",
+    "component": "",
+    "status": "",
+    "partner_sub_type": "",
+    "partner_type": "",
+    "partner": "",
+    "grantId": "",
+    "IPnumber": "",
+    "activityAreaName": ""
   }
 }

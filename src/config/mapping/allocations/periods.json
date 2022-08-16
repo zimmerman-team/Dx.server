@@ -4,5 +4,29 @@
     "periodStart": "periodStartYear",
     "periodEnd": "periodEndYear",
     "aggregation": "$apply=groupby((periodStartYear,periodEndYear))&$orderby=periodStartYear desc"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "periodStart": "",
+    "periodEnd": "",
+    "aggregation": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "periodStart": "",
+    "periodEnd": "",
+    "aggregation": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "periodStart": "",
+    "periodEnd": "",
+    "aggregation": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "periodStart": "",
+    "periodEnd": "",
+    "aggregation": ""
   }
 }

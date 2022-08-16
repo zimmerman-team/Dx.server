@@ -4,5 +4,29 @@
     "label": "multiCountryName",
     "value": "multiCountryName",
     "regionCode": "geographicAreaCode_ISO3"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "regionCode": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "regionCode": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "regionCode": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "regionCode": ""
   }
 }

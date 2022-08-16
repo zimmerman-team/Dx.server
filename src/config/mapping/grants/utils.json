@@ -2,5 +2,21 @@
   "TGFOData": {
     "countPath": "@odata.count",
     "defaultOrderBy": "grantAgreementStatusTypeName asc, grantAgreementNumber asc"
+  },
+  "TGFPledgesContributions": {
+    "countPath": "",
+    "defaultOrderBy": ""
+  },
+  "IATIAllBudgets": {
+    "countPath": "",
+    "defaultOrderBy": ""
+  },
+  "IATICovidActivities": {
+    "countPath": "@odata.count",
+    "defaultOrderBy": "iati_identifier asc"
+  },
+  "HXLPalestine": {
+    "countPath": "@odata.count",
+    "defaultOrderBy": "description asc"
   }
 }

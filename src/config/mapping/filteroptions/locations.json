@@ -4,5 +4,29 @@
     "label": "geographicAreaName",
     "value": "geographicAreaCode_ISO3",
     "children": "members"
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "children": ""
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "children": ""
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "children": ""
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "label": "",
+    "value": "",
+    "children": ""
   }
 }

@@ -15,5 +15,73 @@
       "A2": 4,
       "A1": 5
     }
+  },
+  "TGFPledgesContributions": {
+    "dataPath": "",
+    "startDate": "",
+    "endDate": "",
+    "rating": "",
+    "defaultSelect": "",
+    "defaultOrderBy": "",
+    "defaultExpand": "",
+    "ratingValues": {
+      "N/A": "",
+      "C": "",
+      "B2": "",
+      "B1": "",
+      "A2": "",
+      "A1": ""
+    }
+  },
+  "IATIAllBudgets": {
+    "dataPath": "",
+    "startDate": "",
+    "endDate": "",
+    "rating": "",
+    "defaultSelect": "",
+    "defaultOrderBy": "",
+    "defaultExpand": "",
+    "ratingValues": {
+      "N/A": "",
+      "C": "",
+      "B2": "",
+      "B1": "",
+      "A2": "",
+      "A1": ""
+    }
+  },
+  "IATICovidActivities": {
+    "dataPath": "",
+    "startDate": "",
+    "endDate": "",
+    "rating": "",
+    "defaultSelect": "",
+    "defaultOrderBy": "",
+    "defaultExpand": "",
+    "ratingValues": {
+      "N/A": "",
+      "C": "",
+      "B2": "",
+      "B1": "",
+      "A2": "",
+      "A1": ""
+    }
+  },
+  "HXLPalestine": {
+    "dataPath": "",
+    "startDate": "",
+    "endDate": "",
+    "rating": "",
+    "defaultSelect": "",
+    "defaultOrderBy": "",
+    "defaultExpand": "",
+    "ratingValues": {
+      "N/A": "",
+      "C": "",
+      "B2": "",
+      "B1": "",
+      "A2": "",
+      "A1": ""
+    }
   }
 }
