@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings
+  RestBindings,
 } from '@loopback/rest';
 import _ from 'lodash';
 import datasets from '../config/mapping/datasets.json';
@@ -22,28 +22,28 @@ const DATASETS_RESPONSE: ResponseObject = {
             type: 'array',
             items: {
               type: 'string',
-            }
+            },
           },
         },
       },
     },
   },
 };
-
 /**
  * A simple controller return the mapped datasets
  */
 export class DatasetsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
 
   @get('/mapped-datasets')
   @response(200, DATASETS_RESPONSE)
   mappeddatasets(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
-    let mappedDatasetsList: string[] = []
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const mappedDatasetsList: string[] = [];
     const mappedDatasets = _.get(datasets, datasource);
-    Object.keys(mappedDatasets).forEach((key) => {
-      if (mappedDatasets[key]) mappedDatasetsList.push(key)
+    Object.keys(mappedDatasets).forEach(key => {
+      if (mappedDatasets[key]) mappedDatasetsList.push(key);
     });
     return {
       data: mappedDatasetsList,
@@ -63,7 +63,7 @@ const DATASOURCES_RESPONSE: ResponseObject = {
             type: 'array',
             items: {
               type: 'string',
-            }
+            },
           },
         },
       },
@@ -74,7 +74,7 @@ const DATASOURCES_RESPONSE: ResponseObject = {
  * A simple controller return the available datasources
  */
 export class DatasourcesController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
 
   @get('/available-datasources')
   @response(200, DATASOURCES_RESPONSE)

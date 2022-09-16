@@ -1,7 +1,18 @@
 [
-  "TGFOData",
-  "TGFPledgesContributions",
-  "IATIAllBudgets",
-  "IATICovidActivities",
-  "HXLPalestine"
+  {
+    "value": "TGFOData",
+    "name": "GF Dataset"
+  },
+  {
+    "value": "IATIAllBudgets",
+    "name": "IATI Budgets"
+  },
+  {
+    "value": "IATICovidActivities",
+    "name": "IATI Covid Activities"
+  },
+  {
+    "value": "HXLPalestine",
+    "name": "HXL Palestine"
+  }
 ]

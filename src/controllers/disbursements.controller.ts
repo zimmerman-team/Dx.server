@@ -4,7 +4,7 @@ import {
   Request,
   response,
   ResponseObject,
-  RestBindings
+  RestBindings,
 } from '@loopback/rest';
 import center from '@turf/center';
 import {points, Position} from '@turf/helpers';
@@ -27,11 +27,12 @@ import staticCountries from '../static-assets/countries.json';
 import {handleDataApiError} from '../utils/dataApiError';
 import {
   grantDetailGetFilterString,
-  grantDetailTreemapGetFilterString
+  grantDetailTreemapGetFilterString,
 } from '../utils/filtering/disbursements/grantDetailGetFilterString';
 import {getGeoMultiCountriesFilterString} from '../utils/filtering/disbursements/multicountries/getFilterString';
 import {getFilterString} from '../utils/filtering/grants/getFilterString';
 import {formatFinancialValue} from '../utils/formatFinancialValue';
+import {hexToRGBA} from '../utils/hexToRGBA';
 
 const DISBURSEMENTS_TIME_CYCLE_RESPONSE: ResponseObject = {
   description: 'Disbursements Time Cycle Response',
@@ -171,19 +172,30 @@ const DISBURSEMENTS_TREEMAP_RESPONSE: ResponseObject = {
   },
 };
 
+const treemapColors = [
+  '#CEA8BC',
+  '#F4F4F4',
+  '#73D3CD',
+  '#FFFFFF',
+  '#DADAF8',
+  '#B1BCC8',
+];
+
 export class DisbursementsController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
 
   // Time/Cycle
 
   @get('/disbursements/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   timeCycle(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
-      _.get(TimeCycleFieldsMapping, datasource).disbursementsTimeCycleAggregation,
+      _.get(TimeCycleFieldsMapping, datasource)
+        .disbursementsTimeCycleAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -193,17 +205,30 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).disbursements}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).disbursements
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        let apiData = _.get(resp.data, _.get(TimeCycleFieldsMapping, datasource).dataPath, []);
+        let apiData = _.get(
+          resp.data,
+          _.get(TimeCycleFieldsMapping, datasource).dataPath,
+          [],
+        );
         if (apiData.length > 0) {
-          if (_.get(apiData[0], _.get(TimeCycleFieldsMapping, datasource).year, '').length > 4) {
+          if (
+            _.get(
+              apiData[0],
+              _.get(TimeCycleFieldsMapping, datasource).year,
+              '',
+            ).length > 4
+          ) {
             apiData = _.filter(
               apiData,
-              (item: any) => item[_.get(TimeCycleFieldsMapping, datasource).year],
+              (item: any) =>
+                item[_.get(TimeCycleFieldsMapping, datasource).year],
             ).map((item: any) => ({
               ...item,
               [_.get(TimeCycleFieldsMapping, datasource).year]: item[
@@ -220,29 +245,38 @@ export class DisbursementsController {
         Object.keys(groupedDataByYear).forEach((year: string) => {
           const dataItems = groupedDataByYear[year];
           const yearComponents: any = [];
-          _.orderBy(dataItems, _.get(TimeCycleFieldsMapping, datasource).year, 'asc').forEach(
-            (item: any) => {
-              const value = parseInt(
-                _.get(item, _.get(TimeCycleFieldsMapping, datasource).disbursed, 0),
-                10,
+          _.orderBy(
+            dataItems,
+            _.get(TimeCycleFieldsMapping, datasource).year,
+            'asc',
+          ).forEach((item: any) => {
+            const value = parseInt(
+              _.get(
+                item,
+                _.get(TimeCycleFieldsMapping, datasource).disbursed,
+                0,
+              ),
+              10,
+            );
+            if (value) {
+              const name = _.get(
+                item,
+                _.get(TimeCycleFieldsMapping, datasource).component,
+                '',
               );
-              if (value) {
-                const name = _.get(item, _.get(TimeCycleFieldsMapping, datasource).component, '');
-                const prevYearComponent = _.get(
-                  data,
-                  `[${data.length - 1}].cumulativeChildren`,
-                  [],
-                );
-                yearComponents.push({
-                  name,
-                  disbursed: value,
-                  cumulative:
-                    _.get(_.find(prevYearComponent, {name}), 'value', 0) +
-                    value,
-                });
-              }
-            },
-          );
+              const prevYearComponent = _.get(
+                data,
+                `[${data.length - 1}].cumulativeChildren`,
+                [],
+              );
+              yearComponents.push({
+                name,
+                disbursed: value,
+                cumulative:
+                  _.get(_.find(prevYearComponent, {name}), 'value', 0) + value,
+              });
+            }
+          });
           const disbursed = _.sumBy(yearComponents, 'disbursed');
           const cumulative = _.sumBy(yearComponents, 'cumulative');
           if (disbursed > 0) {
@@ -286,7 +320,8 @@ export class DisbursementsController {
   @get('/signed/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   timeCycleSigned(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -300,18 +335,25 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).vgrantPeriods}?${params}${filterString
+    const url = `${
+      _.get(urls, datasource).vgrantPeriods
+    }?${params}${filterString
       .replace('filter', '$filter=')
       .replace(')/', ')')}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        let apiData = _.get(resp.data, _.get(TimeCycleFieldsMapping, datasource).dataPath, []);
+        let apiData = _.get(
+          resp.data,
+          _.get(TimeCycleFieldsMapping, datasource).dataPath,
+          [],
+        );
         if (apiData.length > 0) {
           apiData = _.filter(
             apiData,
-            (item: any) => item[_.get(TimeCycleFieldsMapping, datasource).signedYear],
+            (item: any) =>
+              item[_.get(TimeCycleFieldsMapping, datasource).signedYear],
           ).map((item: any) => ({
             ...item,
             [_.get(TimeCycleFieldsMapping, datasource).signedYear]: item[
@@ -346,7 +388,11 @@ export class DisbursementsController {
               10,
             );
             if (value) {
-              const name = _.get(item, _.get(TimeCycleFieldsMapping, datasource).component, '');
+              const name = _.get(
+                item,
+                _.get(TimeCycleFieldsMapping, datasource).component,
+                '',
+              );
               const prevYearComponent = _.get(
                 data,
                 `[${data.length - 1}].cumulativeChildren`,
@@ -403,7 +449,8 @@ export class DisbursementsController {
   @get('/commitment/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   timeCycleCommitment(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -417,20 +464,30 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).vcommitments}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).vcommitments
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        let apiData = _.get(resp.data, _.get(TimeCycleFieldsMapping, datasource).dataPath, []);
+        let apiData = _.get(
+          resp.data,
+          _.get(TimeCycleFieldsMapping, datasource).dataPath,
+          [],
+        );
         if (apiData.length > 0) {
           if (
-            _.get(apiData[0], _.get(TimeCycleFieldsMapping, datasource).committedYear, '').length >
-            4
+            _.get(
+              apiData[0],
+              _.get(TimeCycleFieldsMapping, datasource).committedYear,
+              '',
+            ).length > 4
           ) {
             apiData = _.filter(
               apiData,
-              (item: any) => item[_.get(TimeCycleFieldsMapping, datasource).committedYear],
+              (item: any) =>
+                item[_.get(TimeCycleFieldsMapping, datasource).committedYear],
             ).map((item: any) => ({
               ...item,
               [_.get(TimeCycleFieldsMapping, datasource).committedYear]: item[
@@ -453,11 +510,19 @@ export class DisbursementsController {
             'asc',
           ).forEach((item: any) => {
             const value = parseInt(
-              _.get(item, _.get(TimeCycleFieldsMapping, datasource).committed, 0),
+              _.get(
+                item,
+                _.get(TimeCycleFieldsMapping, datasource).committed,
+                0,
+              ),
               10,
             );
             if (value) {
-              const name = _.get(item, _.get(TimeCycleFieldsMapping, datasource).component, '');
+              const name = _.get(
+                item,
+                _.get(TimeCycleFieldsMapping, datasource).component,
+                '',
+              );
               const prevYearComponent = _.get(
                 data,
                 `[${data.length - 1}].cumulativeChildren`,
@@ -514,11 +579,13 @@ export class DisbursementsController {
   @get('/disbursements/time-cycle/drilldown')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   timeCycleDrilldown(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
-      _.get(TimeCycleDrilldownFieldsMapping, datasource).disbursementsTimeCycleDrilldownAggregation,
+      _.get(TimeCycleDrilldownFieldsMapping, datasource)
+        .disbursementsTimeCycleDrilldownAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -528,7 +595,9 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).disbursements}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).disbursements
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -548,21 +617,38 @@ export class DisbursementsController {
           const componentLocations: BudgetsTreemapDataItem[] = [];
           dataItems.forEach((item: any) => {
             componentLocations.push({
-              name: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).locationName],
-              value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).disbursed],
+              name: item[
+                _.get(TimeCycleDrilldownFieldsMapping, datasource).locationName
+              ],
+              value:
+                item[
+                  _.get(TimeCycleDrilldownFieldsMapping, datasource).disbursed
+                ],
               formattedValue: formatFinancialValue(
-                item[_.get(TimeCycleDrilldownFieldsMapping, datasource).disbursed],
+                item[
+                  _.get(TimeCycleDrilldownFieldsMapping, datasource).disbursed
+                ],
               ),
               color: '#595C70',
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).locationName],
-                    value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).disbursed],
+                    name: item[
+                      _.get(TimeCycleDrilldownFieldsMapping, datasource)
+                        .locationName
+                    ],
+                    value:
+                      item[
+                        _.get(TimeCycleDrilldownFieldsMapping, datasource)
+                          .disbursed
+                      ],
                   },
                 ],
-                value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).disbursed],
+                value:
+                  item[
+                    _.get(TimeCycleDrilldownFieldsMapping, datasource).disbursed
+                  ],
               },
             });
           });
@@ -602,11 +688,13 @@ export class DisbursementsController {
     };
     // @ts-ignore
     delete query.barPeriod;
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       query,
       datasource,
-      _.get(TimeCycleDrilldownFieldsMapping, datasource).signedTimeCycleDrilldownAggregation,
+      _.get(TimeCycleDrilldownFieldsMapping, datasource)
+        .signedTimeCycleDrilldownAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -616,7 +704,9 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).vgrantPeriods}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).vgrantPeriods
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -636,8 +726,11 @@ export class DisbursementsController {
           const componentLocations: BudgetsTreemapDataItem[] = [];
           dataItems.forEach((item: any) => {
             componentLocations.push({
-              name: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).locationName],
-              value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).signed],
+              name: item[
+                _.get(TimeCycleDrilldownFieldsMapping, datasource).locationName
+              ],
+              value:
+                item[_.get(TimeCycleDrilldownFieldsMapping, datasource).signed],
               formattedValue: formatFinancialValue(
                 item[_.get(TimeCycleDrilldownFieldsMapping, datasource).signed],
               ),
@@ -646,11 +739,21 @@ export class DisbursementsController {
                 header: component,
                 componentsStats: [
                   {
-                    name: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).locationName],
-                    value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).signed],
+                    name: item[
+                      _.get(TimeCycleDrilldownFieldsMapping, datasource)
+                        .locationName
+                    ],
+                    value:
+                      item[
+                        _.get(TimeCycleDrilldownFieldsMapping, datasource)
+                          .signed
+                      ],
                   },
                 ],
-                value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).signed],
+                value:
+                  item[
+                    _.get(TimeCycleDrilldownFieldsMapping, datasource).signed
+                  ],
               },
             });
           });
@@ -690,11 +793,13 @@ export class DisbursementsController {
     };
     // @ts-ignore
     delete query.barPeriod;
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       query,
       datasource,
-      _.get(TimeCycleDrilldownFieldsMapping, datasource).commitmentTimeCycleDrilldownAggregation,
+      _.get(TimeCycleDrilldownFieldsMapping, datasource)
+        .commitmentTimeCycleDrilldownAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -704,7 +809,9 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).vcommitments}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).vcommitments
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -724,21 +831,38 @@ export class DisbursementsController {
           const componentLocations: BudgetsTreemapDataItem[] = [];
           dataItems.forEach((item: any) => {
             componentLocations.push({
-              name: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).locationName],
-              value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).committed],
+              name: item[
+                _.get(TimeCycleDrilldownFieldsMapping, datasource).locationName
+              ],
+              value:
+                item[
+                  _.get(TimeCycleDrilldownFieldsMapping, datasource).committed
+                ],
               formattedValue: formatFinancialValue(
-                item[_.get(TimeCycleDrilldownFieldsMapping, datasource).committed],
+                item[
+                  _.get(TimeCycleDrilldownFieldsMapping, datasource).committed
+                ],
               ),
               color: '#595C70',
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).locationName],
-                    value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).committed],
+                    name: item[
+                      _.get(TimeCycleDrilldownFieldsMapping, datasource)
+                        .locationName
+                    ],
+                    value:
+                      item[
+                        _.get(TimeCycleDrilldownFieldsMapping, datasource)
+                          .committed
+                      ],
                   },
                 ],
-                value: item[_.get(TimeCycleDrilldownFieldsMapping, datasource).committed],
+                value:
+                  item[
+                    _.get(TimeCycleDrilldownFieldsMapping, datasource).committed
+                  ],
               },
             });
           });
@@ -774,7 +898,8 @@ export class DisbursementsController {
   @get('/disbursements/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemap(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -788,90 +913,110 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentLocations: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            let locationName = item[_.get(TreemapFieldsMapping, datasource).locationName];
-            let locationCode = item[_.get(TreemapFieldsMapping, datasource).locationCode];
-            if (item[_.get(TreemapFieldsMapping, datasource).multicountry] !== null) {
-              locationName = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-              locationCode = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-            }
-            componentLocations.push({
-              name: locationName,
-              code: locationCode,
-              value: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-              formattedValue: formatFinancialValue(
-                item[_.get(TreemapFieldsMapping, datasource).disbursed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentLocations: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              let locationName =
+                item[_.get(TreemapFieldsMapping, datasource).locationName];
+              let locationCode =
+                item[_.get(TreemapFieldsMapping, datasource).locationCode];
+              if (
+                item[_.get(TreemapFieldsMapping, datasource).multicountry] !==
+                null
+              ) {
+                locationName =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+                locationCode =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+              }
+              componentLocations.push({
+                name: locationName,
+                code: locationCode,
+                value: item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                formattedValue: formatFinancialValue(
+                  item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: locationName,
+                      count: item.count,
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
+                  },
+                  percValue: (
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
+                    item[_.get(TreemapFieldsMapping, datasource).committed]
+                  ).toString(),
+                },
+              });
+            });
+            const disbursed = _.sumBy(componentLocations, 'value');
+            const committed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.committed',
+            );
+            data.push({
+              name: component,
+              value: disbursed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(disbursed),
+              _children: _.orderBy(componentLocations, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: locationName,
-                    count: item.count,
-                    investment: item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    name: component,
+                    count: _.sumBy(
+                      componentLocations,
+                      'tooltip.componentsStats[0].count',
+                    ),
+                    investment: _.sumBy(componentLocations, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed: _.sumBy(
+                    componentLocations,
+                    'tooltip.totalInvestments.signed',
+                  ),
                 },
-                percValue: (
-                  (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(TreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const disbursed = _.sumBy(componentLocations, 'value');
-          const committed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.committed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: disbursed,
-            formattedValue: formatFinancialValue(disbursed),
-            _children: _.orderBy(componentLocations, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentLocations,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentLocations, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed: _.sumBy(
-                  componentLocations,
-                  'tooltip.totalInvestments.signed',
-                ),
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
@@ -883,7 +1028,8 @@ export class DisbursementsController {
   @get('/signed/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapSigned(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -897,91 +1043,111 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentLocations: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            let locationName = item[_.get(TreemapFieldsMapping, datasource).locationName];
-            let locationCode = item[_.get(TreemapFieldsMapping, datasource).locationCode];
-            if (item[_.get(TreemapFieldsMapping, datasource).multicountry] !== null) {
-              locationName = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-              locationCode = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-            }
-            componentLocations.push({
-              name: locationName,
-              code: locationCode,
-              value: item[_.get(TreemapFieldsMapping, datasource).signed],
-              formattedValue: formatFinancialValue(
-                item[_.get(TreemapFieldsMapping, datasource).signed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentLocations: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              let locationName =
+                item[_.get(TreemapFieldsMapping, datasource).locationName];
+              let locationCode =
+                item[_.get(TreemapFieldsMapping, datasource).locationCode];
+              if (
+                item[_.get(TreemapFieldsMapping, datasource).multicountry] !==
+                null
+              ) {
+                locationName =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+                locationCode =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+              }
+              componentLocations.push({
+                name: locationName,
+                code: locationCode,
+                value: item[_.get(TreemapFieldsMapping, datasource).signed],
+                formattedValue: formatFinancialValue(
+                  item[_.get(TreemapFieldsMapping, datasource).signed],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: locationName,
+                      count: item.count,
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).signed],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
+                  },
+                  percValue: (
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
+                    item[_.get(TreemapFieldsMapping, datasource).committed]
+                  ).toString(),
+                },
+              });
+            });
+            const signed = _.sumBy(componentLocations, 'value');
+            const committed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.committed',
+            );
+            const disbursed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.disbursed',
+            );
+            data.push({
+              name: component,
+              value: signed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(signed),
+              _children: _.orderBy(componentLocations, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: locationName,
-                    count: item.count,
-                    investment: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    name: component,
+                    count: _.sumBy(
+                      componentLocations,
+                      'tooltip.componentsStats[0].count',
+                    ),
+                    investment: _.sumBy(componentLocations, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed,
                 },
-                percValue: (
-                  (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(TreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const signed = _.sumBy(componentLocations, 'value');
-          const committed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.committed',
-          );
-          const disbursed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.disbursed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: signed,
-            formattedValue: formatFinancialValue(signed),
-            _children: _.orderBy(componentLocations, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentLocations,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentLocations, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed,
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
@@ -993,7 +1159,8 @@ export class DisbursementsController {
   @get('/commitment/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapCommitment(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -1007,91 +1174,111 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentLocations: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            let locationName = item[_.get(TreemapFieldsMapping, datasource).locationName];
-            let locationCode = item[_.get(TreemapFieldsMapping, datasource).locationCode];
-            if (item[_.get(TreemapFieldsMapping, datasource).multicountry] !== null) {
-              locationName = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-              locationCode = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-            }
-            componentLocations.push({
-              name: locationName,
-              code: locationCode,
-              value: item[_.get(TreemapFieldsMapping, datasource).committed],
-              formattedValue: formatFinancialValue(
-                item[_.get(TreemapFieldsMapping, datasource).committed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentLocations: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              let locationName =
+                item[_.get(TreemapFieldsMapping, datasource).locationName];
+              let locationCode =
+                item[_.get(TreemapFieldsMapping, datasource).locationCode];
+              if (
+                item[_.get(TreemapFieldsMapping, datasource).multicountry] !==
+                null
+              ) {
+                locationName =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+                locationCode =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+              }
+              componentLocations.push({
+                name: locationName,
+                code: locationCode,
+                value: item[_.get(TreemapFieldsMapping, datasource).committed],
+                formattedValue: formatFinancialValue(
+                  item[_.get(TreemapFieldsMapping, datasource).committed],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: locationName,
+                      count: item.count,
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).committed],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
+                  },
+                  percValue: (
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
+                    item[_.get(TreemapFieldsMapping, datasource).committed]
+                  ).toString(),
+                },
+              });
+            });
+            const committed = _.sumBy(componentLocations, 'value');
+            const signed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.signed',
+            );
+            const disbursed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.disbursed',
+            );
+            data.push({
+              name: component,
+              value: committed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(committed),
+              _children: _.orderBy(componentLocations, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: locationName,
-                    count: item.count,
-                    investment: item[_.get(TreemapFieldsMapping, datasource).committed],
+                    name: component,
+                    count: _.sumBy(
+                      componentLocations,
+                      'tooltip.componentsStats[0].count',
+                    ),
+                    investment: _.sumBy(componentLocations, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed,
                 },
-                percValue: (
-                  (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(TreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const committed = _.sumBy(componentLocations, 'value');
-          const signed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.signed',
-          );
-          const disbursed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.disbursed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: committed,
-            formattedValue: formatFinancialValue(committed),
-            _children: _.orderBy(componentLocations, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentLocations,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentLocations, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed,
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
@@ -1103,11 +1290,13 @@ export class DisbursementsController {
   @get('/disbursements/treemap/drilldown')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapDrilldown(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
-      _.get(TreemapFieldsMapping, datasource).disbursementsTreemapDrilldownAggregation,
+      _.get(TreemapFieldsMapping, datasource)
+        .disbursementsTreemapDrilldownAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -1117,17 +1306,27 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByCountry = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).locationName,
         );
         const groupedDataByMulticountry = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).multicountry,
         );
         const data: DisbursementsTreemapDataItem[] = [];
@@ -1137,7 +1336,7 @@ export class DisbursementsController {
           (key: string) => key !== 'null',
         );
         if (multicountryKeys.length === 0) {
-          countryKeys.forEach((location: string) => {
+          countryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByCountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1147,23 +1346,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).disbursed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).disbursed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1176,8 +1382,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: disbursed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(disbursed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1205,7 +1411,7 @@ export class DisbursementsController {
             });
           });
         } else if (countryKeys.length === 1 && multicountryKeys.length > 0) {
-          multicountryKeys.forEach((location: string) => {
+          multicountryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByMulticountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1215,23 +1421,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).disbursed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).disbursed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1244,8 +1457,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: disbursed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(disbursed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1273,7 +1486,7 @@ export class DisbursementsController {
             });
           });
         } else {
-          countryKeys.forEach((location: string) => {
+          countryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByCountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1283,23 +1496,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).disbursed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).disbursed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1312,8 +1532,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: disbursed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(disbursed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1340,7 +1560,7 @@ export class DisbursementsController {
               },
             });
           });
-          multicountryKeys.forEach((location: string) => {
+          multicountryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByMulticountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1350,23 +1570,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).disbursed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).disbursed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1379,8 +1606,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: disbursed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(disbursed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1419,11 +1646,13 @@ export class DisbursementsController {
   @get('/signed/treemap/drilldown')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapDrilldownSigned(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
-      _.get(TreemapFieldsMapping, datasource).disbursementsTreemapDrilldownAggregation,
+      _.get(TreemapFieldsMapping, datasource)
+        .disbursementsTreemapDrilldownAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -1433,17 +1662,27 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByCountry = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).locationName,
         );
         const groupedDataByMulticountry = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).multicountry,
         );
         const data: DisbursementsTreemapDataItem[] = [];
@@ -1453,7 +1692,7 @@ export class DisbursementsController {
           (key: string) => key !== 'null',
         );
         if (multicountryKeys.length === 0) {
-          countryKeys.forEach((location: string) => {
+          countryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByCountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1463,23 +1702,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).signed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).signed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).signed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1496,8 +1742,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: signed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(signed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1522,7 +1768,7 @@ export class DisbursementsController {
             });
           });
         } else if (countryKeys.length === 1 && multicountryKeys.length > 0) {
-          multicountryKeys.forEach((location: string) => {
+          multicountryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByMulticountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1532,23 +1778,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).signed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).signed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).signed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1565,8 +1818,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: signed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(signed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1591,7 +1844,7 @@ export class DisbursementsController {
             });
           });
         } else {
-          countryKeys.forEach((location: string) => {
+          countryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByCountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1601,23 +1854,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).signed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).signed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).signed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1634,8 +1894,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: signed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(signed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1659,7 +1919,7 @@ export class DisbursementsController {
               },
             });
           });
-          multicountryKeys.forEach((location: string) => {
+          multicountryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByMulticountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1669,23 +1929,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).signed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).signed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).signed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1702,8 +1969,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: signed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(signed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1739,11 +2006,13 @@ export class DisbursementsController {
   @get('/commitment/treemap/drilldown')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   treemapDrilldownCommitment(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
-      _.get(TreemapFieldsMapping, datasource).disbursementsTreemapDrilldownAggregation,
+      _.get(TreemapFieldsMapping, datasource)
+        .disbursementsTreemapDrilldownAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -1753,17 +2022,27 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByCountry = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).locationName,
         );
         const groupedDataByMulticountry = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).multicountry,
         );
         const data: DisbursementsTreemapDataItem[] = [];
@@ -1773,7 +2052,7 @@ export class DisbursementsController {
           (key: string) => key !== 'null',
         );
         if (multicountryKeys.length === 0) {
-          countryKeys.forEach((location: string) => {
+          countryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByCountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1783,23 +2062,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).committed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).committed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).committed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1816,8 +2102,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: committed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(committed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1842,7 +2128,7 @@ export class DisbursementsController {
             });
           });
         } else if (countryKeys.length === 1 && multicountryKeys.length > 0) {
-          multicountryKeys.forEach((location: string) => {
+          multicountryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByMulticountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1852,23 +2138,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).committed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).committed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).committed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1885,8 +2178,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: committed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(committed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1911,7 +2204,7 @@ export class DisbursementsController {
             });
           });
         } else {
-          countryKeys.forEach((location: string) => {
+          countryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByCountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1921,23 +2214,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).committed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).committed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).committed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -1954,8 +2254,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: committed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(committed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -1979,7 +2279,7 @@ export class DisbursementsController {
               },
             });
           });
-          multicountryKeys.forEach((location: string) => {
+          multicountryKeys.forEach((location: string, index: number) => {
             const dataItems = groupedDataByMulticountry[location];
             const locationComponents: DisbursementsTreemapDataItem[] = [];
             dataItems.forEach((item: any) => {
@@ -1989,23 +2289,30 @@ export class DisbursementsController {
                 formattedValue: formatFinancialValue(
                   item[_.get(TreemapFieldsMapping, datasource).committed],
                 ),
-                color: '#595C70',
+                color: treemapColors[index],
                 tooltip: {
                   header: location,
                   componentsStats: [
                     {
-                      name: item[_.get(TreemapFieldsMapping, datasource).component],
+                      name: item[
+                        _.get(TreemapFieldsMapping, datasource).component
+                      ],
                       count: item.count,
-                      investment: item[_.get(TreemapFieldsMapping, datasource).committed],
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).committed],
                     },
                   ],
                   totalInvestments: {
-                    committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                    disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                    signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
                   },
                   percValue: (
-                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
                     item[_.get(TreemapFieldsMapping, datasource).committed]
                   ).toString(),
                 },
@@ -2022,8 +2329,8 @@ export class DisbursementsController {
             );
             data.push({
               name: location,
-              color: '#DFE3E5',
               value: committed,
+              color: hexToRGBA(treemapColors[index], 0.85),
               formattedValue: formatFinancialValue(committed),
               _children: _.orderBy(locationComponents, 'value', 'desc'),
               tooltip: {
@@ -2061,7 +2368,8 @@ export class DisbursementsController {
   @get('/disbursements/geomap')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   geomap(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     let aggregationField = _.get(GeomapFieldsMapping, datasource).disbursed;
     if (
       this.req.query.aggregationField &&
@@ -2087,7 +2395,9 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .all([axios.get(url), axios.get(_.get(urls, datasource).geojson)])
@@ -2110,9 +2420,18 @@ export class DisbursementsController {
                 value: item[aggregationField],
               });
             });
-            const disbursed = _.sumBy(dataItems, _.get(GeomapFieldsMapping, datasource).disbursed);
-            const committed = _.sumBy(dataItems, _.get(GeomapFieldsMapping, datasource).committed);
-            const signed = _.sumBy(dataItems, _.get(GeomapFieldsMapping, datasource).signed);
+            const disbursed = _.sumBy(
+              dataItems,
+              _.get(GeomapFieldsMapping, datasource).disbursed,
+            );
+            const committed = _.sumBy(
+              dataItems,
+              _.get(GeomapFieldsMapping, datasource).committed,
+            );
+            const signed = _.sumBy(
+              dataItems,
+              _.get(GeomapFieldsMapping, datasource).signed,
+            );
             data.push({
               code: iso3,
               components: locationComponents,
@@ -2217,11 +2536,11 @@ export class DisbursementsController {
                 iso_a3: feature.id,
                 data: fItem
                   ? {
-                    components: fItem.components,
-                    disbursed: fItem.disbursed,
-                    committed: fItem.committed,
-                    signed: fItem.signed,
-                  }
+                      components: fItem.components,
+                      disbursed: fItem.disbursed,
+                      committed: fItem.committed,
+                      signed: fItem.signed,
+                    }
                   : {},
               },
             };
@@ -2239,7 +2558,8 @@ export class DisbursementsController {
   @get('/disbursements/geomap/multicountries')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   geomapMulticountries(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     let aggregationField = _.get(GeomapFieldsMapping, datasource).disbursed;
     if (
       this.req.query.aggregationField &&
@@ -2255,7 +2575,8 @@ export class DisbursementsController {
     const filterString = getGeoMultiCountriesFilterString(
       this.req.query,
       datasource,
-      _.get(GeomapFieldsMapping, datasource).disbursementsMulticountryGeomapAggregation,
+      _.get(GeomapFieldsMapping, datasource)
+        .disbursementsMulticountryGeomapAggregation,
       'GrantAgreement/MultiCountryId ne null',
     );
     const params = querystring.stringify(
@@ -2266,10 +2587,15 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantPeriods}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantPeriods
+    }?${params}${filterString}`;
 
     return axios
-      .all([axios.get(url), axios.get(_.get(urls, datasource).multicountriescountriesdata)])
+      .all([
+        axios.get(url),
+        axios.get(_.get(urls, datasource).multicountriescountriesdata),
+      ])
       .then(
         axios.spread((...responses) => {
           const rawData = _.get(
@@ -2309,7 +2635,8 @@ export class DisbursementsController {
               composition.forEach((item: any) => {
                 const iso3 = _.get(
                   item,
-                  _.get(GeomapFieldsMapping, datasource).multiCountryCompositionItem,
+                  _.get(GeomapFieldsMapping, datasource)
+                    .multiCountryCompositionItem,
                   '',
                 );
                 const fCountry = _.find(staticCountries, {iso3: iso3});
@@ -2333,7 +2660,11 @@ export class DisbursementsController {
                   _.get(GeomapFieldsMapping, datasource).multicountryComponent,
                   '',
                 ),
-                activitiesCount: _.get(item, _.get(GeomapFieldsMapping, datasource).count, 0),
+                activitiesCount: _.get(
+                  item,
+                  _.get(GeomapFieldsMapping, datasource).count,
+                  0,
+                ),
                 value: _.get(item, aggregationField, 0),
               })),
               disbursed: _.sumBy(
@@ -2365,11 +2696,13 @@ export class DisbursementsController {
   @get('/location/disbursements/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   locationDetailTreemap(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
-      _.get(TreemapFieldsMapping, datasource).locationDisbursementsTreemapAggregation,
+      _.get(TreemapFieldsMapping, datasource)
+        .locationDisbursementsTreemapAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -2379,90 +2712,110 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentGrants: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            let grantName = item[_.get(TreemapFieldsMapping, datasource).grantName];
-            let grantCode = item[_.get(TreemapFieldsMapping, datasource).grantCode];
-            if (item[_.get(TreemapFieldsMapping, datasource).multicountry] !== null) {
-              grantName = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-              grantCode = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-            }
-            componentGrants.push({
-              name: `${grantName} | ${grantCode}`,
-              code: grantCode,
-              value: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-              formattedValue: formatFinancialValue(
-                item[_.get(TreemapFieldsMapping, datasource).disbursed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentGrants: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              let grantName =
+                item[_.get(TreemapFieldsMapping, datasource).grantName];
+              let grantCode =
+                item[_.get(TreemapFieldsMapping, datasource).grantCode];
+              if (
+                item[_.get(TreemapFieldsMapping, datasource).multicountry] !==
+                null
+              ) {
+                grantName =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+                grantCode =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+              }
+              componentGrants.push({
+                name: `${grantName} | ${grantCode}`,
+                code: grantCode,
+                value: item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                formattedValue: formatFinancialValue(
+                  item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: grantName,
+                      count: item.count,
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
+                  },
+                  percValue: (
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
+                    item[_.get(TreemapFieldsMapping, datasource).committed]
+                  ).toString(),
+                },
+              });
+            });
+            const disbursed = _.sumBy(componentGrants, 'value');
+            const committed = _.sumBy(
+              componentGrants,
+              'tooltip.totalInvestments.committed',
+            );
+            data.push({
+              name: component,
+              value: disbursed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(disbursed),
+              _children: _.orderBy(componentGrants, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: grantName,
-                    count: item.count,
-                    investment: item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    name: component,
+                    count: _.sumBy(
+                      componentGrants,
+                      'tooltip.componentsStats[0].count',
+                    ),
+                    investment: _.sumBy(componentGrants, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed: _.sumBy(
+                    componentGrants,
+                    'tooltip.totalInvestments.signed',
+                  ),
                 },
-                percValue: (
-                  (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(TreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const disbursed = _.sumBy(componentGrants, 'value');
-          const committed = _.sumBy(
-            componentGrants,
-            'tooltip.totalInvestments.committed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: disbursed,
-            formattedValue: formatFinancialValue(disbursed),
-            _children: _.orderBy(componentGrants, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentGrants,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentGrants, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed: _.sumBy(
-                  componentGrants,
-                  'tooltip.totalInvestments.signed',
-                ),
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
@@ -2474,11 +2827,13 @@ export class DisbursementsController {
   @get('/location/signed/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   locationDetailTreemapSigned(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
-      _.get(TreemapFieldsMapping, datasource).locationDisbursementsTreemapAggregation,
+      _.get(TreemapFieldsMapping, datasource)
+        .locationDisbursementsTreemapAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -2488,91 +2843,111 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentGrants: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            let grantName = item[_.get(TreemapFieldsMapping, datasource).grantName];
-            let grantCode = item[_.get(TreemapFieldsMapping, datasource).grantCode];
-            if (item[_.get(TreemapFieldsMapping, datasource).multicountry] !== null) {
-              grantName = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-              grantCode = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-            }
-            componentGrants.push({
-              name: `${grantName} | ${grantCode}`,
-              code: grantCode,
-              value: item[_.get(TreemapFieldsMapping, datasource).signed],
-              formattedValue: formatFinancialValue(
-                item[_.get(TreemapFieldsMapping, datasource).signed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentGrants: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              let grantName =
+                item[_.get(TreemapFieldsMapping, datasource).grantName];
+              let grantCode =
+                item[_.get(TreemapFieldsMapping, datasource).grantCode];
+              if (
+                item[_.get(TreemapFieldsMapping, datasource).multicountry] !==
+                null
+              ) {
+                grantName =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+                grantCode =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+              }
+              componentGrants.push({
+                name: `${grantName} | ${grantCode}`,
+                code: grantCode,
+                value: item[_.get(TreemapFieldsMapping, datasource).signed],
+                formattedValue: formatFinancialValue(
+                  item[_.get(TreemapFieldsMapping, datasource).signed],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: grantName,
+                      count: item.count,
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).signed],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
+                  },
+                  percValue: (
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
+                    item[_.get(TreemapFieldsMapping, datasource).committed]
+                  ).toString(),
+                },
+              });
+            });
+            const signed = _.sumBy(componentGrants, 'value');
+            const committed = _.sumBy(
+              componentGrants,
+              'tooltip.totalInvestments.committed',
+            );
+            const disbursed = _.sumBy(
+              componentGrants,
+              'tooltip.totalInvestments.disbursed',
+            );
+            data.push({
+              name: component,
+              value: signed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(signed),
+              _children: _.orderBy(componentGrants, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: grantName,
-                    count: item.count,
-                    investment: item[_.get(TreemapFieldsMapping, datasource).signed],
+                    name: component,
+                    count: _.sumBy(
+                      componentGrants,
+                      'tooltip.componentsStats[0].count',
+                    ),
+                    investment: _.sumBy(componentGrants, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed,
                 },
-                percValue: (
-                  (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(TreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const signed = _.sumBy(componentGrants, 'value');
-          const committed = _.sumBy(
-            componentGrants,
-            'tooltip.totalInvestments.committed',
-          );
-          const disbursed = _.sumBy(
-            componentGrants,
-            'tooltip.totalInvestments.disbursed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: signed,
-            formattedValue: formatFinancialValue(signed),
-            _children: _.orderBy(componentGrants, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentGrants,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentGrants, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed,
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
@@ -2584,11 +2959,13 @@ export class DisbursementsController {
   @get('/location/commitment/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   locationDetailTreemapCommitment(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
-      _.get(TreemapFieldsMapping, datasource).locationDisbursementsTreemapAggregation,
+      _.get(TreemapFieldsMapping, datasource)
+        .locationDisbursementsTreemapAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -2598,91 +2975,111 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantsNoCount}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantsNoCount
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(TreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(TreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(TreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentGrants: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            let grantName = item[_.get(TreemapFieldsMapping, datasource).grantName];
-            let grantCode = item[_.get(TreemapFieldsMapping, datasource).grantCode];
-            if (item[_.get(TreemapFieldsMapping, datasource).multicountry] !== null) {
-              grantName = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-              grantCode = item[_.get(TreemapFieldsMapping, datasource).multicountry];
-            }
-            componentGrants.push({
-              name: `${grantName} | ${grantCode}`,
-              code: grantCode,
-              value: item[_.get(TreemapFieldsMapping, datasource).committed],
-              formattedValue: formatFinancialValue(
-                item[_.get(TreemapFieldsMapping, datasource).committed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentGrants: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              let grantName =
+                item[_.get(TreemapFieldsMapping, datasource).grantName];
+              let grantCode =
+                item[_.get(TreemapFieldsMapping, datasource).grantCode];
+              if (
+                item[_.get(TreemapFieldsMapping, datasource).multicountry] !==
+                null
+              ) {
+                grantName =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+                grantCode =
+                  item[_.get(TreemapFieldsMapping, datasource).multicountry];
+              }
+              componentGrants.push({
+                name: `${grantName} | ${grantCode}`,
+                code: grantCode,
+                value: item[_.get(TreemapFieldsMapping, datasource).committed],
+                formattedValue: formatFinancialValue(
+                  item[_.get(TreemapFieldsMapping, datasource).committed],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: grantName,
+                      count: item.count,
+                      investment:
+                        item[_.get(TreemapFieldsMapping, datasource).committed],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[_.get(TreemapFieldsMapping, datasource).committed],
+                    disbursed:
+                      item[_.get(TreemapFieldsMapping, datasource).disbursed],
+                    signed:
+                      item[_.get(TreemapFieldsMapping, datasource).signed],
+                  },
+                  percValue: (
+                    (item[_.get(TreemapFieldsMapping, datasource).disbursed] *
+                      100) /
+                    item[_.get(TreemapFieldsMapping, datasource).committed]
+                  ).toString(),
+                },
+              });
+            });
+            const committed = _.sumBy(componentGrants, 'value');
+            const signed = _.sumBy(
+              componentGrants,
+              'tooltip.totalInvestments.signed',
+            );
+            const disbursed = _.sumBy(
+              componentGrants,
+              'tooltip.totalInvestments.disbursed',
+            );
+            data.push({
+              name: component,
+              value: committed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(committed),
+              _children: _.orderBy(componentGrants, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: grantName,
-                    count: item.count,
-                    investment: item[_.get(TreemapFieldsMapping, datasource).committed],
+                    name: component,
+                    count: _.sumBy(
+                      componentGrants,
+                      'tooltip.componentsStats[0].count',
+                    ),
+                    investment: _.sumBy(componentGrants, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(TreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(TreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(TreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed,
                 },
-                percValue: (
-                  (item[_.get(TreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(TreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const committed = _.sumBy(componentGrants, 'value');
-          const signed = _.sumBy(
-            componentGrants,
-            'tooltip.totalInvestments.signed',
-          );
-          const disbursed = _.sumBy(
-            componentGrants,
-            'tooltip.totalInvestments.disbursed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: committed,
-            formattedValue: formatFinancialValue(committed),
-            _children: _.orderBy(componentGrants, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentGrants,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentGrants, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed,
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
@@ -2696,11 +3093,13 @@ export class DisbursementsController {
   @get('/grant/disbursements/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   grantDetailTimeCycle(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = grantDetailGetFilterString(
       this.req.query,
       datasource,
-      _.get(GrantDetailTimeCycleFieldsMapping, datasource).disbursementsTimeCycleAggregation,
+      _.get(GrantDetailTimeCycleFieldsMapping, datasource)
+        .disbursementsTimeCycleAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -2710,7 +3109,9 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantDetailDisbursements}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantDetailDisbursements
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
@@ -2722,12 +3123,16 @@ export class DisbursementsController {
         );
         if (apiData.length > 0) {
           if (
-            _.get(apiData[0], _.get(GrantDetailTimeCycleFieldsMapping, datasource).year, '')
-              .length > 4
+            _.get(
+              apiData[0],
+              _.get(GrantDetailTimeCycleFieldsMapping, datasource).year,
+              '',
+            ).length > 4
           ) {
             apiData = _.filter(
               apiData,
-              (item: any) => item[_.get(GrantDetailTimeCycleFieldsMapping, datasource).year],
+              (item: any) =>
+                item[_.get(GrantDetailTimeCycleFieldsMapping, datasource).year],
             ).map((item: any) => ({
               ...item,
               [_.get(GrantDetailTimeCycleFieldsMapping, datasource).year]: item[
@@ -2750,7 +3155,11 @@ export class DisbursementsController {
             'asc',
           ).forEach((item: any) => {
             const value = parseInt(
-              _.get(item, _.get(GrantDetailTimeCycleFieldsMapping, datasource).disbursed, 0),
+              _.get(
+                item,
+                _.get(GrantDetailTimeCycleFieldsMapping, datasource).disbursed,
+                0,
+              ),
               10,
             );
             if (value) {
@@ -2783,7 +3192,8 @@ export class DisbursementsController {
                 (yc: any) => ({
                   name: yc.name,
                   color: _.get(
-                    _.get(GrantDetailTimeCycleFieldsMapping, datasource).componentColors,
+                    _.get(GrantDetailTimeCycleFieldsMapping, datasource)
+                      .componentColors,
                     yc.name,
                     '',
                   ),
@@ -2794,7 +3204,8 @@ export class DisbursementsController {
                 (yc: any) => ({
                   name: yc.name,
                   color: _.get(
-                    _.get(GrantDetailTimeCycleFieldsMapping, datasource).componentColors,
+                    _.get(GrantDetailTimeCycleFieldsMapping, datasource)
+                      .componentColors,
                     yc.name,
                     '',
                   ),
@@ -2815,7 +3226,8 @@ export class DisbursementsController {
   @get('/grant/commitment/time-cycle')
   @response(200, DISBURSEMENTS_TIME_CYCLE_RESPONSE)
   grantDetailTimeCycleCommitment(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = getFilterString(
       this.req.query,
       datasource,
@@ -2842,15 +3254,23 @@ export class DisbursementsController {
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
-        let apiData = _.get(resp.data, _.get(TimeCycleFieldsMapping, datasource).dataPath, []);
+        let apiData = _.get(
+          resp.data,
+          _.get(TimeCycleFieldsMapping, datasource).dataPath,
+          [],
+        );
         if (apiData.length > 0) {
           if (
-            _.get(apiData[0], _.get(TimeCycleFieldsMapping, datasource).committedYear, '').length >
-            4
+            _.get(
+              apiData[0],
+              _.get(TimeCycleFieldsMapping, datasource).committedYear,
+              '',
+            ).length > 4
           ) {
             apiData = _.filter(
               apiData,
-              (item: any) => item[_.get(TimeCycleFieldsMapping, datasource).committedYear],
+              (item: any) =>
+                item[_.get(TimeCycleFieldsMapping, datasource).committedYear],
             ).map((item: any) => ({
               ...item,
               [_.get(TimeCycleFieldsMapping, datasource).committedYear]: item[
@@ -2873,11 +3293,19 @@ export class DisbursementsController {
             'asc',
           ).forEach((item: any) => {
             const value = parseInt(
-              _.get(item, _.get(TimeCycleFieldsMapping, datasource).committed, 0),
+              _.get(
+                item,
+                _.get(TimeCycleFieldsMapping, datasource).committed,
+                0,
+              ),
               10,
             );
             if (value) {
-              const name = _.get(item, _.get(TimeCycleFieldsMapping, datasource).component, '');
+              const name = _.get(
+                item,
+                _.get(TimeCycleFieldsMapping, datasource).component,
+                '',
+              );
               const prevYearComponent = _.get(
                 data,
                 `[${data.length - 1}].cumulativeChildren`,
@@ -2934,11 +3362,13 @@ export class DisbursementsController {
   @get('/grant/disbursements/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   grantDetailTreemap(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = grantDetailTreemapGetFilterString(
       this.req.query,
       datasource,
-      _.get(GrantDetailTreemapFieldsMapping, datasource).disbursementsTreemapAggregation,
+      _.get(GrantDetailTreemapFieldsMapping, datasource)
+        .disbursementsTreemapAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -2948,91 +3378,129 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantDetailGrants}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantDetailGrants
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(GrantDetailTreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(GrantDetailTreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(GrantDetailTreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentLocations: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            componentLocations.push({
-              name: _.get(
-                item,
-                _.get(GrantDetailTreemapFieldsMapping, datasource).locationName,
-                '',
-              ),
-              value: item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed],
-              formattedValue: formatFinancialValue(
-                item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentLocations: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              componentLocations.push({
+                name: _.get(
+                  item,
+                  _.get(GrantDetailTreemapFieldsMapping, datasource)
+                    .locationName,
+                  '',
+                ),
+                value:
+                  item[
+                    _.get(GrantDetailTreemapFieldsMapping, datasource).disbursed
+                  ],
+                formattedValue: formatFinancialValue(
+                  item[
+                    _.get(GrantDetailTreemapFieldsMapping, datasource).disbursed
+                  ],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: _.get(
+                        item,
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .locationName,
+                        '',
+                      ),
+                      count: item.count,
+                      investment:
+                        item[
+                          _.get(GrantDetailTreemapFieldsMapping, datasource)
+                            .disbursed
+                        ],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .committed
+                      ],
+                    disbursed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .disbursed
+                      ],
+                    signed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .signed
+                      ],
+                  },
+                  percValue: (
+                    (item[
+                      _.get(GrantDetailTreemapFieldsMapping, datasource)
+                        .disbursed
+                    ] *
+                      100) /
+                    item[
+                      _.get(GrantDetailTreemapFieldsMapping, datasource)
+                        .committed
+                    ]
+                  ).toString(),
+                },
+              });
+            });
+            const disbursed = _.sumBy(componentLocations, 'value');
+            const committed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.committed',
+            );
+            data.push({
+              name: component,
+              value: disbursed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(disbursed),
+              _children: _.orderBy(componentLocations, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: _.get(
-                      item,
-                      _.get(GrantDetailTreemapFieldsMapping, datasource).locationName,
-                      '',
+                    name: component,
+                    count: _.sumBy(
+                      componentLocations,
+                      'tooltip.componentsStats[0].count',
                     ),
-                    count: item.count,
-                    investment: item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed],
+                    investment: _.sumBy(componentLocations, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed: _.sumBy(
+                    componentLocations,
+                    'tooltip.totalInvestments.signed',
+                  ),
                 },
-                percValue: (
-                  (item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const disbursed = _.sumBy(componentLocations, 'value');
-          const committed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.committed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: disbursed,
-            formattedValue: formatFinancialValue(disbursed),
-            _children: _.orderBy(componentLocations, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentLocations,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentLocations, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed: _.sumBy(
-                  componentLocations,
-                  'tooltip.totalInvestments.signed',
-                ),
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
@@ -3044,11 +3512,13 @@ export class DisbursementsController {
   @get('/grant/signed/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   grantDetailTreemapSigned(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = grantDetailTreemapGetFilterString(
       this.req.query,
       datasource,
-      _.get(GrantDetailTreemapFieldsMapping, datasource).disbursementsTreemapAggregation,
+      _.get(GrantDetailTreemapFieldsMapping, datasource)
+        .disbursementsTreemapAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -3058,95 +3528,133 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantDetailGrants}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantDetailGrants
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(GrantDetailTreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(GrantDetailTreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(GrantDetailTreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentLocations: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            componentLocations.push({
-              name: _.get(
-                item,
-                _.get(GrantDetailTreemapFieldsMapping, datasource).locationName,
-                '',
-              ),
-              value: item[_.get(GrantDetailTreemapFieldsMapping, datasource).signed],
-              formattedValue: formatFinancialValue(
-                item[_.get(GrantDetailTreemapFieldsMapping, datasource).signed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentLocations: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              componentLocations.push({
+                name: _.get(
+                  item,
+                  _.get(GrantDetailTreemapFieldsMapping, datasource)
+                    .locationName,
+                  '',
+                ),
+                value:
+                  item[
+                    _.get(GrantDetailTreemapFieldsMapping, datasource).signed
+                  ],
+                formattedValue: formatFinancialValue(
+                  item[
+                    _.get(GrantDetailTreemapFieldsMapping, datasource).signed
+                  ],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: _.get(
+                        item,
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .locationName,
+                        '',
+                      ),
+                      count: item.count,
+                      investment:
+                        item[
+                          _.get(GrantDetailTreemapFieldsMapping, datasource)
+                            .signed
+                        ],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .committed
+                      ],
+                    disbursed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .disbursed
+                      ],
+                    signed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .signed
+                      ],
+                  },
+                  percValue: (
+                    (item[
+                      _.get(GrantDetailTreemapFieldsMapping, datasource)
+                        .disbursed
+                    ] *
+                      100) /
+                    item[
+                      _.get(GrantDetailTreemapFieldsMapping, datasource)
+                        .committed
+                    ]
+                  ).toString(),
+                },
+              });
+            });
+            const signed = _.sumBy(componentLocations, 'value');
+            const committed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.committed',
+            );
+            const disbursed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.disbursed',
+            );
+            data.push({
+              name: component,
+              value: signed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(signed),
+              _children: _.orderBy(componentLocations, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: _.get(
-                      item,
-                      _.get(GrantDetailTreemapFieldsMapping, datasource).locationName,
-                      '',
+                    name: component,
+                    count: _.sumBy(
+                      componentLocations,
+                      'tooltip.componentsStats[0].count',
                     ),
-                    count: item.count,
-                    investment: item[_.get(GrantDetailTreemapFieldsMapping, datasource).signed],
+                    investment: _.sumBy(componentLocations, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed: _.sumBy(
+                    componentLocations,
+                    'tooltip.totalInvestments.signed',
+                  ),
                 },
-                percValue: (
-                  (item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const signed = _.sumBy(componentLocations, 'value');
-          const committed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.committed',
-          );
-          const disbursed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.disbursed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: signed,
-            formattedValue: formatFinancialValue(signed),
-            _children: _.orderBy(componentLocations, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentLocations,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentLocations, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed: _.sumBy(
-                  componentLocations,
-                  'tooltip.totalInvestments.signed',
-                ),
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),
@@ -3158,11 +3666,13 @@ export class DisbursementsController {
   @get('/grant/commitment/treemap')
   @response(200, DISBURSEMENTS_TREEMAP_RESPONSE)
   grantDetailTreemapCommitment(): object {
-    const datasource: any = this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
+    const datasource: any =
+      this.req.query?.datasource ?? process.env.DEFAULT_DATASOURCE;
     const filterString = grantDetailTreemapGetFilterString(
       this.req.query,
       datasource,
-      _.get(GrantDetailTreemapFieldsMapping, datasource).disbursementsTreemapAggregation,
+      _.get(GrantDetailTreemapFieldsMapping, datasource)
+        .disbursementsTreemapAggregation,
     );
     const params = querystring.stringify(
       {},
@@ -3172,95 +3682,133 @@ export class DisbursementsController {
         encodeURIComponent: (str: string) => str,
       },
     );
-    const url = `${_.get(urls, datasource).grantDetailGrants}?${params}${filterString}`;
+    const url = `${
+      _.get(urls, datasource).grantDetailGrants
+    }?${params}${filterString}`;
 
     return axios
       .get(url)
       .then((resp: AxiosResponse) => {
         const groupedDataByComponent = _.groupBy(
-          _.get(resp.data, _.get(GrantDetailTreemapFieldsMapping, datasource).dataPath, []),
+          _.get(
+            resp.data,
+            _.get(GrantDetailTreemapFieldsMapping, datasource).dataPath,
+            [],
+          ),
           _.get(GrantDetailTreemapFieldsMapping, datasource).component,
         );
         const data: DisbursementsTreemapDataItem[] = [];
-        Object.keys(groupedDataByComponent).forEach((component: string) => {
-          const dataItems = groupedDataByComponent[component];
-          const componentLocations: DisbursementsTreemapDataItem[] = [];
-          dataItems.forEach((item: any) => {
-            componentLocations.push({
-              name: _.get(
-                item,
-                _.get(GrantDetailTreemapFieldsMapping, datasource).locationName,
-                '',
-              ),
-              value: item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed],
-              formattedValue: formatFinancialValue(
-                item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed],
-              ),
-              color: '#595C70',
+        Object.keys(groupedDataByComponent).forEach(
+          (component: string, index: number) => {
+            const dataItems = groupedDataByComponent[component];
+            const componentLocations: DisbursementsTreemapDataItem[] = [];
+            dataItems.forEach((item: any) => {
+              componentLocations.push({
+                name: _.get(
+                  item,
+                  _.get(GrantDetailTreemapFieldsMapping, datasource)
+                    .locationName,
+                  '',
+                ),
+                value:
+                  item[
+                    _.get(GrantDetailTreemapFieldsMapping, datasource).committed
+                  ],
+                formattedValue: formatFinancialValue(
+                  item[
+                    _.get(GrantDetailTreemapFieldsMapping, datasource).committed
+                  ],
+                ),
+                color: treemapColors[index],
+                tooltip: {
+                  header: component,
+                  componentsStats: [
+                    {
+                      name: _.get(
+                        item,
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .locationName,
+                        '',
+                      ),
+                      count: item.count,
+                      investment:
+                        item[
+                          _.get(GrantDetailTreemapFieldsMapping, datasource)
+                            .committed
+                        ],
+                    },
+                  ],
+                  totalInvestments: {
+                    committed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .committed
+                      ],
+                    disbursed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .disbursed
+                      ],
+                    signed:
+                      item[
+                        _.get(GrantDetailTreemapFieldsMapping, datasource)
+                          .signed
+                      ],
+                  },
+                  percValue: (
+                    (item[
+                      _.get(GrantDetailTreemapFieldsMapping, datasource)
+                        .disbursed
+                    ] *
+                      100) /
+                    item[
+                      _.get(GrantDetailTreemapFieldsMapping, datasource)
+                        .committed
+                    ]
+                  ).toString(),
+                },
+              });
+            });
+            const committed = _.sumBy(componentLocations, 'value');
+            const signed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.signed',
+            );
+            const disbursed = _.sumBy(
+              componentLocations,
+              'tooltip.totalInvestments.disbursed',
+            );
+            data.push({
+              name: component,
+              value: committed,
+              color: hexToRGBA(treemapColors[index], 0.85),
+              formattedValue: formatFinancialValue(committed),
+              _children: _.orderBy(componentLocations, 'value', 'desc'),
               tooltip: {
                 header: component,
                 componentsStats: [
                   {
-                    name: _.get(
-                      item,
-                      _.get(GrantDetailTreemapFieldsMapping, datasource).locationName,
-                      '',
+                    name: component,
+                    count: _.sumBy(
+                      componentLocations,
+                      'tooltip.componentsStats[0].count',
                     ),
-                    count: item.count,
-                    investment: item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed],
+                    investment: _.sumBy(componentLocations, 'value'),
                   },
                 ],
                 totalInvestments: {
-                  committed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed],
-                  disbursed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed],
-                  signed: item[_.get(GrantDetailTreemapFieldsMapping, datasource).signed],
+                  committed,
+                  disbursed,
+                  signed: _.sumBy(
+                    componentLocations,
+                    'tooltip.totalInvestments.signed',
+                  ),
                 },
-                percValue: (
-                  (item[_.get(GrantDetailTreemapFieldsMapping, datasource).disbursed] * 100) /
-                  item[_.get(GrantDetailTreemapFieldsMapping, datasource).committed]
-                ).toString(),
+                percValue: ((disbursed * 100) / committed).toString(),
               },
             });
-          });
-          const committed = _.sumBy(componentLocations, 'value');
-          const signed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.signed',
-          );
-          const disbursed = _.sumBy(
-            componentLocations,
-            'tooltip.totalInvestments.disbursed',
-          );
-          data.push({
-            name: component,
-            color: '#DFE3E5',
-            value: committed,
-            formattedValue: formatFinancialValue(committed),
-            _children: _.orderBy(componentLocations, 'value', 'desc'),
-            tooltip: {
-              header: component,
-              componentsStats: [
-                {
-                  name: component,
-                  count: _.sumBy(
-                    componentLocations,
-                    'tooltip.componentsStats[0].count',
-                  ),
-                  investment: _.sumBy(componentLocations, 'value'),
-                },
-              ],
-              totalInvestments: {
-                committed,
-                disbursed,
-                signed: _.sumBy(
-                  componentLocations,
-                  'tooltip.totalInvestments.signed',
-                ),
-              },
-              percValue: ((disbursed * 100) / committed).toString(),
-            },
-          });
-        });
+          },
+        );
         return {
           count: data.length,
           data: _.orderBy(data, 'value', 'desc'),

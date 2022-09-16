@@ -5,12 +5,12 @@
     "disbursed": "disbursed",
     "component": "grantAgreementImplementationPeriod.grantAgreement.component.componentName",
     "componentColors": {
-      "HIV": "#252C34",
-      "Tuberculosis": "#595C70",
-      "Malaria": "#B2B2B2",
-      "TB/HIV": "#CDD4DF",
-      "RSSH": "#A598F3",
-      "Multicomponent": "#BFCFEE"
+      "HIV": "#CEA8BC",
+      "Tuberculosis": "#E4E4E4",
+      "Malaria": "#F4F4F4",
+      "RSSH": "#FFFFFF",
+      "Multicomponent": "#73D3CD",
+      "TB/HIV": "#DADAF8"
     },
     "disbursementsTimeCycleAggregation": "$apply=<filterString>groupby((DisbursementYear,grantAgreementImplementationPeriod/grantAgreement/component/componentName),aggregate(DisbursementAmount with sum as disbursed))"
   },

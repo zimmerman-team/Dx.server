@@ -9,12 +9,12 @@
     "signed": "totalSignedAmount",
     "component": "componentName",
     "componentColors": {
-      "HIV": "#252C34",
-      "Tuberculosis": "#595C70",
-      "Malaria": "#B2B2B2",
-      "TB/HIV": "#CDD4DF",
-      "RSSH": "#A598F3",
-      "Multicomponent": "#BFCFEE"
+      "HIV": "#CEA8BC",
+      "Tuberculosis": "#231D2C",
+      "Malaria": "#F4F4F4",
+      "TB/HIV": "#B1BCC8",
+      "RSSH": "#E4E4E4",
+      "Multicomponent": "#73D3CD"
     },
     "disbursementsTimeCycleAggregation": "$apply=<filterString>groupby((DisbursementYear,ComponentName),aggregate(DisbursementAmount with sum as disbursed))",
     "signedTimeCycleAggregation": "$select=SignatureDate,ComponentName,TotalSignedAmount&<filterString>",
