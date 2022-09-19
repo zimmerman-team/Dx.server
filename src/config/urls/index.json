@@ -46,7 +46,7 @@
     "allocations": "",
     "eligibility": "",
     "geojson": "",
-    "pledgescontributions": "http://localhost:4004/data/TGFPledgesContributions",
+    "pledgescontributions": "http://backend.dx.staging.nyuki.io/data/TGFPledgesContributions",
     "performancerating": "",
     "performanceframework": "",
     "multicountries": "",
@@ -73,7 +73,7 @@
     "grantPeriods": "",
     "vgrantPeriods": "",
     "grantDetailDisbursements": "",
-    "budgets": "http://localhost:4004/data/IATIAllBudgets",
+    "budgets": "http://backend.dx.staging.nyuki.io/data/IATIAllBudgets",
     "allocations": "",
     "eligibility": "",
     "geojson": "",
@@ -93,8 +93,8 @@
     "multicountriescountriesdata": ""
   },
   "IATICovidActivities": {
-    "grants": "http://localhost:4004/data/IATICovidActivities?$count=true&",
-    "grantsNoCount": "http://localhost:4004/data/IATICovidActivities",
+    "grants": "http://backend.dx.staging.nyuki.io/data/IATICovidActivities?$count=true&",
+    "grantsNoCount": "http://backend.dx.staging.nyuki.io/data/IATICovidActivities",
     "results": "",
     "documents": "",
     "disbursements": "",
@@ -124,8 +124,8 @@
     "multicountriescountriesdata": ""
   },
   "HXLPalestine": {
-    "grants": "http://localhost:4004/data/HXLPalestine?$count=true&",
-    "grantsNoCount": "http://localhost:4004/data/HXLPalestine",
+    "grants": "http://backend.dx.staging.nyuki.io/data/HXLPalestine?$count=true&",
+    "grantsNoCount": "http://backend.dx.staging.nyuki.io/data/HXLPalestine",
     "results": "",
     "documents": "",
     "disbursements": "",
