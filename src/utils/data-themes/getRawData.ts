@@ -9,42 +9,57 @@ export function getRawData(
   baseUrl: string,
   rows: string,
   mappingConfig: any,
+  limit: boolean = true,
 ): object {
-  const calls: AxiosPromise[] = [];
-  const rowsInt = parseInt(rows, 10);
-  if (rowsInt > 1000) {
-    const reps = Math.ceil(rowsInt / 1000);
-    for (let i = 0; i < reps; i++) {
-      const skip = i * 1000;
-      let localRows = 1000;
-      if (i === reps - 1) {
-        localRows = rowsInt - i * 1000;
+  if (limit) {
+    const calls: AxiosPromise[] = [];
+    const rowsInt = parseInt(rows, 10);
+    if (rowsInt > 1000) {
+      const reps = Math.ceil(rowsInt / 1000);
+      for (let i = 0; i < reps; i++) {
+        const skip = i * 1000;
+        let localRows = 1000;
+        if (i === reps - 1) {
+          localRows = rowsInt - i * 1000;
+        }
+        calls.push(
+          axios.get(
+            `${baseUrl}&${generic.withcount}&$skip=${skip}&${generic.rows}${localRows}`,
+          ),
+        );
       }
+    } else {
       calls.push(
-        axios.get(
-          `${baseUrl}&${generic.withcount}&$skip=${skip}&${generic.rows}${localRows}`,
-        ),
+        axios.get(`${baseUrl}&${generic.withcount}&${generic.rows}${rows}`),
       );
     }
-  } else {
-    calls.push(
-      axios.get(`${baseUrl}&${generic.withcount}&${generic.rows}${rows}`),
-    );
+    return Promise.all(calls)
+      .then((responses: AxiosResponse[]) => {
+        let data: {[key: string]: string | number | boolean}[] = [];
+        responses.forEach((res: AxiosResponse) => {
+          data = [
+            ...data,
+            ..._.get(res.data, mappingConfig.dataPath, []).map(formatRawData),
+          ];
+        });
+        const filterOptionGroups = getDatasetFilterOptions(data);
+        return {
+          data,
+          filterOptionGroups,
+          count: _.get(responses[0].data, generic.countField, data.length),
+        };
+      })
+      .catch(handleDataApiError);
   }
-  return Promise.all(calls)
-    .then((responses: AxiosResponse[]) => {
+  return axios.get(baseUrl)
+    .then((response: AxiosResponse) => {
       let data: {[key: string]: string | number | boolean}[] = [];
-      responses.forEach((res: AxiosResponse) => {
-        data = [
-          ...data,
-          ..._.get(res.data, mappingConfig.dataPath, []).map(formatRawData),
-        ];
-      });
+      data = _.get(response.data, mappingConfig.dataPath, []).map(formatRawData)
       const filterOptionGroups = getDatasetFilterOptions(data);
       return {
         data,
         filterOptionGroups,
-        count: _.get(responses[0].data, generic.countField, data.length),
+        count: data.length
       };
     })
     .catch(handleDataApiError);
