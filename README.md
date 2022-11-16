@@ -40,6 +40,7 @@ MONGO_PORT=<mongoDB port>
 MONGO_USERNAME=<mongoDB username>
 MONGO_PASSWORD=<mongoDB password>
 MONGO_DB=<mongoDB name>
+ALTERNATIVE_DATASOURCE_BASE=<Base URL to a different datasource, to be appended with the dataset identifier, for example "https://my.odata.source/data/">
 ```
 
 ## Install dependencies

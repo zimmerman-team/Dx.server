@@ -4,6 +4,7 @@ import axios from 'axios';
 import allocations from '../../config/mapping/data-themes/raw-data/allocations.json';
 import budgets from '../../config/mapping/data-themes/raw-data/budgets.json';
 import eligibility from '../../config/mapping/data-themes/raw-data/eligibility.json';
+import generic from '../../config/mapping/data-themes/raw-data/generic.json';
 import grants from '../../config/mapping/data-themes/raw-data/grants.json';
 import investmentCommitted from '../../config/mapping/data-themes/raw-data/investment-committed.json';
 import investmentDisbursed from '../../config/mapping/data-themes/raw-data/investment-disbursed.json';
@@ -106,6 +107,17 @@ export class DataThemesRawDataController {
       `${urls.eligibility}/?${eligibility.select}`,
       rows,
       eligibility,
+    );
+  }
+
+  @get('/data-themes/raw-data/{datasetId}')
+  @response(200)
+  datasets(@param.query.string('rows') rows: string, @param.path.string('datasetId') id: string): object {
+    return getRawData(
+      process.env.ALTERNATIVE_DATASOURCE_BASE + id,
+      rows,
+      generic,
+      false // disables data limiter
     );
   }
 }
