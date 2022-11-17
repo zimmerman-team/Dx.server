@@ -6,6 +6,7 @@ export * from './dataset.controller';
 export * from './disbursements.controller';
 export * from './documents.controller';
 export * from './eligibility.controller';
+export * from './file-upload.controller';
 export * from './filteroptions.controller';
 export * from './global-search.controller';
 export * from './grants.controller';

@@ -15,7 +15,7 @@ import {getRawData} from '../../utils/data-themes/getRawData';
 import {getRawDataWithMapper} from '../../utils/data-themes/getRawDataWithMapper';
 
 export class DataThemesRawDataController {
-  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
+  constructor(@inject(RestBindings.Http.REQUEST) private req: Request) { }
 
   @get('/data-themes/sample-data/{datasetId}')
   @response(200)

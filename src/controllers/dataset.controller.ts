@@ -32,6 +32,7 @@ export class DatasetController {
   @post('/datasets')
   @response(200, {
     description: 'Dataset model instance',
+    // content: {'application/json': {schema: getModelSchemaRef(Dataset)}},
     content: {'application/json': {schema: getModelSchemaRef(Dataset)}},
   })
   async create(
