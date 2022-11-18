@@ -40,7 +40,9 @@ MONGO_PORT=<mongoDB port>
 MONGO_USERNAME=<mongoDB username>
 MONGO_PASSWORD=<mongoDB password>
 MONGO_DB=<mongoDB name>
-ALTERNATIVE_DATASOURCE_BASE=<Base URL to a different datasource, to be appended with the dataset identifier, for example "https://my.odata.source/data/">
+ALTERNATIVE_DATASOURCE_BASE=<Base URL to a different datasource, to be appended with the dataset
+identifier, for example "https://my.odata.source/data/">
+DX_BACKEND_DATA_DIR=<directory where the DX backend runs + /staging/db/data/>
 ```
 
 ## Install dependencies
