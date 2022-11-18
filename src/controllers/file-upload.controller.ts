@@ -17,6 +17,8 @@ import {FileUploadHandler} from '../types';
 import fs from 'fs';
 import _ from 'lodash';
 
+import axios from 'axios';
+
 /**
  * A controller to handle file uploads using multipart/form-data media type
  */
@@ -61,7 +63,7 @@ export class FileUploadController {
    * Get files and fields for the request
    * @param request - Http request
    */
-  private static getFilesAndFields(request: Request) {
+  private static async getFilesAndFields(request: Request) {
     const uploadedFiles = request.files;
     const mapper = (f: globalThis.Express.Multer.File) => ({
       fieldname: f.fieldname,
@@ -86,6 +88,10 @@ export class FileUploadController {
       process.env.DX_BACKEND_DATA_DIR + newName,
       () => { }
     )
+
+    await axios.get(`http://localhost:4004/update-data`).then(_ => console.log("dx backend update complete")).catch(_ => {console.log("dx backend update failed")})
+    await axios.get(`http://localhost:4400/trigger-update`).then(_ => console.log("SSR update complete")).catch(_ => {console.log("SSR update failed")})
+
     return {files, fields: request.body};
   }
 }
