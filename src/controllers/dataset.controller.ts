@@ -12,6 +12,7 @@ import {
   getModelSchemaRef, param, patch, post, put, requestBody,
   response
 } from '@loopback/rest';
+import fs from 'fs';
 import {Dataset} from '../models';
 import {DatasetRepository} from '../repositories';
 
@@ -149,6 +150,26 @@ export class DatasetController {
     description: 'Dataset DELETE success',
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
+    this.datasetRepository.findById(id).then(() => {
+      // Step 1: remove the dataset from the DX backend if it exists.
+      let path = process.env.DX_BACKEND_API_DATA_DIR || "";
+      const filesInData = fs.readdirSync(path);
+      filesInData.forEach((file: string) => {
+        if (file.includes(id)) fs.unlinkSync(path + file);
+      });
+      // Step 2: remove the dataset from the SSR repository
+      path = process.env.DX_SSR_DIR + 'additionalDatasets.json';
+      const additionalDatasets = require(path)
+      additionalDatasets.forEach((item: any, i: number) => {
+        if (item.id === id) {
+          additionalDatasets.splice(i, 1);
+          return;
+        }
+      });
+      fs.writeFileSync(path, JSON.stringify(additionalDatasets));
+    }).catch(() => { }); // do nothing if the dataset does not exist
+
+    // Step 3: remove the dataset from the dataset database
     await this.datasetRepository.deleteById(id);
   }
 }

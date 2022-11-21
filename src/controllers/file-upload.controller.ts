@@ -85,7 +85,7 @@ export class FileUploadController {
     const newName = `data-${_.get(files[0], 'fieldname', "")}.${originalName.split('.').pop()}`;
     fs.rename(
       process.env.INPUT_DIR + originalName,
-      process.env.DX_BACKEND_DATA_DIR + newName,
+      process.env.DX_BACKEND_STAGING_DATA_DIR + newName,
       () => { }
     )
 
