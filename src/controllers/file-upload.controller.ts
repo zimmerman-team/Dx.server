@@ -14,8 +14,6 @@ import {
 import {FILE_UPLOAD_SERVICE} from '../keys';
 import {FileUploadHandler} from '../types';
 
-import fs from 'fs';
-import _ from 'lodash';
 
 import axios from 'axios';
 
@@ -80,15 +78,6 @@ export class FileUploadController {
         files.push(...uploadedFiles[filename].map(mapper));
       }
     }
-    // MOVE THE PRODUCED FILE TO THE DX BACKEND.
-    const originalName = _.get(files[0], 'originalname', "");
-    const newName = `data-${_.get(files[0], 'fieldname', "")}.${originalName.split('.').pop()}`;
-    fs.rename(
-      process.env.INPUT_DIR + originalName,
-      process.env.DX_BACKEND_STAGING_DATA_DIR + newName,
-      () => { }
-    )
-
     await axios.get(`http://localhost:4004/update-data`).then(_ => console.log("dx backend update complete")).catch(_ => {console.log("dx backend update failed")})
     await axios.get(`http://localhost:4400/trigger-update`).then(_ => console.log("SSR update complete")).catch(_ => {console.log("SSR update failed")})
 

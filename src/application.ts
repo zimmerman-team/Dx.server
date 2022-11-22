@@ -74,14 +74,15 @@ export class ApiApplication extends BootMixin(
    */
   protected configureFileUpload(destination?: string) {
     // Upload files to `dist/.sandbox` by default
-    destination = destination ?? path.join(__dirname, "../input");
+    destination = destination ?? path.join(__dirname, "../../dx.backend/staging/db/data");
     this.bind(STORAGE_DIRECTORY).to(destination);
     const multerOptions: multer.Options = {
       storage: multer.diskStorage({
         destination,
         // Use the original file name as is
         filename: (req, file, cb) => {
-          cb(null, file.originalname);
+          const newName = `data-${file.fieldname}.${file.originalname.split('.').pop()}`;
+          cb(null, newName);
         },
       }),
     };
