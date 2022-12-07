@@ -152,7 +152,7 @@ export class DatasetController {
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     this.datasetRepository.findById(id).then(() => {
       // Step 1: remove the dataset from the DX backend if it exists.
-      let path = process.env.DX_BACKEND_API_DATA_DIR || "";
+      let path = process.env.DX_BACKEND_DIR + "api/db/data/" || "";
       const filesInData = fs.readdirSync(path);
       filesInData.forEach((file: string) => {
         if (file.includes(id)) fs.unlinkSync(path + file);
@@ -167,7 +167,30 @@ export class DatasetController {
         }
       });
       fs.writeFileSync(path, JSON.stringify(additionalDatasets));
-    }).catch(() => { }); // do nothing if the dataset does not exist
+
+      // delete the file from SSR (parsed-)data-files
+      fs.unlinkSync(`${process.env.DX_SSR_DIR}/parsed-data-files/${id}.json`);
+      fs.unlinkSync(`${process.env.DX_SSR_DIR}/data-files/${id}.json`);
+      // delete the dataset entry from backend api/db/schema.cds
+      const schemaFile = `${process.env.DX_BACKEND_DIR}api/db/schema.cds`;
+      const schema = fs.readFileSync(schemaFile).toString();
+      let newContent: string[] = [];
+      let skip = false;
+      schema.split('\n').forEach(line => {
+        if (!skip && line.includes(`dx${id}`)) skip = true;
+        if (!skip) newContent.push(line);
+        if (skip && line === '}') skip = false;
+      });
+      fs.writeFileSync(schemaFile, newContent.join('\n'));
+
+      // delete the dataset entry from backend api/srv/data-service.cds
+      const serviceFile = `${process.env.DX_BACKEND_DIR}api/srv/data-service.cds`;
+      const service = fs.readFileSync(serviceFile)
+        .toString().split('\n')
+        .map((str) => str.includes(`dx${id}`) ? "" : str).join('\n');
+      console.log(service)
+      fs.writeFileSync(serviceFile, service);
+    }).catch((e) => {console.log(e)}); // do nothing if the dataset does not exist
 
     // Step 3: remove the dataset from the dataset database
     await this.datasetRepository.deleteById(id);

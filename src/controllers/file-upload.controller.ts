@@ -78,8 +78,16 @@ export class FileUploadController {
         files.push(...uploadedFiles[filename].map(mapper));
       }
     }
-    await axios.get(`http://localhost:4004/update-data`).then(_ => console.log("dx backend update complete")).catch(_ => {console.log("dx backend update failed")})
-    await axios.get(`http://localhost:4400/trigger-update`).then(_ => console.log("SSR update complete")).catch(_ => {console.log("SSR update failed")})
+    await axios.get(`http://localhost:4004/update-data`)
+      .then(_ => console.log("dx backend update complete"))
+      .catch(_ => {
+        console.log("dx backend update failed");
+        return {files, fields: request.body};
+        // TODO: remove the created dataset from the repo.
+      });
+    await axios.get(`http://localhost:4400/trigger-update`)
+      .then(_ => console.log("SSR update complete"))
+      .catch(_ => {console.log("SSR update failed")});
 
     return {files, fields: request.body};
   }
