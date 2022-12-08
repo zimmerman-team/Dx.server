@@ -13,8 +13,8 @@ import {
 } from '@loopback/rest';
 import {FILE_UPLOAD_SERVICE} from '../keys';
 import {FileUploadHandler} from '../types';
-
-
+// @ts-ignore keep this import for production node
+import multer from 'multer';
 import axios from 'axios';
 
 /**
