@@ -85,6 +85,7 @@ export class ApiApplication extends BootMixin(
           cb(null, newName);
         },
       }),
+      limits: {fileSize: 1024 * 1024 * 40}
     };
     // Configure the file upload service with multer options
     this.configure(FILE_UPLOAD_SERVICE).to(multerOptions);

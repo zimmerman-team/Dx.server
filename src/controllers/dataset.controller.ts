@@ -169,8 +169,11 @@ export class DatasetController {
       fs.writeFileSync(path, JSON.stringify(additionalDatasets));
 
       // delete the file from SSR (parsed-)data-files
-      fs.unlinkSync(`${process.env.DX_SSR_DIR}/parsed-data-files/${id}.json`);
-      fs.unlinkSync(`${process.env.DX_SSR_DIR}/data-files/${id}.json`);
+      const parsedDF = `${process.env.DX_SSR_DIR}/parsed-data-files/${id}.json`;
+      const dF = `${process.env.DX_SSR_DIR}/data-files/${id}.json`;
+      fs.existsSync(parsedDF) && fs.unlinkSync(parsedDF);
+      fs.existsSync(dF) && fs.unlinkSync(dF);
+
       // delete the dataset entry from backend api/db/schema.cds
       const schemaFile = `${process.env.DX_BACKEND_DIR}api/db/schema.cds`;
       const schema = fs.readFileSync(schemaFile).toString();
@@ -188,7 +191,6 @@ export class DatasetController {
       const service = fs.readFileSync(serviceFile)
         .toString().split('\n')
         .map((str) => str.includes(`dx${id}`) ? "" : str).join('\n');
-      console.log(service)
       fs.writeFileSync(serviceFile, service);
     }).catch((e) => {console.log(e)}); // do nothing if the dataset does not exist
 
