@@ -1,5 +1,6 @@
 export * from './allocations.controller';
 export * from './budgets.controller';
+export * from './charts.controller';
 export * from './data-themes/index.controller';
 export * from './data-themes/raw-data.controller';
 export * from './dataset.controller';
@@ -16,4 +17,5 @@ export * from './performanceframework.controller';
 export * from './performancerating.controller';
 export * from './ping.controller';
 export * from './pledgescontributions.controller';
+export * from './reports.controller';
 export * from './results.controller';

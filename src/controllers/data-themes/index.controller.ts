@@ -111,9 +111,6 @@ export class DataThemesController {
         }
       : undefined;
     if (order) {
-      if (!order) {
-        query = {};
-      }
       query = {
         ...query,
         order,
