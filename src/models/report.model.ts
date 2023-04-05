@@ -22,10 +22,10 @@ export class Report extends Entity {
   showHeader: boolean;
 
   @property({
-    type: 'object',
+    type: 'string',
     required: false,
   })
-  title: object;
+  title: string;
 
   @property({
     type: 'object',
@@ -37,13 +37,44 @@ export class Report extends Entity {
     type: 'array',
     itemType: 'any',
   })
-  rows: any[][]; // string: chart id, object: formatted text
+  rows: {
+    items: any[]; // string: chart id, object: formatted text
+    structure: string;
+  }[];
 
   @property({
     type: 'boolean',
     default: false,
   })
   public: boolean;
+
+  @property({
+    type: 'string',
+    required: false,
+    default: '#252c34',
+  })
+  backgroundColor: string;
+
+  @property({
+    type: 'string',
+    required: false,
+    default: '#ffffff',
+  })
+  titleColor: string;
+
+  @property({
+    type: 'string',
+    required: false,
+    default: '#ffffff',
+  })
+  descriptionColor: string;
+
+  @property({
+    type: 'string',
+    required: false,
+    default: '#ffffff',
+  })
+  dateColor: string;
 
   @property({
     type: 'date',

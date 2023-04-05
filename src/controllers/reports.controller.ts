@@ -110,47 +110,7 @@ export class ReportsController {
     filter?: FilterExcludingWhere<Report>,
   ): Promise<Report> {
     const report = await this.ReportRepository.findById(id, filter);
-    return new Promise(resolve => {
-      for (const row of report.rows) {
-        let rowCounter = 0;
-        new Promise(resolve2 => {
-          for (const item of row) {
-            let itemCounter = 0;
-            if (typeof item === 'string') {
-              axios
-                .get(`http://localhost:4200/chart/${item}`)
-                .then(res => {
-                  report.rows[rowCounter][itemCounter] = res.data;
-                  itemCounter++;
-                  if (itemCounter === row.length) {
-                    resolve2({});
-                  }
-                })
-                .catch(err => {
-                  console.log(err);
-                  report.rows[rowCounter][itemCounter] = {};
-                  itemCounter++;
-                  if (itemCounter === row.length) {
-                    resolve2({});
-                  }
-                });
-            } else {
-              itemCounter++;
-              if (itemCounter === row.length) {
-                resolve2({});
-              }
-            }
-          }
-        })
-          .then(() => {
-            rowCounter++;
-            if (rowCounter === report.rows.length) {
-              resolve(report);
-            }
-          })
-          .catch(() => {});
-      }
-    });
+    return report;
   }
 
   @post('/report/{id}/render')
