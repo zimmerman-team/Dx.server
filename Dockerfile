@@ -6,6 +6,8 @@ RUN apk update && apk add bash
 # Set up the server directory
 WORKDIR /app
 COPY . /app
+RUN mkdir -p /app/dx.rawgraphs-ssr
+RUN mkdir -p /app/dx.backend
 
 # Install yarn dependencies
 RUN yarn global add pm2

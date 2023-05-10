@@ -212,8 +212,9 @@ export class ChartsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
+    const host = process.env.SSR_SUBDOMAIN ? `${process.env.SSR_SUBDOMAIN}.${process.env.MAIN_DOMAIN}` : 'localhost';
     const result = await (
-      await axios.post(`http://localhost:4400/render/chart/${id}`, {...body})
+      await axios.post(`http://${host}:4400/render/chart/${id}`, {...body})
     ).data;
     return result;
   }
