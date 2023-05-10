@@ -180,8 +180,14 @@ export class ChartsController {
   async duplicate(@param.path.string('id') id: string): Promise<Chart> {
     const fChart = await this.chartRepository.findById(id);
     return this.chartRepository.create({
-      ...fChart,
       name: `${fChart.name} copy`,
+      public: fChart.public,
+      vizType: fChart.vizType,
+      datasetId: fChart.datasetId,
+      mapping: fChart.mapping,
+      vizOptions: fChart.vizOptions,
+      appliedFilters: fChart.appliedFilters,
+      enabledFilterOptionGroups: fChart.enabledFilterOptionGroups,
     });
   }
 }
