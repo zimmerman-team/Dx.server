@@ -181,8 +181,16 @@ export class ReportsController {
   async duplicate(@param.path.string('id') id: string): Promise<Report> {
     const fReport = await this.ReportRepository.findById(id);
     return this.ReportRepository.create({
-      ...fReport,
       name: `${fReport.name} copy`,
+      showHeader: fReport.showHeader,
+      title: fReport.title,
+      subTitle: fReport.subTitle,
+      rows: fReport.rows,
+      public: fReport.public,
+      backgroundColor: fReport.backgroundColor,
+      titleColor: fReport.titleColor,
+      descriptionColor: fReport.descriptionColor,
+      dateColor: fReport.dateColor,
     });
   }
 }
