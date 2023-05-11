@@ -89,15 +89,15 @@ export class FileUploadController {
       }
     }
     for (const uploadedFile of files) {
-      const host = process.env.BACKEND_SUBDOMAIN ? `${process.env.BACKEND_SUBDOMAIN}.${process.env.MAIN_DOMAIN}` : 'localhost';
-      await axios.post(`${host}:4004/upload-file/${uploadedFile.filename}`)
+      const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+      await axios.post(`http://${host}:4004/upload-file/${uploadedFile.filename}`)
         .then(_ => console.log("DX Backend upload complete"))
         .catch(_ => {
           console.log("DX Backend upload failed");
           return {error: "Error uploading files"};
         });
     }
-    const host = process.env.SSR_SUBDOMAIN ? `${process.env.SSR_SUBDOMAIN}.${process.env.MAIN_DOMAIN}` : 'localhost';
+    const host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
     await axios.get(`http://${host}:4400/trigger-update`)
       .then(_ => console.log("SSR update complete"))
       .catch(_ => {console.log("SSR update failed")});

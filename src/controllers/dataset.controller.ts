@@ -153,7 +153,7 @@ export class DatasetController {
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     this.datasetRepository.findById(id).then(() => {
       // Step 1: remove the dataset from the DX backend if it exists.
-      const host = process.env.BACKEND_SUBDOMAIN ? `${process.env.BACKEND_SUBDOMAIN}.${process.env.MAIN_DOMAIN}` : 'localhost';
+      const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
       axios.post(`${host}:4004/delete-dataset/dx${id}`)
         .then(_ => console.log("File removed from DX Backend"))
         .catch(_ => {

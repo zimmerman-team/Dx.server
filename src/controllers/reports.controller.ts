@@ -126,7 +126,7 @@ export class ReportsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
-    const host = process.env.SSR_SUBDOMAIN ? `${process.env.SSR_SUBDOMAIN}.${process.env.MAIN_DOMAIN}` : 'localhost';
+    const host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
     const result = await (
       await axios.post(`http://${host}:4400/render/report/${id}`, {...body})
     ).data;
