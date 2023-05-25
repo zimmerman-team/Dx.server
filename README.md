@@ -30,6 +30,7 @@ const dbPort = process.env.MONGO_PORT ?? 27017;
 const dbUser = process.env.MONGO_USERNAME ?? '';
 const dbPass = process.env.MONGO_PASSWORD ?? '';
 const database = process.env.MONGO_DB ?? 'the-data-explorer-db';
+const authSource = process.env.MONGO_AUTH_SOURCE ?? '';
 ```
 
 If you want to use different configuration variables then add them as environment variables
@@ -40,9 +41,11 @@ MONGO_PORT=<mongoDB port>
 MONGO_USERNAME=<mongoDB username>
 MONGO_PASSWORD=<mongoDB password>
 MONGO_DB=<mongoDB name>
+MONGO_AUTH_SOURCE=<mongoDB authentication source>
 ALTERNATIVE_DATASOURCE_BASE=<Base URL to a different datasource, to be appended with the dataset identifier, for example "https://my.odata.source/data/dx">
 DX_BACKEND_DIR=<directory where the DX backend runs, ending in a />
 DX_SSR_DIR=<directory where the DX SSR runs, ending in a />
+DX_BACKEND_URL=<URL to DX Backend, localhost would be http://localhost:4004>
 ```
 
 ## Install dependencies

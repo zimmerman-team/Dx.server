@@ -17,6 +17,15 @@ import {FileUploadHandler} from '../types';
 import multer from 'multer';
 import axios from 'axios';
 
+interface UploadedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  filename: string;
+}
+
 /**
  * A controller to handle file uploads using multipart/form-data media type
  */
@@ -69,8 +78,9 @@ export class FileUploadController {
       encoding: f.encoding,
       mimetype: f.mimetype,
       size: f.size,
+      filename: f.filename,
     });
-    let files: object[] = [];
+    let files: UploadedFile[] = [];
     if (Array.isArray(uploadedFiles)) {
       files = uploadedFiles.map(mapper);
     } else {
@@ -78,14 +88,17 @@ export class FileUploadController {
         files.push(...uploadedFiles[filename].map(mapper));
       }
     }
-    await axios.get(`http://localhost:4004/update-data`)
-      .then(_ => console.log("dx backend update complete"))
-      .catch(_ => {
-        console.log("dx backend update failed");
-        return {files, fields: request.body};
-        // TODO: remove the created dataset from the repo.
-      });
-    await axios.get(`http://localhost:4400/trigger-update`)
+    for (const uploadedFile of files) {
+      const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+      await axios.post(`http://${host}:4004/upload-file/${uploadedFile.filename}`)
+        .then(_ => console.log("DX Backend upload complete"))
+        .catch(_ => {
+          console.log("DX Backend upload failed");
+          return {error: "Error uploading files"};
+        });
+    }
+    const host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
+    await axios.get(`http://${host}:4400/trigger-update`)
       .then(_ => console.log("SSR update complete"))
       .catch(_ => {console.log("SSR update failed")});
 

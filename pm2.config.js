@@ -16,7 +16,7 @@ module.exports = {
       restart_delay: 100,
       out_file: '/home/zim/app-logs/the-data-explorer-api/out.log',
       error_file: '/home/zim/app-logs/the-data-explorer-api/error.log',
-      watch: true,
+      watch: false,
       ignore_watch: [
         '.git',
         '.circle',

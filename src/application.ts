@@ -29,6 +29,7 @@ export class ApiApplication extends BootMixin(
     const dbUser = process.env.MONGO_USERNAME ?? '';
     const dbPass = process.env.MONGO_PASSWORD ?? '';
     const database = process.env.MONGO_DB ?? 'the-data-explorer-db';
+    const authSource = process.env.MONGO_AUTH_SOURCE ?? '';
 
     this.bind('datasources.config.db').to({
       name: 'db',
@@ -39,6 +40,7 @@ export class ApiApplication extends BootMixin(
       user: dbUser,
       password: dbPass,
       database: database,
+      authSource: authSource,
       useNewUrlParser: true,
     });
     this.bind('datasources.db').toClass(DbDataSource);
@@ -74,18 +76,18 @@ export class ApiApplication extends BootMixin(
    */
   protected configureFileUpload(destination?: string) {
     // Upload files to `dist/.sandbox` by default
-    destination = destination ?? path.join(__dirname, "../../dx.backend/staging/db/data");
+    destination = destination ?? process.env.DX_BACKEND_DIR + 'staging/';
     this.bind(STORAGE_DIRECTORY).to(destination);
     const multerOptions: multer.Options = {
       storage: multer.diskStorage({
         destination,
         // Use the original file name as is
         filename: (req, file, cb) => {
-          const newName = `data-${file.fieldname}.${file.originalname.split('.').pop()}`;
+          const newName = `${file.fieldname}.${file.originalname.split('.').pop()}`;
           cb(null, newName);
         },
       }),
-      limits: {fileSize: 1024 * 1024 * 40}
+      limits: {fileSize: 1024 * 1024 * 150}
     };
     // Configure the file upload service with multer options
     this.configure(FILE_UPLOAD_SERVICE).to(multerOptions);

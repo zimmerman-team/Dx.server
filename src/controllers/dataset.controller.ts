@@ -4,14 +4,15 @@ import {
   CountSchema,
   Filter,
   FilterExcludingWhere,
-  repository,
-  Where
+  Where,
+  repository
 } from '@loopback/repository';
 import {
   del, get,
   getModelSchemaRef, param, patch, post, put, requestBody,
   response
 } from '@loopback/rest';
+import axios from 'axios';
 import fs from 'fs';
 import {Dataset} from '../models';
 import {DatasetRepository} from '../repositories';
@@ -152,49 +153,30 @@ export class DatasetController {
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     this.datasetRepository.findById(id).then(() => {
       // Step 1: remove the dataset from the DX backend if it exists.
-      let path = process.env.DX_BACKEND_DIR + "api/db/data/" || "";
-      const filesInData = fs.readdirSync(path);
-      filesInData.forEach((file: string) => {
-        if (file.includes(id)) fs.unlinkSync(path + file);
-      });
+      const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+      axios.post(`${host}:4004/delete-dataset/dx${id}`)
+        .then(_ => console.log("File removed from DX Backend"))
+        .catch(_ => {
+          console.log("Failed to remove the dataset from DX Backend");
+        });
       // Step 2: remove the dataset from the SSR repository
-      path = process.env.DX_SSR_DIR + 'additionalDatasets.json';
-      const additionalDatasets = require(path)
+      const ssrPath = process.env.DX_SSR_DIR + 'additionalDatasets.json';
+      const additionalDatasets = require(ssrPath)
       additionalDatasets.forEach((item: any, i: number) => {
         if (item.id === id) {
           additionalDatasets.splice(i, 1);
           return;
         }
       });
-      fs.writeFileSync(path, JSON.stringify(additionalDatasets));
+      fs.writeFileSync(ssrPath, JSON.stringify(additionalDatasets));
 
       // delete the file from SSR (parsed-)data-files
       const parsedDF = `${process.env.DX_SSR_DIR}/parsed-data-files/${id}.json`;
       const dF = `${process.env.DX_SSR_DIR}/data-files/${id}.json`;
       fs.existsSync(parsedDF) && fs.unlinkSync(parsedDF);
       fs.existsSync(dF) && fs.unlinkSync(dF);
-
-      // delete the dataset entry from backend api/db/schema.cds
-      const schemaFile = `${process.env.DX_BACKEND_DIR}api/db/schema.cds`;
-      const schema = fs.readFileSync(schemaFile).toString();
-      let newContent: string[] = [];
-      let skip = false;
-      schema.split('\n').forEach(line => {
-        if (!skip && line.includes(`dx${id}`)) skip = true;
-        if (!skip) newContent.push(line);
-        if (skip && line === '}') skip = false;
-      });
-      fs.writeFileSync(schemaFile, newContent.join('\n'));
-
-      // delete the dataset entry from backend api/srv/data-service.cds
-      const serviceFile = `${process.env.DX_BACKEND_DIR}api/srv/data-service.cds`;
-      const service = fs.readFileSync(serviceFile)
-        .toString().split('\n')
-        .map((str) => str.includes(`dx${id}`) ? "" : str).join('\n');
-      fs.writeFileSync(serviceFile, service);
-    }).catch((e) => {console.log(e)}); // do nothing if the dataset does not exist
-
+    });
     // Step 3: remove the dataset from the dataset database
     await this.datasetRepository.deleteById(id);
-  }
+  };
 }

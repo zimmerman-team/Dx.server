@@ -52,8 +52,9 @@ export class ChartsController {
   @get('/chart/sample-data/{datasetId}')
   @response(200)
   async sampleData(@param.path.string('datasetId') datasetId: string) {
+    const host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
     return axios
-      .get(`http://localhost:4400/sample-data/${datasetId}/?returnAll=1`)
+      .get(`http://${host}:4400/sample-data/${datasetId}/?returnAll=1`)
       .then(res => {
         const rows = _.get(res, 'data.data', []);
         const columns = Object.keys(_.get(rows, '[0]', {}));
@@ -212,8 +213,9 @@ export class ChartsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
+    const host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
     const result = await (
-      await axios.post(`http://localhost:4400/render/chart/${id}`, {...body})
+      await axios.post(`http://${host}:4400/render/chart/${id}`, {...body})
     ).data;
     return result;
   }
