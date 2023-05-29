@@ -72,7 +72,15 @@ export class ReportsController {
   async find(@param.filter(Report) filter?: Filter<Report>): Promise<Report[]> {
     return this.ReportRepository.find({
       ...filter,
-      fields: ['id', 'name', 'createdDate', 'showHeader', 'title', 'subTitle'],
+      fields: [
+        'id',
+        'name',
+        'createdDate',
+        'showHeader',
+        'backgroundColor',
+        'title',
+        'subTitle',
+      ],
     });
   }
 
