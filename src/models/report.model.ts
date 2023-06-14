@@ -77,6 +77,15 @@ export class Report extends Entity {
   dateColor: string;
 
   @property({
+    type: 'array',
+    itemType: 'object',
+  })
+  contentWidths: {
+    id: string;
+    widths: number[];
+  }[];
+
+  @property({
     type: 'date',
     default: () => new Date(),
   })
