@@ -86,6 +86,15 @@ export class Report extends Entity {
   }[];
 
   @property({
+    type: 'array',
+    itemType: 'object',
+  })
+  contentHeights: {
+    id: string;
+    heights: number[];
+  }[];
+
+  @property({
     type: 'date',
     default: () => new Date(),
   })
