@@ -152,31 +152,14 @@ export class DatasetController {
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     this.datasetRepository.findById(id).then(() => {
-      // Step 1: remove the dataset from the DX backend if it exists.
+      // Trigger the dataset removal through the backend, cleaning up SSR and the backend
       const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
       axios.post(`${host}:4004/delete-dataset/dx${id}`)
         .then(_ => console.log("File removed from DX Backend"))
         .catch(_ => {
           console.log("Failed to remove the dataset from DX Backend");
         });
-      // Step 2: remove the dataset from the SSR repository
-      const ssrPath = process.env.DX_SSR_DIR + 'additionalDatasets.json';
-      const additionalDatasets = require(ssrPath)
-      additionalDatasets.forEach((item: any, i: number) => {
-        if (item.id === id) {
-          additionalDatasets.splice(i, 1);
-          return;
-        }
-      });
-      fs.writeFileSync(ssrPath, JSON.stringify(additionalDatasets));
-
-      // delete the file from SSR (parsed-)data-files
-      const parsedDF = `${process.env.DX_SSR_DIR}/parsed-data-files/${id}.json`;
-      const dF = `${process.env.DX_SSR_DIR}/data-files/${id}.json`;
-      fs.existsSync(parsedDF) && fs.unlinkSync(parsedDF);
-      fs.existsSync(dF) && fs.unlinkSync(dF);
     });
-    // Step 3: remove the dataset from the dataset database
     await this.datasetRepository.deleteById(id);
   };
 }
