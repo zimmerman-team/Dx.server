@@ -14,6 +14,7 @@ import {DbDataSource} from './datasources';
 
 import {FILE_UPLOAD_SERVICE, STORAGE_DIRECTORY} from "./keys";
 import {MySequence} from "./sequence";
+import { mimeTypeToFileExtension } from './utils/mimeTypeToFileExtension';
 
 export {ApplicationConfig};
 
@@ -83,7 +84,7 @@ export class ApiApplication extends BootMixin(
         destination,
         // Use the original file name as is
         filename: (req, file, cb) => {
-          const newName = `${file.fieldname}.${file.originalname.split('.').pop()}`;
+          const newName = `${file.fieldname}${mimeTypeToFileExtension(file.mimetype)}`;
           cb(null, newName);
         },
       }),
