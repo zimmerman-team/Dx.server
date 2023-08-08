@@ -97,11 +97,6 @@ export class FileUploadController {
           return {error: "Error uploading files"};
         });
     }
-    const host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
-    await axios.get(`http://${host}:4400/trigger-update`)
-      .then(_ => console.log("SSR update complete"))
-      .catch(_ => {console.log("SSR update failed")});
-
     return {files, fields: request.body};
   }
 }
