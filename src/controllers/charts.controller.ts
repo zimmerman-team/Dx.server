@@ -54,77 +54,14 @@ export class ChartsController {
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     const host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
     return axios
-      .get(`http://${host}:4400/sample-data/${datasetId}/?returnAll=1`)
+      .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {
-        const rows = _.get(res, 'data.data', []);
-        const columns = Object.keys(_.get(rows, '[0]', {}));
-
-        const stats: {
-          name: string;
-          type: string;
-          data: {name: string; value: number}[];
-        }[] = [];
-
-        columns.forEach((c: string) => {
-          const grouped = _.groupBy(rows, c);
-          const keys = Object.keys(grouped);
-          if (
-            keys.length < 4 ||
-            (keys.length < rows.length / 1.5 && keys.length > 20)
-          ) {
-            const total = rows.length;
-            stats.push({
-              name: c,
-              type: 'percentage',
-              data: _.orderBy(
-                keys.map(k => ({
-                  name: k,
-                  value: (grouped[k].length / total) * 100,
-                })),
-                'value',
-                'desc',
-              ),
-            });
-            if (stats[stats.length - 1].data.length > 20) {
-              const others = stats[stats.length - 1].data.slice(2);
-              stats[stats.length - 1].data = stats[stats.length - 1].data.slice(
-                0,
-                2,
-              );
-              stats[stats.length - 1].data.push({
-                name: 'Others',
-                value: _.sumBy(others, 'value'),
-              });
-            }
-          } else if (keys.length < 21) {
-            stats.push({
-              name: c,
-              type: 'bar',
-              data: _.sortBy(keys).map(k => ({
-                name: k,
-                value: grouped[k].length,
-              })),
-            });
-          } else {
-            stats.push({
-              name: c,
-              type: 'unique',
-              data: [
-                {
-                  name: 'Unique',
-                  value: keys.length,
-                },
-              ],
-            });
-          }
-        });
-
         return {
           count: _.get(res, 'data.count', []),
           sample: _.get(res, 'data.sample', []),
           dataTypes: _.get(res, 'data.dataTypes', []),
           filterOptionGroups: _.get(res, 'data.filterOptionGroups', []),
-          stats,
+          stats: _.get(res, 'data.stats', []),
         };
       })
       .catch(error => {

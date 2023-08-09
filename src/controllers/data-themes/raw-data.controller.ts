@@ -22,7 +22,7 @@ export class DataThemesRawDataController {
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     const host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
     return axios
-      .get(`http://${host}:4400/sample-data/${datasetId}`)
+      .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {
         return res.data;
       })
