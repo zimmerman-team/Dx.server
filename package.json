@@ -41,7 +41,8 @@
       "src/"
     ],
     "ignore": [
-      "dist/*"
+      "dist/*",
+      "src/utils/renderChart/dist/rendering/*"
     ],
     "ext": "ts",
     "exec": "npm start"
