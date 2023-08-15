@@ -44,7 +44,6 @@ MONGO_DB=<mongoDB name>
 MONGO_AUTH_SOURCE=<mongoDB authentication source>
 ALTERNATIVE_DATASOURCE_BASE=<Base URL to a different datasource, to be appended with the dataset identifier, for example "https://my.odata.source/data/dx">
 DX_BACKEND_DIR=<directory where the DX backend runs, ending in a />
-DX_SSR_DIR=<directory where the DX SSR runs, ending in a />
 DX_BACKEND_URL=<URL to DX Backend, localhost would be http://localhost:4004>
 PARSED_DATA_FILES_PATH=<directory where the parsed data files are stored>
 ```
