@@ -33,6 +33,8 @@
     "rebuild": "yarn run clean && yarn run build",
     "dev": "nodemon",
     "deploy": "yarn prestart && pm2 start pm2.config.js --env production",
+    "initialise-server": "git submodule init && git submodule update && cd src/utils/renderChart/rawgraphs-charts && yarn install && yarn build && cd ../ && npx webpack --config webpack.config.cjs && cd ../../..",
+    "rebuild-ssr": "cd src/utils/renderChart/ && npx webpack --config webpack.config.cjs && cd ../../..",
     "docker": "yarn prestart && yarn migrate && pm2-runtime start pm2.config.js --env production"
   },
   "nodemonConfig": {
@@ -41,7 +43,8 @@
       "src/"
     ],
     "ignore": [
-      "dist/*"
+      "dist/*",
+      "src/utils/renderChart/dist/rendering/*"
     ],
     "ext": "ts",
     "exec": "npm start"
