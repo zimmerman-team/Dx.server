@@ -153,7 +153,7 @@ export class ChartsController {
     @requestBody() body: any,
   ) {
     try {
-      const chartData = await this.chartRepository.findById(id);
+      const chartData = id === "new" ? {} : await this.chartRepository.findById(id);
       // save an object with ({...body}, chartData) with identifiers as body and chardata as json
       const ob = {
         body: {...body},

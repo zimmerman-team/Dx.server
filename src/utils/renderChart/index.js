@@ -212,7 +212,8 @@ export async function renderChartData(id, body, chartData) {
   let item = data[0][0];
   let parsed = null;
   try {
-    const parsedData = fs.readFileSync(`/home/zimmerman/Projects/dx/DX/dx.rawgraphs-ssr/parsed-data-files/${item.datasetId}.json`)
+    const filePath = process.env.PARSED_DATA_FILES_PATH || `./`;
+    const parsedData = fs.readFileSync(`${filePath}${item.datasetId}.json`)
     parsed = JSON.parse(parsedData.toString());
   } catch (error) {
     console.error(`Error loading parsed data`, error);
