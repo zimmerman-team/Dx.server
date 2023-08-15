@@ -7,7 +7,8 @@ RUN apk update && apk add bash
 WORKDIR /app
 COPY . /app
 RUN mkdir -p /app/dx.backend
-
+# Ensure .env is available for the execSync index of the chart rendering
+RUN echo "PARSED_DATA_FILES_PATH='/app/dx.backend/parsed-data-files/'" > .env
 # Install yarn dependencies
 RUN yarn global add pm2
 RUN yarn install
