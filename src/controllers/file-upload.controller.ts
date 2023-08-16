@@ -89,11 +89,12 @@ export class FileUploadController {
       }
     }
     for (const uploadedFile of files) {
-      const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+      let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
       await axios.post(`http://${host}:4004/upload-file/${uploadedFile.filename}`)
         .then(_ => console.log("DX Backend upload complete"))
-        .catch(_ => {
-          console.log("DX Backend upload failed");
+        .catch(e => {
+          console.log("DX Backend upload failed", e);
           return {error: "Error uploading files"};
         });
     }

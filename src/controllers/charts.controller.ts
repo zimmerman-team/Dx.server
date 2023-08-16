@@ -54,7 +54,8 @@ export class ChartsController {
   @get('/chart/sample-data/{datasetId}')
   @response(200)
   async sampleData(@param.path.string('datasetId') datasetId: string) {
-    const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+    let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+    host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
     return axios
       .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {
