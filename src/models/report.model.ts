@@ -40,6 +40,14 @@ export class Report extends Entity {
   rows: {
     items: any[]; // string: chart id, object: formatted text
     structure: string;
+    contentWidths: {
+      id: string;
+      widths: number[];
+    }[];
+    contentHeights: {
+      id: string;
+      heights: number[];
+    }[];
   }[];
 
   @property({
@@ -75,24 +83,6 @@ export class Report extends Entity {
     default: '#ffffff',
   })
   dateColor: string;
-
-  @property({
-    type: 'array',
-    itemType: 'object',
-  })
-  contentWidths: {
-    id: string;
-    widths: number[];
-  }[];
-
-  @property({
-    type: 'array',
-    itemType: 'object',
-  })
-  contentHeights: {
-    id: string;
-    heights: number[];
-  }[];
 
   @property({
     type: 'date',

@@ -199,8 +199,7 @@ export class ReportsController {
       backgroundColor: fReport.backgroundColor,
       titleColor: fReport.titleColor,
       descriptionColor: fReport.descriptionColor,
-      contentWidths: fReport.contentWidths,
-      contentHeights: fReport.contentHeights,
+
       dateColor: fReport.dateColor,
     });
   }

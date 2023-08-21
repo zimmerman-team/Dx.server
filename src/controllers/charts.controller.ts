@@ -18,11 +18,11 @@ import {
   response,
 } from '@loopback/rest';
 import axios from 'axios';
+import {execSync} from 'child_process';
+import fs from 'fs-extra';
 import _ from 'lodash';
 import {Chart} from '../models';
 import {ChartRepository} from '../repositories';
-import fs from 'fs-extra';
-import { execSync } from 'child_process';
 
 export class ChartsController {
   constructor(
@@ -154,27 +154,35 @@ export class ChartsController {
     @requestBody() body: any,
   ) {
     try {
-      const chartData = id === "new" ? {} : await this.chartRepository.findById(id);
+      const chartData =
+        id === 'new' ? {} : await this.chartRepository.findById(id);
       // save an object with ({...body}, chartData) with identifiers as body and chardata as json
       const ob = {
         body: {...body},
-        chartData: chartData
-      }
-      fs.writeFileSync(`./src/utils/renderChart/dist/rendering/${id}.json`, JSON.stringify(ob, null, 4));
+        chartData: chartData,
+      };
+      fs.writeFileSync(
+        `./src/utils/renderChart/dist/rendering/${id}.json`,
+        JSON.stringify(ob, null, 4),
+      );
       // execute the ./src/utiles/renderChart/dist/index.cjs with id as the parameter
       execSync(`node ./src/utils/renderChart/dist/index.cjs ${id}`);
       // once the renderign is done, read the output file
-      const data = fs.readFileSync(`./src/utils/renderChart/dist/rendering/${id}_rendered.json`);
+      const data = fs.readFileSync(
+        `./src/utils/renderChart/dist/rendering/${id}_rendered.json`,
+      );
 
       // clean temp files
       fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}.json`);
-      fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}_rendered.json`);
+      fs.removeSync(
+        `./src/utils/renderChart/dist/rendering/${id}_rendered.json`,
+      );
 
       // return jsonified data
       return JSON.parse(data.toString());
     } catch (err) {
       console.error(err);
-      return { "error": err };
+      return {error: err};
     }
   }
 
