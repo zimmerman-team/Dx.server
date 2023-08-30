@@ -109,6 +109,7 @@ export class ApiApplication extends BootMixin(
         filename: (req, file, cb) => {
           const newName = `${file.fieldname}${mimeTypeToFileExtension(
             file.mimetype,
+            file.originalname,
           )}`;
           cb(null, newName);
         },

@@ -72,6 +72,7 @@ export class FileUploadController {
    */
   private static async getFilesAndFields(request: Request) {
     const uploadedFiles = request.files;
+    const additionalFields = request.body;
     const mapper = (f: globalThis.Express.Multer.File) => ({
       fieldname: f.fieldname,
       originalname: f.originalname,
@@ -91,7 +92,19 @@ export class FileUploadController {
     for (const uploadedFile of files) {
       let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
       if (process.env.ENV_TYPE !== "prod") host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
-      await axios.post(`http://${host}:4004/upload-file/${uploadedFile.filename}`)
+      let uploadFileAddition = "";
+      if (additionalFields.table) uploadFileAddition = `/${additionalFields.table}`;
+      if (
+        additionalFields.username !== "" &&
+        additionalFields.password !== "" &&
+        additionalFields.host !== "" &&
+        additionalFields.port !== "" &&
+        additionalFields.database !== "" &&
+        additionalFields.table !== ""
+      ) {
+        uploadFileAddition = `/${additionalFields.username}/${additionalFields.password}/${additionalFields.host}/${additionalFields.port}/${additionalFields.database}/${additionalFields.table}`;
+      }
+      await axios.post(`http://${host}:4004/upload-file/${uploadedFile.filename}${uploadFileAddition}`)
         .then(_ => console.log("DX Backend upload complete"))
         .catch(e => {
           console.log("DX Backend upload failed", e);
