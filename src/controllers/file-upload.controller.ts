@@ -104,6 +104,15 @@ export class FileUploadController {
       ) {
         uploadFileAddition = `/${additionalFields.username}/${additionalFields.password}/${additionalFields.host}/${additionalFields.port}/${additionalFields.database}/${additionalFields.table}`;
       }
+      if (additionalFields.api_url !== "") {
+        // create a base64 encoded string from the api url and replace slashes with underscores
+        let apiUrlBase64 = Buffer.from(additionalFields.api_url, 'utf-8').toString('base64');
+        apiUrlBase64 = apiUrlBase64.replace(/\//g, "_");
+        // extend the url with the base64 encoded string and the json and xml root elements, or none if not provided
+        uploadFileAddition = `/${apiUrlBase64}`;
+        uploadFileAddition += `/${(additionalFields.json_root !== "") ? additionalFields.json_root : "none"}`;
+        uploadFileAddition += `/${(additionalFields.xml_root !== "") ? additionalFields.xml_root : "none"}`;
+      }
       await axios.post(`http://${host}:4004/upload-file/${uploadedFile.filename}${uploadFileAddition}`)
         .then(_ => console.log("DX Backend upload complete"))
         .catch(e => {
