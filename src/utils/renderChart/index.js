@@ -43,7 +43,6 @@ import {
   // @ts-ignore
 // } from "@rawgraphs/rawgraphs-charts";
 } from "./rawgraphs-charts/lib/index.cjs.js";
-import { __esModule } from "../../../../rawgraphs-charts/lib/index.cjs.js";
 
 // consts
 const charts = {
@@ -243,7 +242,7 @@ try {
       const id = process.argv[2]  // 2 because 0 is node and 1 is this file
       // read the data from ./source_data.json as json
       const data = fs.readFileSync(`${__dirname}/rendering/${id}.json`)
-      const parsedData = JSON.parse(data.toString());
+      const parsedData = JSON.parse(data);
       const body = parsedData.body
       const chartData = parsedData.chartData
       renderChartData(id, body, chartData)
