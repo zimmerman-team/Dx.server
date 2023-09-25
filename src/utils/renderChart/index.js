@@ -134,15 +134,15 @@ function getDatasetFilterOptions(
 }
 
 function filterData(
-  data,
+  parsedDataset,
   appliedFilters
 ) {
   // Get the filter keys
   const filterKeys = Object.keys(appliedFilters || {});
-  if (filterKeys.length === 0) return data; // can't be 0, but safety return
+  if (filterKeys.length === 0) return parsedDataset; // can't be 0, but safety return
   
   // Filter 'data' based on 'appliedFilters' using the specified 'filterKeys'
-  const filteredData = _.filter(data, (item) => {
+  const filteredData = _.filter(parsedDataset, (item) => {
     // Check if all conditions hold for each 'filterKey'
     return filterKeys.every((filterKey) =>
       appliedFilters[filterKey]?.includes(item[filterKey]?.toString())
@@ -160,13 +160,35 @@ function renderChart(
   vizType
 ) {
   const chart = charts[vizType];
+  let title = "";
+  let subtitle = "";
+  let description = "";
+
+  if (vizType === "bigNumber") {
+    // remove title, subtitle, description from item.mapping
+    title = item.mapping.title;
+    subtitle = item.mapping.subtitle;
+    description = item.mapping.description;
+    item.mapping = { "value": item.mapping.value };
+  }
+
   const viz = rawChart(chart, {
     data: parsed.dataset,
     mapping: item.mapping,
     visualOptions: item.vizOptions,
     dataTypes: parsed.dataTypes,
   });
-  const vizData = viz._getVizData();
+  let vizData = viz._getVizData();
+
+  if (vizType === "bigNumber") {
+    // remove title, subtitle, description from item.mapping
+    vizData = {
+      "title": title ?? "tmp",
+      "value": vizData.value,
+      "subtitle": subtitle ?? "tmp",
+      "description": description ?? "tmp",
+    };
+  }
 
   let tabItem = {
     renderedContent: "",
@@ -194,30 +216,28 @@ function renderChart(
 }
 
 export async function renderChartData(id, body, chartData) {
-  let data;
+  let internalData;
   if (id === "new" || body.rows) {
     if (!body.rows || body.rows.length === 0) {
       return { "error": "no rows"};
     } 
-    data = body.rows;
+    internalData = body.rows;
   } else {
-    data = [[chartData]];
+    internalData = [[chartData]];
   }
-
   // at this point, this render function is always used to render a single chart.
   // we can assume that we only take the data item at data[0][0].
   // content is never in item anymore.
   // read the item and get the relevant parsed-data-file as json
-  let item = data[0][0];
+  let item = internalData[0][0];
   let parsed = null;
   try {
-    const filePath = process.env.PARSED_DATA_FILES_PATH || `./`;
+    const filePath = process.env.PARSED_DATA_FILES_PATH || `../../../../../dx.backend/parsed-data-files/`;
     const parsedData = fs.readFileSync(`${filePath}${item.datasetId}.json`)
     parsed = JSON.parse(parsedData.toString());
   } catch (error) {
-    console.error(`Error loading parsed data`, error);
+    console.log("Error reading parsed data file", error)
   }
-
   // Check if there are either filters in the item.appliedFilters or in the body.previewAppliedFilters
   const itemAppliedFilters = _.get(body, `previewAppliedFilters[0][0]`, null);
   // If there are filters, filter the data
@@ -248,5 +268,5 @@ try {
       renderChartData(id, body, chartData)
   }
 } catch (error) {
-  console.error("Something went wrong...\n", error)
+  console.error("Something went wrong...\n")
 }
