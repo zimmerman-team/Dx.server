@@ -166,7 +166,7 @@ export class ChartsController {
         JSON.stringify(ob, null, 4),
       );
       // execute the ./src/utiles/renderChart/dist/index.cjs with id as the parameter
-      execSync(`node ./src/utils/renderChart/dist/index.cjs ${id}`, { timeout: 0 });
+      execSync(`node ./src/utils/renderChart/dist/index.cjs ${id}`, { timeout: 0, stdio: 'pipe' });
       // once the renderign is done, read the output file
       const data = fs.readFileSync(
         `./src/utils/renderChart/dist/rendering/${id}_rendered.json`,
