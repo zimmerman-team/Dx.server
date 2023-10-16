@@ -4,7 +4,7 @@ import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication} from '@loopback/rest';
 import {
   RestExplorerBindings,
-  RestExplorerComponent
+  RestExplorerComponent,
 } from '@loopback/rest-explorer';
 import {ServiceMixin} from '@loopback/service-proxy';
 import 'dotenv/config';
@@ -12,9 +12,18 @@ import multer from 'multer';
 import path from 'path';
 import {DbDataSource} from './datasources';
 
-import {FILE_UPLOAD_SERVICE, STORAGE_DIRECTORY} from "./keys";
-import {MySequence} from "./sequence";
-import { mimeTypeToFileExtension } from './utils/mimeTypeToFileExtension';
+import {
+  AuthenticationComponent,
+  registerAuthenticationStrategy,
+} from '@loopback/authentication';
+import {
+  JWTAuthenticationStrategy,
+  JWTServiceProvider,
+  KEY,
+} from './authentication-strategies';
+import {FILE_UPLOAD_SERVICE, STORAGE_DIRECTORY} from './keys';
+import {MySequence} from './sequence';
+import {mimeTypeToFileExtension} from './utils/mimeTypeToFileExtension';
 
 export {ApplicationConfig};
 
@@ -23,6 +32,20 @@ export class ApiApplication extends BootMixin(
 ) {
   constructor(options: ApplicationConfig = {}) {
     super(options);
+
+    this.component(AuthenticationComponent);
+
+    this.service(JWTServiceProvider);
+
+    // Register the Auth0 JWT authentication strategy
+    // @ts-ignore
+    registerAuthenticationStrategy(this, JWTAuthenticationStrategy);
+    this.configure(KEY).to({
+      jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
+      audience: process.env.AUTH0_AUDIENCE,
+      issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+      algorithms: ['RS256'],
+    });
 
     // Set datasource based off environment
     const dbHost = process.env.MONGO_HOST ?? 'localhost';
@@ -84,11 +107,13 @@ export class ApiApplication extends BootMixin(
         destination,
         // Use the original file name as is
         filename: (req, file, cb) => {
-          const newName = `${file.fieldname}${mimeTypeToFileExtension(file.mimetype)}`;
+          const newName = `${file.fieldname}${mimeTypeToFileExtension(
+            file.mimetype,
+          )}`;
           cb(null, newName);
         },
       }),
-      limits: {fileSize: 1024 * 1024 * 150}
+      limits: {fileSize: 1024 * 1024 * 150},
     };
     // Configure the file upload service with multer options
     this.configure(FILE_UPLOAD_SERVICE).to(multerOptions);
