@@ -85,6 +85,11 @@ export class Report extends Entity {
   dateColor: string;
 
   @property({
+    type: 'string',
+  })
+  owner: string;
+
+  @property({
     type: 'date',
     default: () => new Date(),
   })

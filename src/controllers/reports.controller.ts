@@ -1,3 +1,5 @@
+import {authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -14,15 +16,19 @@ import {
   patch,
   post,
   put,
+  Request,
   requestBody,
   response,
+  RestBindings,
 } from '@loopback/rest';
 import axios from 'axios';
+import _ from 'lodash';
 import {Report} from '../models';
 import {ReportRepository} from '../repositories';
 
 export class ReportsController {
   constructor(
+    @inject(RestBindings.Http.REQUEST) private req: Request,
     @repository(ReportRepository)
     public ReportRepository: ReportRepository,
   ) {}
@@ -32,6 +38,7 @@ export class ReportsController {
     description: 'Report model instance',
     content: {'application/json': {schema: getModelSchemaRef(Report)}},
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async create(
     @requestBody({
       content: {
@@ -45,6 +52,7 @@ export class ReportsController {
     })
     Report: Omit<Report, 'id'>,
   ): Promise<Report> {
+    Report.owner = _.get(this.req, 'user.sub', 'anonymous');
     return this.ReportRepository.create(Report);
   }
 
@@ -53,8 +61,12 @@ export class ReportsController {
     description: 'Report model count',
     content: {'application/json': {schema: CountSchema}},
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Report) where?: Where<Report>): Promise<Count> {
-    return this.ReportRepository.count(where);
+    return this.ReportRepository.count({
+      ...where,
+      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+    });
   }
 
   @get('/reports')
@@ -69,9 +81,14 @@ export class ReportsController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async find(@param.filter(Report) filter?: Filter<Report>): Promise<Report[]> {
     return this.ReportRepository.find({
       ...filter,
+      where: {
+        ...filter?.where,
+        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+      },
       fields: [
         'id',
         'name',
@@ -89,6 +106,7 @@ export class ReportsController {
     description: 'Report PATCH success count',
     content: {'application/json': {schema: CountSchema}},
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async updateAll(
     @requestBody({
       content: {
@@ -112,6 +130,7 @@ export class ReportsController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Report, {exclude: 'where'})
@@ -130,6 +149,7 @@ export class ReportsController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async renderById(
     @param.path.string('id') id: string,
     @requestBody() body: any,
@@ -145,6 +165,7 @@ export class ReportsController {
   @response(204, {
     description: 'Report PATCH success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async updateById(
     @param.path.string('id') id: string,
     @requestBody({
@@ -163,6 +184,7 @@ export class ReportsController {
   @response(204, {
     description: 'Report PUT success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() Report: Report,
@@ -174,6 +196,7 @@ export class ReportsController {
   @response(204, {
     description: 'Report DELETE success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.ReportRepository.deleteById(id);
   }
@@ -187,8 +210,10 @@ export class ReportsController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async duplicate(@param.path.string('id') id: string): Promise<Report> {
     const fReport = await this.ReportRepository.findById(id);
+    fReport.owner = _.get(this.req, 'user.sub', 'anonymous');
     return this.ReportRepository.create({
       name: `${fReport.name} copy`,
       showHeader: fReport.showHeader,

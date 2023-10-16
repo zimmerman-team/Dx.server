@@ -1,35 +1,46 @@
-import {BindingKey, inject} from "@loopback/core";
+import {authenticate} from '@loopback/authentication';
+import {BindingKey, inject} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   Where,
-  repository
+  repository,
 } from '@loopback/repository';
 import {
-  del, get,
-  getModelSchemaRef, param, patch, post, put, requestBody,
-  response
+  Request,
+  RestBindings,
+  del,
+  get,
+  getModelSchemaRef,
+  param,
+  patch,
+  post,
+  put,
+  requestBody,
+  response,
 } from '@loopback/rest';
 import axios from 'axios';
-import fs from 'fs';
 import {Dataset} from '../models';
 import {DatasetRepository} from '../repositories';
 
-import {RequestHandler} from "express-serve-static-core";
+import {RequestHandler} from 'express-serve-static-core';
+import _ from 'lodash';
+
 type FileUploadHandler = RequestHandler;
 
 const FILE_UPLOAD_SERVICE = BindingKey.create<FileUploadHandler>(
-  "services.FileUpload"
+  'services.FileUpload',
 );
 
 export class DatasetController {
   constructor(
+    @inject(RestBindings.Http.REQUEST) private req: Request,
     @repository(DatasetRepository)
     public datasetRepository: DatasetRepository,
-    @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler
-  ) { }
+    @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
+  ) {}
 
   @post('/datasets')
   @response(200, {
@@ -37,6 +48,7 @@ export class DatasetController {
     // content: {'application/json': {schema: getModelSchemaRef(Dataset)}},
     content: {'application/json': {schema: getModelSchemaRef(Dataset)}},
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async create(
     @requestBody({
       content: {
@@ -50,6 +62,7 @@ export class DatasetController {
     })
     dataset: Omit<Dataset, 'id'>,
   ): Promise<Dataset> {
+    dataset.owner = _.get(this.req, 'user.sub', 'anonymous');
     return this.datasetRepository.create(dataset);
   }
 
@@ -58,10 +71,12 @@ export class DatasetController {
     description: 'Dataset model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Dataset) where?: Where<Dataset>,
-  ): Promise<Count> {
-    return this.datasetRepository.count(where);
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async count(@param.where(Dataset) where?: Where<Dataset>): Promise<Count> {
+    return this.datasetRepository.count({
+      ...where,
+      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+    });
   }
 
   @get('/datasets')
@@ -76,6 +91,7 @@ export class DatasetController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
@@ -87,6 +103,7 @@ export class DatasetController {
     description: 'Dataset PATCH success count',
     content: {'application/json': {schema: CountSchema}},
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async updateAll(
     @requestBody({
       content: {
@@ -110,9 +127,11 @@ export class DatasetController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Dataset, {exclude: 'where'}) filter?: FilterExcludingWhere<Dataset>
+    @param.filter(Dataset, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Dataset>,
   ): Promise<Dataset> {
     return this.datasetRepository.findById(id, filter);
   }
@@ -121,6 +140,7 @@ export class DatasetController {
   @response(204, {
     description: 'Dataset PATCH success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async updateById(
     @param.path.string('id') id: string,
     @requestBody({
@@ -139,6 +159,7 @@ export class DatasetController {
   @response(204, {
     description: 'Dataset PUT success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() dataset: Dataset,
@@ -150,17 +171,19 @@ export class DatasetController {
   @response(204, {
     description: 'Dataset DELETE success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     this.datasetRepository.findById(id).then(() => {
       // Trigger the dataset removal through the backend, cleaning up SSR and the backend
       let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
       host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
-      axios.post(`${host}:4004/delete-dataset/dx${id}`)
-        .then(_ => console.log("File removed from DX Backend"))
+      axios
+        .post(`${host}:4004/delete-dataset/dx${id}`)
+        .then(_ => console.log('File removed from DX Backend'))
         .catch(_ => {
-          console.log("Failed to remove the dataset from DX Backend");
+          console.log('Failed to remove the dataset from DX Backend');
         });
     });
     await this.datasetRepository.deleteById(id);
-  };
+  }
 }
