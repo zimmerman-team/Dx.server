@@ -21,7 +21,7 @@ export class DataThemesRawDataController {
   @response(200)
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     let host = process.env.SSR_SUBDOMAIN ? 'dx-ssr' : 'localhost';
-    host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+    if (process.env.ENV_TYPE !== "prod") host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
     return axios
       .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {

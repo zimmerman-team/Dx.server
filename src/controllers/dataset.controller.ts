@@ -95,7 +95,13 @@ export class DatasetController {
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
-    return this.datasetRepository.find(filter);
+    return this.datasetRepository.find({
+      ...filter,
+      where: {
+        ...filter?.where,
+        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+      },
+    });
   }
 
   @patch('/datasets')
@@ -176,7 +182,10 @@ export class DatasetController {
     this.datasetRepository.findById(id).then(() => {
       // Trigger the dataset removal through the backend, cleaning up SSR and the backend
       let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
-      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+      if (process.env.ENV_TYPE !== 'prod')
+        host = process.env.ENV_TYPE
+          ? `dx-backend-${process.env.ENV_TYPE}`
+          : host;
       axios
         .post(`${host}:4004/delete-dataset/dx${id}`)
         .then(_ => console.log('File removed from DX Backend'))
