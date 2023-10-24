@@ -158,7 +158,10 @@ export class DatasetController {
     })
     dataset: Dataset,
   ): Promise<void> {
-    await this.datasetRepository.updateById(id, dataset);
+    await this.datasetRepository.updateById(id, {
+      ...dataset,
+      updatedDate: new Date().toISOString(),
+    });
   }
 
   @put('/datasets/{id}')

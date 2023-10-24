@@ -62,7 +62,8 @@ export class ChartsController {
   @response(200)
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
-    if (process.env.ENV_TYPE !== "prod") host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+    if (process.env.ENV_TYPE !== 'prod')
+      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
     return axios
       .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {
@@ -224,7 +225,10 @@ export class ChartsController {
     })
     chart: Chart,
   ): Promise<void> {
-    await this.chartRepository.updateById(id, chart);
+    await this.chartRepository.updateById(id, {
+      ...chart,
+      updatedDate: new Date().toISOString(),
+    });
   }
 
   @put('/chart/{id}')
