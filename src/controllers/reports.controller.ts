@@ -154,9 +154,12 @@ export class ReportsController {
         },
       },
     })
-    Report: Report,
+    report: Report,
   ): Promise<void> {
-    await this.ReportRepository.updateById(id, Report);
+    await this.ReportRepository.updateById(id, {
+      ...report,
+      updatedDate: new Date().toISOString(),
+    });
   }
 
   @put('/report/{id}')

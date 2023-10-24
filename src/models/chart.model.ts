@@ -62,6 +62,12 @@ export class Chart extends Entity {
   })
   createdDate: string;
 
+  @property({
+    type: 'date',
+    default: () => new Date(),
+  })
+  updatedDate: string;
+
   constructor(data?: Partial<Chart>) {
     super(data);
   }

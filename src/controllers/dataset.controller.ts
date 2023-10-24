@@ -1,35 +1,41 @@
-import {BindingKey, inject} from "@loopback/core";
+import {BindingKey, inject} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   Where,
-  repository
+  repository,
 } from '@loopback/repository';
 import {
-  del, get,
-  getModelSchemaRef, param, patch, post, put, requestBody,
-  response
+  del,
+  get,
+  getModelSchemaRef,
+  param,
+  patch,
+  post,
+  put,
+  requestBody,
+  response,
 } from '@loopback/rest';
 import axios from 'axios';
 import fs from 'fs';
 import {Dataset} from '../models';
 import {DatasetRepository} from '../repositories';
 
-import {RequestHandler} from "express-serve-static-core";
+import {RequestHandler} from 'express-serve-static-core';
 type FileUploadHandler = RequestHandler;
 
 const FILE_UPLOAD_SERVICE = BindingKey.create<FileUploadHandler>(
-  "services.FileUpload"
+  'services.FileUpload',
 );
 
 export class DatasetController {
   constructor(
     @repository(DatasetRepository)
     public datasetRepository: DatasetRepository,
-    @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler
-  ) { }
+    @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
+  ) {}
 
   @post('/datasets')
   @response(200, {
@@ -58,9 +64,7 @@ export class DatasetController {
     description: 'Dataset model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Dataset) where?: Where<Dataset>,
-  ): Promise<Count> {
+  async count(@param.where(Dataset) where?: Where<Dataset>): Promise<Count> {
     return this.datasetRepository.count(where);
   }
 
@@ -112,7 +116,8 @@ export class DatasetController {
   })
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Dataset, {exclude: 'where'}) filter?: FilterExcludingWhere<Dataset>
+    @param.filter(Dataset, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Dataset>,
   ): Promise<Dataset> {
     return this.datasetRepository.findById(id, filter);
   }
@@ -132,7 +137,10 @@ export class DatasetController {
     })
     dataset: Dataset,
   ): Promise<void> {
-    await this.datasetRepository.updateById(id, dataset);
+    await this.datasetRepository.updateById(id, {
+      ...dataset,
+      updatedDate: new Date().toISOString(),
+    });
   }
 
   @put('/datasets/{id}')
@@ -154,13 +162,17 @@ export class DatasetController {
     this.datasetRepository.findById(id).then(() => {
       // Trigger the dataset removal through the backend, cleaning up SSR and the backend
       let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
-      if (process.env.ENV_TYPE !== "prod") host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
-      axios.post(`${host}:4004/delete-dataset/dx${id}`)
-        .then(_ => console.log("File removed from DX Backend"))
+      if (process.env.ENV_TYPE !== 'prod')
+        host = process.env.ENV_TYPE
+          ? `dx-backend-${process.env.ENV_TYPE}`
+          : host;
+      axios
+        .post(`${host}:4004/delete-dataset/dx${id}`)
+        .then(_ => console.log('File removed from DX Backend'))
         .catch(_ => {
-          console.log("Failed to remove the dataset from DX Backend");
+          console.log('Failed to remove the dataset from DX Backend');
         });
     });
     await this.datasetRepository.deleteById(id);
-  };
+  }
 }

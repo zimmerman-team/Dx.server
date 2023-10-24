@@ -90,6 +90,12 @@ export class Report extends Entity {
   })
   createdDate: string;
 
+  @property({
+    type: 'date',
+    default: () => new Date(),
+  })
+  updatedDate: string;
+
   constructor(data?: Partial<Report>) {
     super(data);
   }

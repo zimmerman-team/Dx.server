@@ -55,7 +55,8 @@ export class ChartsController {
   @response(200)
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
-    if (process.env.ENV_TYPE !== "prod") host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+    if (process.env.ENV_TYPE !== 'prod')
+      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
     return axios
       .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {
@@ -166,7 +167,10 @@ export class ChartsController {
         JSON.stringify(ob, null, 4),
       );
       // execute the ./src/utiles/renderChart/dist/index.cjs with id as the parameter
-      execSync(`node ./src/utils/renderChart/dist/index.cjs ${id}`, { timeout: 0, stdio: 'pipe' });
+      execSync(`node ./src/utils/renderChart/dist/index.cjs ${id}`, {
+        timeout: 0,
+        stdio: 'pipe',
+      });
       // once the renderign is done, read the output file
       const data = fs.readFileSync(
         `./src/utils/renderChart/dist/rendering/${id}_rendered.json`,
@@ -201,7 +205,10 @@ export class ChartsController {
     })
     chart: Chart,
   ): Promise<void> {
-    await this.chartRepository.updateById(id, chart);
+    await this.chartRepository.updateById(id, {
+      ...chart,
+      updatedDate: new Date().toISOString(),
+    });
   }
 
   @put('/chart/{id}')
