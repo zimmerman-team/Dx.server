@@ -1,3 +1,5 @@
+import {authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -14,8 +16,10 @@ import {
   patch,
   post,
   put,
+  Request,
   requestBody,
   response,
+  RestBindings,
 } from '@loopback/rest';
 import axios from 'axios';
 import {execSync} from 'child_process';
@@ -26,6 +30,7 @@ import {ChartRepository} from '../repositories';
 
 export class ChartsController {
   constructor(
+    @inject(RestBindings.Http.REQUEST) private req: Request,
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
   ) {}
@@ -35,6 +40,7 @@ export class ChartsController {
     description: 'Chart model instance',
     content: {'application/json': {schema: getModelSchemaRef(Chart)}},
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async create(
     @requestBody({
       content: {
@@ -48,6 +54,7 @@ export class ChartsController {
     })
     chart: Omit<Chart, 'id'>,
   ): Promise<Chart> {
+    chart.owner = _.get(this.req, 'user.sub', 'anonymous');
     return this.chartRepository.create(chart);
   }
 
@@ -82,8 +89,12 @@ export class ChartsController {
     description: 'Chart model count',
     content: {'application/json': {schema: CountSchema}},
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Chart) where?: Where<Chart>): Promise<Count> {
-    return this.chartRepository.count(where);
+    return this.chartRepository.count({
+      ...where,
+      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+    });
   }
 
   @get('/charts')
@@ -98,9 +109,14 @@ export class ChartsController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async find(@param.filter(Chart) filter?: Filter<Chart>): Promise<Chart[]> {
     return this.chartRepository.find({
       ...filter,
+      where: {
+        ...filter?.where,
+        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+      },
       fields: ['id', 'name', 'vizType', 'datasetId', 'createdDate'],
     });
   }
@@ -110,6 +126,7 @@ export class ChartsController {
     description: 'Chart PATCH success count',
     content: {'application/json': {schema: CountSchema}},
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async updateAll(
     @requestBody({
       content: {
@@ -133,6 +150,7 @@ export class ChartsController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Chart, {exclude: 'where'})
@@ -150,6 +168,7 @@ export class ChartsController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async renderById(
     @param.path.string('id') id: string,
     @requestBody() body: any,
@@ -194,6 +213,7 @@ export class ChartsController {
   @response(204, {
     description: 'Chart PATCH success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async updateById(
     @param.path.string('id') id: string,
     @requestBody({
@@ -215,6 +235,7 @@ export class ChartsController {
   @response(204, {
     description: 'Chart PUT success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() chart: Chart,
@@ -226,6 +247,7 @@ export class ChartsController {
   @response(204, {
     description: 'Chart DELETE success',
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.chartRepository.deleteById(id);
   }
@@ -239,6 +261,7 @@ export class ChartsController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async duplicate(@param.path.string('id') id: string): Promise<Chart> {
     const fChart = await this.chartRepository.findById(id);
     return this.chartRepository.create({
@@ -250,6 +273,7 @@ export class ChartsController {
       vizOptions: fChart.vizOptions,
       appliedFilters: fChart.appliedFilters,
       enabledFilterOptionGroups: fChart.enabledFilterOptionGroups,
+      owner: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
 }

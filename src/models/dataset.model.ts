@@ -34,6 +34,11 @@ export class Dataset extends Entity {
   category: string;
 
   @property({
+    type: 'string',
+  })
+  owner: string;
+
+  @property({
     type: 'date',
     default: () => new Date(),
   })

@@ -57,6 +57,11 @@ export class Chart extends Entity {
   enabledFilterOptionGroups: string[];
 
   @property({
+    type: 'string',
+  })
+  owner: string;
+
+  @property({
     type: 'date',
     default: () => new Date(),
   })
