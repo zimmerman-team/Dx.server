@@ -75,7 +75,21 @@ export class DatasetController {
   async count(@param.where(Dataset) where?: Where<Dataset>): Promise<Count> {
     return this.datasetRepository.count({
       ...where,
-      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
+    });
+  }
+
+  @get('/datasets/count/public')
+  @response(200, {
+    description: 'Dataset model count',
+    content: {'application/json': {schema: CountSchema}},
+  })
+  async countPublic(
+    @param.where(Dataset) where?: Where<Dataset>,
+  ): Promise<Count> {
+    return this.datasetRepository.count({
+      ...where,
+      or: [{public: true}],
     });
   }
 
@@ -99,7 +113,31 @@ export class DatasetController {
       ...filter,
       where: {
         ...filter?.where,
-        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
+      },
+    });
+  }
+
+  @get('/datasets/public')
+  @response(200, {
+    description: 'Array of Dataset model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Dataset, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async findPublic(
+    @param.filter(Dataset) filter?: Filter<Dataset>,
+  ): Promise<Dataset[]> {
+    return this.datasetRepository.find({
+      ...filter,
+      where: {
+        ...filter?.where,
+        or: [{public: true}],
       },
     });
   }

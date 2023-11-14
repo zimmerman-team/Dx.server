@@ -65,7 +65,21 @@ export class ReportsController {
   async count(@param.where(Report) where?: Where<Report>): Promise<Count> {
     return this.ReportRepository.count({
       ...where,
-      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
+    });
+  }
+
+  @get('/reports/count/public')
+  @response(200, {
+    description: 'Report model count',
+    content: {'application/json': {schema: CountSchema}},
+  })
+  async countPublic(
+    @param.where(Report) where?: Where<Report>,
+  ): Promise<Count> {
+    return this.ReportRepository.count({
+      ...where,
+      or: [{public: true}],
     });
   }
 
@@ -87,7 +101,7 @@ export class ReportsController {
       ...filter,
       where: {
         ...filter?.where,
-        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
+        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
       },
       fields: [
         'id',
@@ -97,6 +111,41 @@ export class ReportsController {
         'backgroundColor',
         'title',
         'subTitle',
+        'public',
+      ],
+    });
+  }
+
+  @get('/reports/public')
+  @response(200, {
+    description: 'Array of Report model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Report, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async findPublic(
+    @param.filter(Report) filter?: Filter<Report>,
+  ): Promise<Report[]> {
+    return this.ReportRepository.find({
+      ...filter,
+      where: {
+        ...filter?.where,
+        or: [{public: true}],
+      },
+      fields: [
+        'id',
+        'name',
+        'createdDate',
+        'showHeader',
+        'backgroundColor',
+        'title',
+        'subTitle',
+        'public',
       ],
     });
   }
