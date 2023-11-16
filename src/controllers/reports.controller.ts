@@ -26,6 +26,58 @@ import _ from 'lodash';
 import {Report} from '../models';
 import {ReportRepository} from '../repositories';
 
+async function getReportsCount(
+  reportRepository: ReportRepository,
+  owner?: string,
+  where?: Where<Report>,
+) {
+  return reportRepository.count({
+    ...where,
+    or: [{owner: owner}, {public: true}],
+  });
+}
+
+async function getReports(
+  reportRepository: ReportRepository,
+  owner?: string,
+  filter?: Filter<Report>,
+) {
+  return reportRepository.find({
+    ...filter,
+    where: {
+      ...filter?.where,
+      or: [{owner: owner}, {public: true}],
+    },
+    fields: [
+      'id',
+      'name',
+      'createdDate',
+      'showHeader',
+      'backgroundColor',
+      'title',
+      'subTitle',
+      'public',
+    ],
+  });
+}
+
+async function renderReport(
+  chartRepository: ReportRepository,
+  id: string,
+  body: any,
+  owner: string,
+) {
+  const report = await chartRepository.findById(id);
+  if (!report || (!report.public && report.owner !== owner)) {
+    return;
+  }
+  const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+  const result = await (
+    await axios.post(`http://${host}:4400/render/report/${id}`, {...body})
+  ).data;
+  return result;
+}
+
 export class ReportsController {
   constructor(
     @inject(RestBindings.Http.REQUEST) private req: Request,
@@ -63,10 +115,11 @@ export class ReportsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Report) where?: Where<Report>): Promise<Count> {
-    return this.ReportRepository.count({
-      ...where,
-      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
-    });
+    return getReportsCount(
+      this.ReportRepository,
+      _.get(this.req, 'user.sub', 'anonymous'),
+      where,
+    );
   }
 
   @get('/reports/count/public')
@@ -77,10 +130,11 @@ export class ReportsController {
   async countPublic(
     @param.where(Report) where?: Where<Report>,
   ): Promise<Count> {
-    return this.ReportRepository.count({
-      ...where,
-      or: [{public: true}],
-    });
+    return getReportsCount(
+      this.ReportRepository,
+      _.get(this.req, 'user.sub', 'anonymous'),
+      where,
+    );
   }
 
   @get('/reports')
@@ -97,23 +151,11 @@ export class ReportsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async find(@param.filter(Report) filter?: Filter<Report>): Promise<Report[]> {
-    return this.ReportRepository.find({
-      ...filter,
-      where: {
-        ...filter?.where,
-        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
-      },
-      fields: [
-        'id',
-        'name',
-        'createdDate',
-        'showHeader',
-        'backgroundColor',
-        'title',
-        'subTitle',
-        'public',
-      ],
-    });
+    return getReports(
+      this.ReportRepository,
+      _.get(this.req, 'user.sub', 'anonymous'),
+      filter,
+    );
   }
 
   @get('/reports/public')
@@ -131,23 +173,11 @@ export class ReportsController {
   async findPublic(
     @param.filter(Report) filter?: Filter<Report>,
   ): Promise<Report[]> {
-    return this.ReportRepository.find({
-      ...filter,
-      where: {
-        ...filter?.where,
-        or: [{public: true}],
-      },
-      fields: [
-        'id',
-        'name',
-        'createdDate',
-        'showHeader',
-        'backgroundColor',
-        'title',
-        'subTitle',
-        'public',
-      ],
-    });
+    return getReports(
+      this.ReportRepository,
+      _.get(this.req, 'user.sub', 'anonymous'),
+      filter,
+    );
   }
 
   @patch('/report')
@@ -189,6 +219,25 @@ export class ReportsController {
     return report;
   }
 
+  @get('/report/public/{id}')
+  @response(200, {
+    description: 'Report model instance',
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(Report, {includeRelations: true}),
+      },
+    },
+  })
+  async findPublicById(
+    @param.path.string('id') id: string,
+    @param.filter(Report, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Report>,
+  ): Promise<Report | {error: string}> {
+    const report = await this.ReportRepository.findById(id, filter);
+    if (report.public) return report;
+    else return {error: 'Unauthorized'};
+  }
+
   @post('/report/{id}/render')
   @response(200, {
     description: 'Report model instance',
@@ -203,11 +252,33 @@ export class ReportsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
-    const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
-    const result = await (
-      await axios.post(`http://${host}:4400/render/report/${id}`, {...body})
-    ).data;
-    return result;
+    return renderReport(
+      this.ReportRepository,
+      id,
+      body,
+      _.get(this.req, 'user.sub', 'anonymous'),
+    );
+  }
+
+  @post('/report/{id}/render/public')
+  @response(200, {
+    description: 'Report model instance',
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(Report, {includeRelations: true}),
+      },
+    },
+  })
+  async renderPublicById(
+    @param.path.string('id') id: string,
+    @requestBody() body: any,
+  ) {
+    return renderReport(
+      this.ReportRepository,
+      id,
+      body,
+      _.get(this.req, 'user.sub', 'anonymous'),
+    );
   }
 
   @patch('/report/{id}')
@@ -265,19 +336,18 @@ export class ReportsController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async duplicate(@param.path.string('id') id: string): Promise<Report> {
     const fReport = await this.ReportRepository.findById(id);
-    fReport.owner = _.get(this.req, 'user.sub', 'anonymous');
     return this.ReportRepository.create({
       name: `${fReport.name} copy`,
       showHeader: fReport.showHeader,
       title: fReport.title,
       subTitle: fReport.subTitle,
       rows: fReport.rows,
-      public: fReport.public,
+      public: false,
       backgroundColor: fReport.backgroundColor,
       titleColor: fReport.titleColor,
       descriptionColor: fReport.descriptionColor,
-
       dateColor: fReport.dateColor,
+      owner: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
 }

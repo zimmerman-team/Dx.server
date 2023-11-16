@@ -405,7 +405,7 @@ export class ChartsController {
     const fChart = await this.chartRepository.findById(id);
     return this.chartRepository.create({
       name: `${fChart.name} copy`,
-      public: fChart.public,
+      public: false,
       vizType: fChart.vizType,
       datasetId: fChart.datasetId,
       mapping: fChart.mapping,
