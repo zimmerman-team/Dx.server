@@ -272,8 +272,10 @@ export class ChartsController {
     @param.path.string('id') id: string,
     @param.filter(Chart, {exclude: 'where'})
     filter?: FilterExcludingWhere<Chart>,
-  ): Promise<Chart> {
-    return this.chartRepository.findById(id, filter);
+  ): Promise<Chart | {name: string; error: string}> {
+    const chart = await this.chartRepository.findById(id, filter);
+    if (chart.public || chart.owner === _.get(this.req, 'user.sub', 'anonymous')) return chart;
+    else return {name: '', error: 'Unauthorized'};
   }
 
   @get('/chart/public/{id}')

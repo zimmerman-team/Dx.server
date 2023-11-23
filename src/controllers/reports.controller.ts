@@ -214,9 +214,14 @@ export class ReportsController {
     @param.path.string('id') id: string,
     @param.filter(Report, {exclude: 'where'})
     filter?: FilterExcludingWhere<Report>,
-  ): Promise<Report> {
+  ): Promise<Report | {error: string}> {
     const report = await this.ReportRepository.findById(id, filter);
-    return report;
+    if (
+      report.public ||
+      report.owner === _.get(this.req, 'user.sub', 'anonymous')
+    )
+      return report;
+    return {error: 'Unauthorized'};
   }
 
   @get('/report/public/{id}')
