@@ -11,7 +11,7 @@ export class Report extends Entity {
 
   @property({
     type: 'string',
-    required: true,
+    required: false,
   })
   name: string;
 
@@ -22,10 +22,10 @@ export class Report extends Entity {
   showHeader: boolean;
 
   @property({
-    type: 'string',
+    type: 'object',
     required: false,
   })
-  title: string;
+  title: object;
 
   @property({
     type: 'object',
