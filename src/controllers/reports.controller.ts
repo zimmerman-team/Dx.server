@@ -229,6 +229,7 @@ export class ReportsController {
       descriptionColor: fReport.descriptionColor,
 
       dateColor: fReport.dateColor,
+      owner: fReport.owner,
     });
   }
 }
