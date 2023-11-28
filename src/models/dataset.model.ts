@@ -35,6 +35,18 @@ export class Dataset extends Entity {
 
   @property({
     type: 'string',
+    required: true,
+  })
+  source: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  sourceUrl: string;
+
+  @property({
+    type: 'string',
   })
   owner: string;
 
