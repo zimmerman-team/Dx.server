@@ -1,6 +1,6 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model({settings: {strict: false, forceId: true}})
+@model({settings: {strict: false, forceId: false}})
 export class Dataset extends Entity {
   @property({
     type: 'string',

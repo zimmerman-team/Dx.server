@@ -9,7 +9,7 @@ import {
   Request,
   requestBody,
   Response,
-  RestBindings
+  RestBindings,
 } from '@loopback/rest';
 import {FILE_UPLOAD_SERVICE} from '../keys';
 import {FileUploadHandler} from '../types';
@@ -36,7 +36,7 @@ export class FileUploadController {
    */
   constructor(
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
-  ) { }
+  ) {}
   @post('/files', {
     responses: {
       200: {
@@ -90,12 +90,16 @@ export class FileUploadController {
     }
     for (const uploadedFile of files) {
       let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
-      if (process.env.ENV_TYPE !== "prod") host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
-      await axios.post(`http://${host}:4004/upload-file/${uploadedFile.filename}`)
-        .then(_ => console.log("DX Backend upload complete"))
+      if (process.env.ENV_TYPE !== 'prod')
+        host = process.env.ENV_TYPE
+          ? `dx-backend-${process.env.ENV_TYPE}`
+          : host;
+      await axios
+        .post(`http://${host}:4004/upload-file/${uploadedFile.filename}`)
+        .then(_ => console.log('DX Backend upload complete'))
         .catch(e => {
-          console.log("DX Backend upload failed", e);
-          return {error: "Error uploading files"};
+          console.log('DX Backend upload failed', e);
+          return {error: 'Error uploading files'};
         });
     }
     return {files, fields: request.body};
