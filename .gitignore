@@ -64,3 +64,5 @@ typings/
 *.tsbuildinfo
 
 src/utils/renderChart/rawgraphs-charts
+
+.DS_Store
