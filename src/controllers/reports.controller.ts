@@ -342,7 +342,7 @@ export class ReportsController {
   async duplicate(@param.path.string('id') id: string): Promise<Report> {
     const fReport = await this.ReportRepository.findById(id);
     return this.ReportRepository.create({
-      name: `${fReport.name} copy`,
+      name: `${fReport.name} (Copy)`,
       showHeader: fReport.showHeader,
       title: fReport.title,
       subTitle: fReport.subTitle,
