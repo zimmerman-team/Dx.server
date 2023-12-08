@@ -274,7 +274,11 @@ export class ChartsController {
     filter?: FilterExcludingWhere<Chart>,
   ): Promise<Chart | {name: string; error: string}> {
     const chart = await this.chartRepository.findById(id, filter);
-    if (chart.public || chart.owner === _.get(this.req, 'user.sub', 'anonymous')) return chart;
+    if (
+      chart.public ||
+      chart.owner === _.get(this.req, 'user.sub', 'anonymous')
+    )
+      return chart;
     else return {name: '', error: 'Unauthorized'};
   }
 
@@ -406,7 +410,7 @@ export class ChartsController {
   async duplicate(@param.path.string('id') id: string): Promise<Chart> {
     const fChart = await this.chartRepository.findById(id);
     return this.chartRepository.create({
-      name: `${fChart.name} copy`,
+      name: `${fChart.name} (Copy)`,
       public: false,
       vizType: fChart.vizType,
       datasetId: fChart.datasetId,
