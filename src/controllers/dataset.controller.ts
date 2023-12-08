@@ -55,12 +55,11 @@ export class DatasetController {
         'application/json': {
           schema: getModelSchemaRef(Dataset, {
             title: 'NewDataset',
-            exclude: ['id'],
           }),
         },
       },
     })
-    dataset: Omit<Dataset, 'id'>,
+    dataset: Dataset,
   ): Promise<Dataset> {
     dataset.owner = _.get(this.req, 'user.sub', 'anonymous');
     return this.datasetRepository.create(dataset);
