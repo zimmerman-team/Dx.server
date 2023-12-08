@@ -41,6 +41,7 @@ import {
   echartsLinechart,
   echartsSunburst,
   echartsPiechart,
+  echartsCirclepacking,
   bigNumber,
   // @ts-ignore
   // } from "@rawgraphs/rawgraphs-charts";
@@ -86,6 +87,7 @@ const charts = {
   echartsLinechart,
   echartsSunburst,
   echartsPiechart,
+  echartsCirclepacking,
   bigNumber,
 };
 
