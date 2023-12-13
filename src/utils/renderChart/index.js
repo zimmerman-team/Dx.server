@@ -45,6 +45,7 @@ import {
   echartsForcegraph,
   echartsCirculargraph,
   echartsBubblechart,
+  echartsAreastack,
   bigNumber,
   // @ts-ignore
   // } from "@rawgraphs/rawgraphs-charts";
@@ -94,6 +95,7 @@ const charts = {
   echartsForcegraph,
   echartsCirculargraph,
   echartsBubblechart,
+  echartsAreastack,
   bigNumber,
 };
 
