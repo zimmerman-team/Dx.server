@@ -46,7 +46,12 @@ import {
   echartsCirculargraph,
   echartsBubblechart,
   echartsAreastack,
+  echartsHeatmap,
+  echartsRadarchart,
   bigNumber,
+  echartsGraphgl,
+  echartsAreatimeaxis,
+  echartsScatterchart,
   // @ts-ignore
   // } from "@rawgraphs/rawgraphs-charts";
 } from './rawgraphs-charts/lib/index.cjs.js';
@@ -96,6 +101,11 @@ const charts = {
   echartsCirculargraph,
   echartsBubblechart,
   echartsAreastack,
+  echartsHeatmap,
+  echartsRadarchart,
+  echartsGraphgl,
+  echartsAreatimeaxis,
+  echartsScatterchart,
   bigNumber,
 };
 
