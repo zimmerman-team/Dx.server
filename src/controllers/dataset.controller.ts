@@ -235,4 +235,44 @@ export class DatasetController {
     });
     await this.datasetRepository.deleteById(id);
   }
+
+  @get('/dataset/duplicate/{id}')
+  @response(200, {
+    description: 'Chart model instance',
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(Dataset, {includeRelations: true}),
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async duplicate(@param.path.string('id') id: string): Promise<Dataset> {
+    const fDataset = await this.datasetRepository.findById(id);
+    const newDatasetPromise = this.datasetRepository.create({
+      name: `${fDataset.name} (Copy)`,
+      public: false,
+      category: fDataset.category,
+      description: fDataset.category,
+      source: fDataset.source,
+      sourceUrl: fDataset.sourceUrl,
+      owner: _.get(this.req, 'user.sub', 'anonymous'),
+    });
+
+    let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+    if (process.env.ENV_TYPE !== 'prod')
+      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+
+    const newDataset = await newDatasetPromise;
+    console.log('New dataset created', newDataset.id);
+
+    await axios
+      .post(`http://${host}:4004/duplicate-dataset/${id}/${newDataset.id}`)
+      .then(_ => console.log('DX Backend duplication complete'))
+      .catch(e => {
+        console.log('DX Backend duplication failed', e);
+        return {error: 'Error duplicating files'};
+      });
+
+    return newDatasetPromise;
+  }
 }
