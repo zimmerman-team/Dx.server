@@ -263,7 +263,6 @@ export class DatasetController {
       host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
 
     const newDataset = await newDatasetPromise;
-    console.log('New dataset created', newDataset.id);
 
     await axios
       .post(`http://${host}:4004/duplicate-dataset/${id}/${newDataset.id}`)
