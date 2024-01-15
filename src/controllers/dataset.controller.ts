@@ -252,7 +252,7 @@ export class DatasetController {
       name: `${fDataset.name} (Copy)`,
       public: false,
       category: fDataset.category,
-      description: fDataset.category,
+      description: fDataset.description,
       source: fDataset.source,
       sourceUrl: fDataset.sourceUrl,
       owner: _.get(this.req, 'user.sub', 'anonymous'),
