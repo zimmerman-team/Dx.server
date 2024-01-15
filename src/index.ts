@@ -1,6 +1,13 @@
 import {RestBindings} from '@loopback/rest';
 import {ApiApplication, ApplicationConfig} from './application';
-
+import {
+  LoggingBindings,
+  LoggingComponent,
+  WINSTON_TRANSPORT,
+  WinstonTransports,
+  format,
+} from '@loopback/logging';
+import {extensionFor} from '@loopback/core';
 export * from './application';
 
 export async function main(options: ApplicationConfig = {}) {
@@ -10,9 +17,41 @@ export async function main(options: ApplicationConfig = {}) {
   await app.start();
   app.bind(RestBindings.REQUEST_BODY_PARSER_OPTIONS).to({limit: '50mb'});
 
+  app.configure(LoggingBindings.COMPONENT).to({
+    enableFluent: false, // default to true
+    enableHttpAccessLog: true, // default to true
+  });
+
+  app.configure(LoggingBindings.WINSTON_LOGGER).to({
+    level: 'info',
+    format: format.json(),
+    defaultMeta: {framework: 'LoopBack'},
+  });
+
+  app.component(LoggingComponent);
   const url = app.restServer.url;
   console.log(`Server is running at ${url}`);
   console.log(`Try ${url}/ping`);
+
+  const fileTransport = new WinstonTransports.File({
+    level: 'info',
+    filename: './logging/info.log',
+    lazy: true,
+  });
+
+  const consoleTransport = new WinstonTransports.Console({
+    level: 'info',
+    format: format.combine(format.colorize(), format.simple()),
+  });
+  app
+    .bind('logging.winston.transports.file')
+    .to(fileTransport)
+    .apply(extensionFor(WINSTON_TRANSPORT));
+
+  // app
+  //   .bind('logging.winston.transports.console')
+  //   .to(consoleTransport)
+  //   .apply(extensionFor(WINSTON_TRANSPORT));
 
   return app;
 }
