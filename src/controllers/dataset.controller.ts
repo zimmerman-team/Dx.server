@@ -27,6 +27,7 @@ import {DatasetRepository} from '../repositories';
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
+import {UserProfile} from '../authentication-strategies/user-profile';
 
 type FileUploadHandler = RequestHandler;
 
@@ -273,5 +274,16 @@ export class DatasetController {
       });
 
     return newDatasetPromise;
+  }
+
+  @get('/dataset/google-drive/user-token')
+  @response(200, {
+    description: 'User Token',
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async getUserToken(): Promise<string> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const profile = await UserProfile.getUserProfile(userId);
+    return profile.identities[0].access_token;
   }
 }
