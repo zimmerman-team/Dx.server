@@ -194,7 +194,6 @@ export class ChartsController {
   }
 
   /* get charts */
-
   @get('/charts')
   @response(200, {
     description: 'Array of Chart model instances',

@@ -4,8 +4,6 @@ import {
   LoggingBindings,
   LoggingComponent,
   WINSTON_TRANSPORT,
-  WinstonTransports,
-  format,
 } from '@loopback/logging';
 import {extensionFor} from '@loopback/core';
 import {LogErrorProvider} from './config/logger/log-error.provider';
