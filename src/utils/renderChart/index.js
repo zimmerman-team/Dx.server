@@ -170,7 +170,7 @@ function filterData(parsedDataset, appliedFilters) {
   return filteredData;
 }
 
-function renderChart(item, parsed, id, itemAppliedFilters, vizType) {
+function renderChart(item, parsed, initialParsedDataset, id, itemAppliedFilters, vizType) {
   const chart = charts[vizType];
   let title = '';
   let subtitle = '';
@@ -205,7 +205,7 @@ function renderChart(item, parsed, id, itemAppliedFilters, vizType) {
   let tabItem = {
     renderedContent: '',
     appliedFilters: itemAppliedFilters || item.appliedFilters,
-    filterOptionGroups: getDatasetFilterOptions(parsed.dataset),
+    filterOptionGroups: getDatasetFilterOptions(initialParsedDataset),
     enabledFilterOptionGroups: item.enabledFilterOptionGroups,
     dataTypes: parsed.dataTypes,
     mappedData: vizData,
@@ -240,6 +240,7 @@ export async function renderChartData(id, body, chartData) {
   // read the item and get the relevant parsed-data-file as json
   let item = internalData[0][0];
   let parsed = null;
+  
   try {
     const filePath =
       process.env.PARSED_DATA_FILES_PATH ||
@@ -251,10 +252,12 @@ export async function renderChartData(id, body, chartData) {
   }
   // Check if there are either filters in the item.appliedFilters or in the body.previewAppliedFilters
   const itemAppliedFilters = _.get(body, `previewAppliedFilters[0][0]`, null);
+  const initialParsedDataset= parsed.dataset
   // If there are filters, filter the data
-  if (!_.isEmpty(item.appliedFilters) || itemAppliedFilters) {
+  if (!_.isEmpty(item.appliedFilters) || itemAppliedFilters ) {
     parsed.dataset = filterData(
       parsed.dataset,
+      
       itemAppliedFilters || item.appliedFilters,
     );
   }
@@ -263,6 +266,7 @@ export async function renderChartData(id, body, chartData) {
   const renderedChart = renderChart(
     item,
     parsed,
+    initialParsedDataset,
     id,
     itemAppliedFilters,
     item.vizType,
