@@ -34,6 +34,9 @@ type FileUploadHandler = RequestHandler;
 const FILE_UPLOAD_SERVICE = BindingKey.create<FileUploadHandler>(
   'services.FileUpload',
 );
+let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+if (process.env.ENV_TYPE !== 'prod')
+  host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
 
 export class DatasetController {
   constructor(
@@ -259,10 +262,6 @@ export class DatasetController {
       owner: _.get(this.req, 'user.sub', 'anonymous'),
     });
 
-    let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
-    if (process.env.ENV_TYPE !== 'prod')
-      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
-
     const newDataset = await newDatasetPromise;
 
     await axios
@@ -285,5 +284,63 @@ export class DatasetController {
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const profile = await UserProfile.getUserProfile(userId);
     return profile.identities[0].access_token;
+  }
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @get('/external-sources/search')
+  @response(200, {
+    description: 'Dataset external search instance',
+  })
+  async searchExternalSources(
+    @param.query.string('q') q: string,
+  ): Promise<any> {
+    try {
+      const response = await axios.post(
+        `http://${host}:4004//external-sources/search`,
+        {
+          owner: _.get(this.req, 'user.sub', 'anonymous'),
+          query: q,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @post('/external-sources/download')
+  @response(200, {
+    description: 'Dataset external search instance',
+  })
+  async downloadExternalSources(
+    @requestBody()
+    externalSource: {
+      description: string;
+      category: string;
+      source: string;
+      url: string;
+      name: string;
+      public: boolean;
+      owner: string;
+      authId: string;
+      datePublished: string;
+      id: string;
+    },
+  ): Promise<any> {
+    try {
+      const response = await axios.post(
+        `http://${host}:4004/external-sources/download`,
+        {
+          externalSource: {
+            ...externalSource,
+            updatedDate: new Date().toISOString(),
+            createdDate: new Date().toISOString(),
+          },
+        },
+      );
+      return response.data;
+    } catch (e) {
+      console.log(e);
+    }
   }
 }
