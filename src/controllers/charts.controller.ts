@@ -27,6 +27,7 @@ import fs from 'fs-extra';
 import _ from 'lodash';
 import {Chart} from '../models';
 import {ChartRepository} from '../repositories';
+import {LoggingBindings, WinstonLogger, logInvocation} from '@loopback/logging';
 
 async function getChartsCount(
   chartRepository: ChartRepository,
@@ -106,6 +107,9 @@ export class ChartsController {
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
   ) {}
+  // Inject a winston logger
+  @inject(LoggingBindings.WINSTON_LOGGER)
+  private logger: WinstonLogger;
 
   /* create chart */
 
@@ -190,7 +194,6 @@ export class ChartsController {
   }
 
   /* get charts */
-
   @get('/charts')
   @response(200, {
     description: 'Array of Chart model instances',
