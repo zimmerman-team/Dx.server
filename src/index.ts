@@ -18,7 +18,7 @@ export async function main(options: ApplicationConfig = {}) {
   app.bind(RestBindings.REQUEST_BODY_PARSER_OPTIONS).to({limit: '50mb'});
   app.configure(LoggingBindings.COMPONENT).to({
     enableFluent: false, // default to true
-    enableHttpAccessLog: true, // default to true
+    enableHttpAccessLog: false, // default to true
   });
 
   app.component(LoggingComponent);

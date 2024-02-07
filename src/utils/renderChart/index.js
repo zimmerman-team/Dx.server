@@ -55,6 +55,7 @@ import {
   // @ts-ignore
   // } from "@rawgraphs/rawgraphs-charts";
 } from './rawgraphs-charts/lib/index.cjs.js';
+import winstonLogger from '../../config/logger/winston-logger.js';
 
 // consts
 const charts = {
@@ -277,12 +278,14 @@ export async function renderChartData(id, body, chartData) {
     `${__dirname}/rendering/${id}_rendered.json`,
     JSON.stringify(renderedChart),
   );
+  winstonLogger.info('Success rendering chart from utils');
   console.log('Success...');
 }
 
 try {
   // if argv2 is undefined, return error
   if (process.argv[2] === undefined) {
+    winstonLogger.error('No id provided');
     console.error('No id provided');
   } else {
     // read the first argument as id
@@ -293,7 +296,10 @@ try {
     const body = parsedData.body;
     const chartData = parsedData.chartData;
     renderChartData(id, body, chartData);
+  winstonLogger.error('Error rendering chart from utils', error);
+
   }
 } catch (error) {
+  winstonLogger.error('Error rendering chart from utils', error);
   console.error('Something went wrong...\n');
 }

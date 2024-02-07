@@ -4,6 +4,8 @@ export const fileTransport = new WinstonTransports.File({
   filename: './src/logging/dx_server.log',
   maxsize: 1000000, // 1MB
   handleExceptions: true,
+  rotationFormat: () => {},
+  level: 'debug',
   format: format.combine(
     format.timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
     format.prettyPrint(),

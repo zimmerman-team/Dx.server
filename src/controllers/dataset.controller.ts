@@ -28,6 +28,7 @@ import {DatasetRepository} from '../repositories';
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
 import {UserProfile} from '../authentication-strategies/user-profile';
+import {LoggingBindings, WinstonLogger, logInvocation} from '@loopback/logging';
 
 type FileUploadHandler = RequestHandler;
 
@@ -45,8 +46,12 @@ export class DatasetController {
     public datasetRepository: DatasetRepository,
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
   ) {}
+  // Inject a winston logger
+  @inject(LoggingBindings.WINSTON_LOGGER)
+  private logger: WinstonLogger;
 
   @post('/datasets')
+  @logInvocation()
   @response(200, {
     description: 'Dataset model instance',
     // content: {'application/json': {schema: getModelSchemaRef(Dataset)}},
@@ -66,16 +71,19 @@ export class DatasetController {
     dataset: Dataset,
   ): Promise<Dataset> {
     dataset.owner = _.get(this.req, 'user.sub', 'anonymous');
+    this.logger.info(`route </datasets> -  Dataset created`);
     return this.datasetRepository.create(dataset);
   }
 
   @get('/datasets/count')
+  @logInvocation()
   @response(200, {
     description: 'Dataset model count',
     content: {'application/json': {schema: CountSchema}},
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Dataset) where?: Where<Dataset>): Promise<Count> {
+    this.logger.info(`route </datasets/count> -  get datasets count`);
     return this.datasetRepository.count({
       ...where,
       or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
@@ -83,6 +91,7 @@ export class DatasetController {
   }
 
   @get('/datasets/count/public')
+  @logInvocation()
   @response(200, {
     description: 'Dataset model count',
     content: {'application/json': {schema: CountSchema}},
@@ -90,6 +99,9 @@ export class DatasetController {
   async countPublic(
     @param.where(Dataset) where?: Where<Dataset>,
   ): Promise<Count> {
+    this.logger.info(
+      `route </datasets/count/public> -  get public datasets count`,
+    );
     return this.datasetRepository.count({
       ...where,
       or: [{public: true}],
@@ -97,6 +109,7 @@ export class DatasetController {
   }
 
   @get('/datasets')
+  @logInvocation()
   @response(200, {
     description: 'Array of Dataset model instances',
     content: {
@@ -112,6 +125,7 @@ export class DatasetController {
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
+    this.logger.info(`route </datasets> -  get datasets`);
     return this.datasetRepository.find({
       ...filter,
       where: {
@@ -122,6 +136,7 @@ export class DatasetController {
   }
 
   @get('/datasets/public')
+  @logInvocation()
   @response(200, {
     description: 'Array of Dataset model instances',
     content: {
@@ -136,6 +151,7 @@ export class DatasetController {
   async findPublic(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
+    this.logger.info(`route </datasets/public> -  get public datasets`);
     return this.datasetRepository.find({
       ...filter,
       where: {
@@ -146,6 +162,7 @@ export class DatasetController {
   }
 
   @patch('/datasets')
+  @logInvocation()
   @response(200, {
     description: 'Dataset PATCH success count',
     content: {'application/json': {schema: CountSchema}},
@@ -162,10 +179,12 @@ export class DatasetController {
     dataset: Dataset,
     @param.where(Dataset) where?: Where<Dataset>,
   ): Promise<Count> {
+    this.logger.info(`route </datasets> -  update all datasets`);
     return this.datasetRepository.updateAll(dataset, where);
   }
 
   @get('/datasets/{id}')
+  @logInvocation()
   @response(200, {
     description: 'Dataset model instance',
     content: {
@@ -180,10 +199,12 @@ export class DatasetController {
     @param.filter(Dataset, {exclude: 'where'})
     filter?: FilterExcludingWhere<Dataset>,
   ): Promise<Dataset> {
+    this.logger.info(`route </datasets/{id}> -  get dataset by id: ${id}`);
     return this.datasetRepository.findById(id, filter);
   }
 
   @patch('/datasets/{id}')
+  @logInvocation()
   @response(204, {
     description: 'Dataset PATCH success',
   })
@@ -199,6 +220,7 @@ export class DatasetController {
     })
     dataset: Dataset,
   ): Promise<void> {
+    this.logger.info(`route </datasets/{id}> -  update dataset by id: ${id}`);
     await this.datasetRepository.updateById(id, {
       ...dataset,
       updatedDate: new Date().toISOString(),
@@ -206,6 +228,7 @@ export class DatasetController {
   }
 
   @put('/datasets/{id}')
+  @logInvocation()
   @response(204, {
     description: 'Dataset PUT success',
   })
@@ -215,9 +238,11 @@ export class DatasetController {
     @requestBody() dataset: Dataset,
   ): Promise<void> {
     await this.datasetRepository.replaceById(id, dataset);
+    this.logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }
 
   @del('/datasets/{id}')
+  @logInvocation()
   @response(204, {
     description: 'Dataset DELETE success',
   })
@@ -232,15 +257,25 @@ export class DatasetController {
           : host;
       axios
         .post(`${host}:4004/delete-dataset/dx${id}`)
-        .then(_ => console.log('File removed from DX Backend'))
+        .then(_ => {
+          this.logger.info(
+            `route </datasets/{id}> -  File ${id} removed from DX Backend`,
+          );
+          console.log('File removed from DX Backend');
+        })
         .catch(_ => {
+          this.logger.error(
+            `route </datasets/{id}> -  Failed to remove the dataset ${id} from DX Backend`,
+          );
           console.log('Failed to remove the dataset from DX Backend');
         });
     });
     await this.datasetRepository.deleteById(id);
+    this.logger.info(`route </datasets/{id}> -  Dataset ${id} removed from db`);
   }
 
   @get('/dataset/duplicate/{id}')
+  @logInvocation()
   @response(200, {
     description: 'Chart model instance',
     content: {
@@ -251,6 +286,9 @@ export class DatasetController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async duplicate(@param.path.string('id') id: string): Promise<Dataset> {
+    this.logger.info(
+      `route </dataset/duplicate/{id}> -  finding dataset by id: ${id}`,
+    );
     const fDataset = await this.datasetRepository.findById(id);
     const newDatasetPromise = this.datasetRepository.create({
       name: `${fDataset.name} (Copy)`,
@@ -263,12 +301,24 @@ export class DatasetController {
     });
 
     const newDataset = await newDatasetPromise;
+    this.logger.info(
+      `route </dataset/duplicate/{id}> -  DX Backend duplication started`,
+    );
 
     await axios
       .post(`http://${host}:4004/duplicate-dataset/${id}/${newDataset.id}`)
-      .then(_ => console.log('DX Backend duplication complete'))
+      .then(_ => {
+        this.logger.info(
+          `route </dataset/duplicate/{id}> -  DX Backend duplication complete`,
+        );
+        console.log('DX Backend duplication complete');
+      })
       .catch(e => {
         console.log('DX Backend duplication failed', e);
+        this.logger.error(
+          `route </dataset/duplicate/{id}> -  DX Backend duplication failed`,
+          e,
+        );
         return {error: 'Error duplicating files'};
       });
 
@@ -276,17 +326,28 @@ export class DatasetController {
   }
 
   @get('/dataset/google-drive/user-token')
+  @logInvocation()
   @response(200, {
     description: 'User Token',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async getUserToken(): Promise<string> {
+    this.logger.info(
+      'route </dataset/google-drive/user-token> -  get user Token',
+    );
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const profile = await UserProfile.getUserProfile(userId);
-    return profile.identities[0].access_token;
+    const token = profile.identities[0].access_token;
+    this.logger.info(
+      'route </dataset/google-drive/user-token> -  user Token',
+      token,
+    );
+    return token;
   }
+
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @get('/external-sources/search')
+  @logInvocation()
   @response(200, {
     description: 'Dataset external search instance',
   })
@@ -294,21 +355,29 @@ export class DatasetController {
     @param.query.string('q') q: string,
   ): Promise<any> {
     try {
+      this.logger.info(
+        'route </external-sources/search> -  Search external sources',
+      );
       const response = await axios.post(
-        `http://${host}:4004//external-sources/search`,
+        `http://${host}:4004/external-sources/search`,
         {
           owner: _.get(this.req, 'user.sub', 'anonymous'),
           query: q,
         },
       );
+      this.logger.info(
+        'route </external-sources/search> -  Searched external sources',
+      );
       return response.data;
     } catch (e) {
       console.log(e);
+      this.logger.error('route </external-sources/search> -  Error', e);
     }
   }
 
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @post('/external-sources/download')
+  @logInvocation()
   @response(200, {
     description: 'Dataset external search instance',
   })
@@ -328,6 +397,9 @@ export class DatasetController {
     },
   ): Promise<any> {
     try {
+      this.logger.info(
+        'route </external-sources/download> -  Download external sources',
+      );
       const response = await axios.post(
         `http://${host}:4004/external-sources/download`,
         {
@@ -338,9 +410,13 @@ export class DatasetController {
           },
         },
       );
+      this.logger.info(
+        'route </external-sources/download> -  Downloaded external sources',
+      );
       return response.data;
     } catch (e) {
       console.log(e);
+      this.logger.error('route </external-sources/download> -  Error', e);
     }
   }
 }
