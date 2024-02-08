@@ -285,8 +285,10 @@ export class DatasetController {
     const profile = await UserProfile.getUserProfile(userId);
     return profile.identities[0].access_token;
   }
-  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+
+  //external sources search
   @get('/external-sources/search')
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @response(200, {
     description: 'Dataset external search instance',
   })
@@ -301,6 +303,36 @@ export class DatasetController {
           query: q,
         },
       );
+      return response.data;
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  //external sources limited search
+  @get('/external-sources/search-limited')
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @response(200, {
+    description: 'Dataset external search instance',
+  })
+  async LimitedSearchExternalSources(
+    @param.query.string('q') q: string,
+    @param.query.string('source') source: string,
+    @param.query.string('limit') limit: string,
+    @param.query.string('offset') offset: string,
+  ): Promise<any> {
+    try {
+      const response = await axios.post(
+        `http://${host}:4004/external-sources/search-limited`,
+        {
+          owner: _.get(this.req, 'user.sub', 'anonymous'),
+          query: q,
+          source,
+          limit: Number(limit),
+          offset: Number(offset),
+        },
+      );
+
       return response.data;
     } catch (e) {
       console.log(e);
