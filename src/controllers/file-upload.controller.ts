@@ -16,7 +16,6 @@ import {FileUploadHandler} from '../types';
 // @ts-ignore keep this import for production node
 import multer from 'multer';
 import axios from 'axios';
-import {winstonLogger} from '../config/logger/winston-logger';
 
 interface UploadedFile {
   fieldname: string;
@@ -82,7 +81,6 @@ export class FileUploadController {
       filename: f.filename,
     });
     let files: UploadedFile[] = [];
-    winstonLogger.info('Uploading files');
     if (Array.isArray(uploadedFiles)) {
       files = uploadedFiles.map(mapper);
     } else {

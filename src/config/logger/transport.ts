@@ -5,7 +5,7 @@ export const fileTransport = new WinstonTransports.File({
   maxsize: 1000000, // 1MB
   handleExceptions: true,
   rotationFormat: () => {},
-  level: 'debug',
+  level: 'info',
   format: format.combine(
     format.timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
     format.prettyPrint(),

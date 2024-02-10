@@ -2,6 +2,7 @@ import winston from 'winston';
 const {combine, timestamp, prettyPrint, printf} = winston.format;
 export const winstonLogger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
+  
   format: combine(
     timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
     prettyPrint(),
@@ -16,7 +17,7 @@ export const winstonLogger = winston.createLogger({
     new winston.transports.File({
       filename: './src/logging/dx_server.log',
       level: 'info',
-      maxsize: 1000000, // 1MB
+      lazy: true
     }),
   ],
 });

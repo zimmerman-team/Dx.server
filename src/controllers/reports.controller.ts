@@ -25,7 +25,7 @@ import axios from 'axios';
 import _ from 'lodash';
 import {Report} from '../models';
 import {ReportRepository} from '../repositories';
-import {LoggingBindings, logInvocation, WinstonLogger} from '@loopback/logging';
+import {winstonLogger as logger} from '../config/logger/winston-logger';
 
 async function getReportsCount(
   reportRepository: ReportRepository,
@@ -85,12 +85,8 @@ export class ReportsController {
     @repository(ReportRepository)
     public ReportRepository: ReportRepository,
   ) {}
-  // Inject a winston logger
-  @inject(LoggingBindings.WINSTON_LOGGER)
-  private logger: WinstonLogger;
 
   @post('/report')
-  @logInvocation()
   @response(200, {
     description: 'Report model instance',
     content: {'application/json': {schema: getModelSchemaRef(Report)}},
@@ -109,20 +105,19 @@ export class ReportsController {
     })
     Report: Omit<Report, 'id'>,
   ): Promise<Report> {
-    this.logger.info(`route </report> creating a new report`);
+    logger.info(`route </report> creating a new report`);
     Report.owner = _.get(this.req, 'user.sub', 'anonymous');
     return this.ReportRepository.create(Report);
   }
 
   @get('/reports/count')
-  @logInvocation()
   @response(200, {
     description: 'Report model count',
     content: {'application/json': {schema: CountSchema}},
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Report) where?: Where<Report>): Promise<Count> {
-    this.logger.info(`route </reports/count> getting reports count`);
+    logger.info(`route </reports/count> getting reports count`);
     return getReportsCount(
       this.ReportRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
@@ -131,7 +126,6 @@ export class ReportsController {
   }
 
   @get('/reports/count/public')
-  @logInvocation()
   @response(200, {
     description: 'Report model count',
     content: {'application/json': {schema: CountSchema}},
@@ -139,9 +133,7 @@ export class ReportsController {
   async countPublic(
     @param.where(Report) where?: Where<Report>,
   ): Promise<Count> {
-    this.logger.info(
-      `route </reports/count/public> getting public reports count`,
-    );
+    logger.info(`route </reports/count/public> getting public reports count`);
     return getReportsCount(
       this.ReportRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
@@ -150,7 +142,6 @@ export class ReportsController {
   }
 
   @get('/reports')
-  @logInvocation()
   @response(200, {
     description: 'Array of Report model instances',
     content: {
@@ -164,7 +155,7 @@ export class ReportsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async find(@param.filter(Report) filter?: Filter<Report>): Promise<Report[]> {
-    this.logger.info(`route </reports> getting reports`);
+    logger.info(`route </reports> getting reports`);
     return getReports(
       this.ReportRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
@@ -173,7 +164,6 @@ export class ReportsController {
   }
 
   @get('/reports/public')
-  @logInvocation()
   @response(200, {
     description: 'Array of Report model instances',
     content: {
@@ -188,7 +178,7 @@ export class ReportsController {
   async findPublic(
     @param.filter(Report) filter?: Filter<Report>,
   ): Promise<Report[]> {
-    this.logger.info(`route </reports/public> getting public reports`);
+    logger.info(`route </reports/public> getting public reports`);
     return getReports(
       this.ReportRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
@@ -197,7 +187,6 @@ export class ReportsController {
   }
 
   @patch('/report')
-  @logInvocation()
   @response(200, {
     description: 'Report PATCH success count',
     content: {'application/json': {schema: CountSchema}},
@@ -214,12 +203,11 @@ export class ReportsController {
     Report: Report,
     @param.where(Report) where?: Where<Report>,
   ): Promise<Count> {
-    this.logger.info(`route </report> updating all reports`);
+    logger.info(`route </report> updating all reports`);
     return this.ReportRepository.updateAll(Report, where);
   }
 
   @get('/report/{id}')
-  @logInvocation()
   @response(200, {
     description: 'Report model instance',
     content: {
@@ -234,21 +222,20 @@ export class ReportsController {
     @param.filter(Report, {exclude: 'where'})
     filter?: FilterExcludingWhere<Report>,
   ): Promise<Report | {error: string}> {
-    this.logger.info(`route </report/{id}> getting report by id ${id}`);
+    logger.info(`route </report/{id}> getting report by id ${id}`);
     const report = await this.ReportRepository.findById(id, filter);
     if (
       report.public ||
       report.owner === _.get(this.req, 'user.sub', 'anonymous')
     ) {
-      this.logger.info(`route </report/{id}> report found`);
+      logger.info(`route </report/{id}> report found`);
       return report;
     }
-    this.logger.info(`route </report/{id}> unauthorized`);
+    logger.info(`route </report/{id}> unauthorized`);
     return {error: 'Unauthorized'};
   }
 
   @get('/report/public/{id}')
-  @logInvocation()
   @response(200, {
     description: 'Report model instance',
     content: {
@@ -262,21 +249,20 @@ export class ReportsController {
     @param.filter(Report, {exclude: 'where'})
     filter?: FilterExcludingWhere<Report>,
   ): Promise<Report | {error: string}> {
-    this.logger.info(
+    logger.info(
       `route </report/public/{id}> getting public report by id ${id}`,
     );
     const report = await this.ReportRepository.findById(id, filter);
     if (report.public) {
-      this.logger.info(`route </report/public/{id}> report found`);
+      logger.info(`route </report/public/{id}> report found`);
       return report;
     } else {
-      this.logger.info(`route </report/public/{id}> unauthorized`);
+      logger.info(`route </report/public/{id}> unauthorized`);
       return {error: 'Unauthorized'};
     }
   }
 
   @post('/report/{id}/render')
-  @logInvocation()
   @response(200, {
     description: 'Report model instance',
     content: {
@@ -290,9 +276,7 @@ export class ReportsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
-    this.logger.info(
-      `route </report/{id}/render> rendering report by id ${id}`,
-    );
+    logger.info(`route </report/{id}/render> rendering report by id ${id}`);
     return renderReport(
       this.ReportRepository,
       id,
@@ -302,7 +286,6 @@ export class ReportsController {
   }
 
   @post('/report/{id}/render/public')
-  @logInvocation()
   @response(200, {
     description: 'Report model instance',
     content: {
@@ -315,7 +298,7 @@ export class ReportsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
-    this.logger.info(
+    logger.info(
       `route </report/{id}/render/public> rendering public report by id ${id}`,
     );
     return renderReport(
@@ -327,7 +310,6 @@ export class ReportsController {
   }
 
   @patch('/report/{id}')
-  @logInvocation()
   @response(204, {
     description: 'Report PATCH success',
   })
@@ -343,7 +325,7 @@ export class ReportsController {
     })
     report: Report,
   ): Promise<void> {
-    this.logger.info(`route </report/{id}> updating report by id ${id}`);
+    logger.info(`route </report/{id}> updating report by id ${id}`);
     await this.ReportRepository.updateById(id, {
       ...report,
       updatedDate: new Date().toISOString(),
@@ -351,7 +333,6 @@ export class ReportsController {
   }
 
   @put('/report/{id}')
-  @logInvocation()
   @response(204, {
     description: 'Report PUT success',
   })
@@ -360,23 +341,21 @@ export class ReportsController {
     @param.path.string('id') id: string,
     @requestBody() Report: Report,
   ): Promise<void> {
-    this.logger.info(`route </report/{id}> replacing report by id ${id}`);
+    logger.info(`route </report/{id}> replacing report by id ${id}`);
     await this.ReportRepository.replaceById(id, Report);
   }
 
   @del('/report/{id}')
-  @logInvocation()
   @response(204, {
     description: 'Report DELETE success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async deleteById(@param.path.string('id') id: string): Promise<void> {
-    this.logger.info(`route </report/{id}> deleting report by id ${id}`);
+    logger.info(`route </report/{id}> deleting report by id ${id}`);
     await this.ReportRepository.deleteById(id);
   }
 
   @get('/report/duplicate/{id}')
-  @logInvocation()
   @response(200, {
     description: 'Report model instance',
     content: {
@@ -387,7 +366,7 @@ export class ReportsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async duplicate(@param.path.string('id') id: string): Promise<Report> {
-    this.logger.info(
+    logger.info(
       `route </report/duplicate/{id}> duplicating report by id ${id}`,
     );
     const fReport = await this.ReportRepository.findById(id);

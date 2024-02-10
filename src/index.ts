@@ -1,13 +1,6 @@
 import {RestBindings} from '@loopback/rest';
 import {ApiApplication, ApplicationConfig} from './application';
-import {
-  LoggingBindings,
-  LoggingComponent,
-  WINSTON_TRANSPORT,
-} from '@loopback/logging';
-import {extensionFor} from '@loopback/core';
 import {LogErrorProvider} from './config/logger/log-error.provider';
-import {fileTransport} from './config/logger/transport';
 export * from './application';
 
 export async function main(options: ApplicationConfig = {}) {
@@ -16,21 +9,10 @@ export async function main(options: ApplicationConfig = {}) {
   await app.migrateSchema();
   await app.start();
   app.bind(RestBindings.REQUEST_BODY_PARSER_OPTIONS).to({limit: '50mb'});
-  app.configure(LoggingBindings.COMPONENT).to({
-    enableFluent: false, // default to true
-    enableHttpAccessLog: false, // default to true
-  });
-
-  app.component(LoggingComponent);
 
   const url = app.restServer.url;
   console.log(`Server is running at ${url}`);
   console.log(`Try ${url}/ping`);
-
-  app
-    .bind('logging.winston.transports.file')
-    .to(fileTransport)
-    .apply(extensionFor(WINSTON_TRANSPORT));
 
   // Log errors through provider
   app.bind(RestBindings.SequenceActions.LOG_ERROR).toProvider(LogErrorProvider);
