@@ -21,7 +21,7 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
 import {Dataset} from '../models';
 import {DatasetRepository} from '../repositories';
 
@@ -317,23 +317,32 @@ export class DatasetController {
   })
   async LimitedSearchExternalSources(
     @param.query.string('q') q: string,
-    @param.query.string('source') source: string,
     @param.query.string('limit') limit: string,
     @param.query.string('offset') offset: string,
   ): Promise<any> {
     try {
-      const response = await axios.post(
-        `http://${host}:4004/external-sources/search-limited`,
-        {
-          owner: _.get(this.req, 'user.sub', 'anonymous'),
-          query: q,
-          source,
-          limit: Number(limit),
-          offset: Number(offset),
-        },
-      );
+      const sources = ['Kaggle', 'World Bank', 'WHO'];
+      const promises: Promise<AxiosResponse<any, any>>[] = [];
 
-      return response.data;
+      sources.forEach(source => {
+        promises.push(
+          axios.post(`http://${host}:4004/external-sources/search-limited`, {
+            owner: _.get(this.req, 'user.sub', 'anonymous'),
+            query: q,
+            source,
+            limit: Number(limit),
+            offset: Number(offset),
+          }),
+        );
+      });
+
+      const responses = await Promise.all(promises);
+
+      const data = responses.reduce(
+        (prev: any, curr) => [...prev, ...curr.data],
+        [],
+      );
+      return _.shuffle(data);
     } catch (e) {
       console.log(e);
     }
