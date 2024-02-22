@@ -172,16 +172,18 @@ function filterData(parsedDataset, appliedFilters) {
 
 function renderChart(item, parsed, initialParsedDataset, id, itemAppliedFilters, vizType) {
   const chart = charts[vizType];
-  let title = '';
-  let subtitle = '';
-  let description = '';
+  let header = '';
+  let subheader = '';
+  let unitofmeasurement = '';
+  let mainKPImetric = '';
 
   if (vizType === 'bigNumber') {
-    // remove title, subtitle, description from item.mapping
-    title = item.mapping.title;
-    subtitle = item.mapping.subtitle;
-    description = item.mapping.description;
-    item.mapping = {value: item.mapping.value};
+    // remove header, subheader, unitofmeasurement from item.mapping
+    header = item.mapping.header;
+    subheader = item.mapping.subheader;
+    unitofmeasurement = item.mapping.unitofmeasurement;
+    mainKPImetric = item.mapping.mainKPImetric;
+    item.mapping = {metric: item.mapping.metric};
   }
 
   const viz = rawChart(chart, {
@@ -193,12 +195,13 @@ function renderChart(item, parsed, initialParsedDataset, id, itemAppliedFilters,
   let vizData = viz._getVizData();
 
   if (vizType === 'bigNumber') {
-    // remove title, subtitle, description from item.mapping
+    // remove header, subheader, unitofmeasurement from item.mapping
     vizData = {
-      title: title ?? 'tmp',
-      value: vizData.value,
-      subtitle: subtitle ?? 'tmp',
-      description: description ?? 'tmp',
+      header: header ?? 'tmp',
+      metric: vizData.metric,
+      mainKPImetric: mainKPImetric,
+      subheader: subheader ?? 'tmp',
+      unitofmeasurement: unitofmeasurement ?? 'tmp',
     };
   }
 
