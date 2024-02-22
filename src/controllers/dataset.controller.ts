@@ -28,6 +28,7 @@ import {DatasetRepository} from '../repositories';
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
 import {UserProfile} from '../authentication-strategies/user-profile';
+import mcache from 'memory-cache';
 
 type FileUploadHandler = RequestHandler;
 
@@ -335,14 +336,57 @@ export class DatasetController {
           }),
         );
       });
+      const getData = async () => {
+        const responses = await Promise.all(promises);
 
-      const responses = await Promise.all(promises);
+        const data = responses.reduce(
+          (prev: any, curr) => [...prev, ...curr.data],
+          [],
+        );
+        return data;
+      };
 
-      const data = responses.reduce(
-        (prev: any, curr) => [...prev, ...curr.data],
-        [],
-      );
-      return _.shuffle(data);
+      if (q === '') {
+        // caching data for empty string searches
+        let cachedData = mcache.get('external_sources_data');
+
+        if (cachedData) {
+          const data = JSON.parse(cachedData)[limit][offset];
+
+          if (data) {
+            return _.shuffle(data);
+          } else {
+            const data = await getData();
+            const dataToCache = {
+              ...JSON.parse(cachedData),
+              [limit]: {
+                ...JSON.parse(cachedData)[limit],
+                [offset]: data,
+              },
+            };
+            mcache.put(
+              'external_sources_data',
+              JSON.stringify(dataToCache),
+              1000 * 60 * 60 * 24,
+            );
+            return _.shuffle(data);
+          }
+        } else {
+          const data = await getData();
+          const dataToCache = {
+            [limit]: {[offset]: data},
+          };
+          mcache.put(
+            'external_sources_data',
+            JSON.stringify(dataToCache),
+            1000 * 60 * 60 * 24,
+          );
+          return _.shuffle(data);
+        }
+      } else {
+        const data = await getData();
+        return _.shuffle(data);
+      }
     } catch (e) {
       console.log(e);
     }
