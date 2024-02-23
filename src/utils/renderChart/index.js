@@ -281,7 +281,7 @@ export async function renderChartData(id, body, chartData) {
     `${__dirname}/rendering/${id}_rendered.json`,
     JSON.stringify(renderedChart),
   );
-winstonLogger.info(`route <utils/renderchart/index.js>: Render chart success`);
+winstonLogger.debug(`route <utils/renderchart/index.js>: Render chart success`);
   console.log('Success...');
 }
 
@@ -299,7 +299,7 @@ try {
     const body = parsedData.body;
     const chartData = parsedData.chartData;
     renderChartData(id, body, chartData);
-    winstonLogger.info(`route <utils/renderchart/index.js>: Rendered chart with id: ${id}`);
+    winstonLogger.debug(`route <utils/renderchart/index.js>: Rendered chart with id: ${id}`);
 
   }
 } catch (error) {

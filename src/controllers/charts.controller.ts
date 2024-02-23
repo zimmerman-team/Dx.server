@@ -34,7 +34,7 @@ async function getChartsCount(
   owner?: string,
   where?: Where<Chart>,
 ) {
-  logger.info(`route </charts/count> Fetching chart count with winston`);
+  logger.info(`route </charts/count> Fetching chart count for owner- ${owner}`);
   return chartRepository.count({
     ...where,
     or: [{owner: owner}, {public: true}],
@@ -188,7 +188,7 @@ export class ChartsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Chart) where?: Where<Chart>): Promise<Count> {
-    logger.info(`route </charts/count> Fetching chart count`);
+    logger.verbose(`route </charts/count> Fetching chart count`);
     return getChartsCount(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
