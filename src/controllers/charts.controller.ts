@@ -27,13 +27,14 @@ import fs from 'fs-extra';
 import _ from 'lodash';
 import {Chart} from '../models';
 import {ChartRepository} from '../repositories';
-import {LoggingBindings, WinstonLogger, logInvocation} from '@loopback/logging';
+import {winstonLogger as logger} from '../config/logger/winston-logger';
 
 async function getChartsCount(
   chartRepository: ChartRepository,
   owner?: string,
   where?: Where<Chart>,
 ) {
+  logger.info(`route </charts/count> Fetching chart count for owner- ${owner}`);
   return chartRepository.count({
     ...where,
     or: [{owner: owner}, {public: true}],
@@ -75,27 +76,37 @@ async function renderChart(
       body: {...body},
       chartData: chartData,
     };
+    logger.debug(`fn <renderChart()> Writing chart data to file- ${id}.json`);
     fs.writeFileSync(
       `./src/utils/renderChart/dist/rendering/${id}.json`,
       JSON.stringify(ob, null, 4),
     );
     // execute the ./src/utiles/renderChart/dist/index.cjs with id as the parameter
+    logger.debug(`fn <renderChart()> executing renderChart for chart- ${id}`);
     execSync(`node ./src/utils/renderChart/dist/index.cjs ${id}`, {
       timeout: 0,
       stdio: 'pipe',
     });
-    // once the renderign is done, read the output file
+    // once the rendering is done, read the output file
+    logger.debug(
+      `fn <renderChart()> Reading rendered chart data from file- ${id}_rendered.json`,
+    );
     const data = fs.readFileSync(
       `./src/utils/renderChart/dist/rendering/${id}_rendered.json`,
     );
 
     // clean temp files
+    logger.debug(`fn <renderChart()> Cleaning temp files for chart- ${id}`);
     fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}.json`);
     fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}_rendered.json`);
 
     // return jsonified data
+    logger.info(`fn <renderChart()> Chart- ${id} rendered`);
     return JSON.parse(data.toString());
   } catch (err) {
+    logger.error(
+      `fn <renderChart()> Error rendering chart- ${id}; ${err.stack ?? err}`,
+    );
     console.error(err);
     return {error: err};
   }
@@ -107,12 +118,8 @@ export class ChartsController {
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
   ) {}
-  // Inject a winston logger
-  @inject(LoggingBindings.WINSTON_LOGGER)
-  private logger: WinstonLogger;
 
   /* create chart */
-
   @post('/chart')
   @response(200, {
     description: 'Chart model instance',
@@ -133,20 +140,26 @@ export class ChartsController {
     chart: Omit<Chart, 'id'>,
   ): Promise<Chart> {
     chart.owner = _.get(this.req, 'user.sub', 'anonymous');
+    logger.info(`route </chart> Creating chart: ${chart.name}`);
     return this.chartRepository.create(chart);
   }
 
   /* get chart dataset sample data */
-
   @get('/chart/sample-data/{datasetId}')
   @response(200)
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
     if (process.env.ENV_TYPE !== 'prod')
       host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+    logger.info(
+      `route </chart/sample-data/{datasetId}> Fetching sample data for dataset ${datasetId}`,
+    );
     return axios
       .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {
+        logger.info(
+          `route </chart/sample-data/{datasetId}> Sample data fetched for dataset ${datasetId}`,
+        );
         return {
           count: _.get(res, 'data.count', []),
           sample: _.get(res, 'data.sample', []),
@@ -157,6 +170,9 @@ export class ChartsController {
       })
       .catch(error => {
         console.log(error);
+        logger.error(
+          `route </chart/sample-data/{datasetId}> Error fetching sample data for dataset ${datasetId}; ${error}`,
+        );
         return {
           data: [],
           error,
@@ -165,7 +181,6 @@ export class ChartsController {
   }
 
   /* charts count */
-
   @get('/charts/count')
   @response(200, {
     description: 'Chart model count',
@@ -173,19 +188,20 @@ export class ChartsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Chart) where?: Where<Chart>): Promise<Count> {
+    logger.verbose(`route </charts/count> Fetching chart count`);
     return getChartsCount(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       where,
     );
   }
-
   @get('/charts/count/public')
   @response(200, {
     description: 'Chart model count',
     content: {'application/json': {schema: CountSchema}},
   })
   async countPublic(@param.where(Chart) where?: Where<Chart>): Promise<Count> {
+    logger.info(`route </charts/count/public> Fetching public chart count`);
     return getChartsCount(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
@@ -208,6 +224,7 @@ export class ChartsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async find(@param.filter(Chart) filter?: Filter<Chart>): Promise<Chart[]> {
+    logger.info(`route</charts> Fetching charts`);
     return getCharts(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
@@ -230,6 +247,7 @@ export class ChartsController {
   async findPublic(
     @param.filter(Chart) filter?: Filter<Chart>,
   ): Promise<Chart[]> {
+    logger.info(`Fetching public charts`);
     return getCharts(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
@@ -256,11 +274,15 @@ export class ChartsController {
     chart: Chart,
     @param.where(Chart) where?: Where<Chart>,
   ): Promise<Count> {
+    logger.info(
+      `route</chart> Updating chart- ${chart.id} ; where: ${JSON.stringify(
+        where,
+      )}`,
+    );
     return this.chartRepository.updateAll(chart, where);
   }
 
   /* get chart */
-
   @get('/chart/{id}')
   @response(200, {
     description: 'Chart model instance',
@@ -276,13 +298,19 @@ export class ChartsController {
     @param.filter(Chart, {exclude: 'where'})
     filter?: FilterExcludingWhere<Chart>,
   ): Promise<Chart | {name: string; error: string}> {
+    logger.info(`route</chart/{id}> Fetching chart- ${id}`);
+    logger.debug(`Finding chart- ${id} with filter- ${JSON.stringify(filter)}`);
     const chart = await this.chartRepository.findById(id, filter);
     if (
       chart.public ||
       chart.owner === _.get(this.req, 'user.sub', 'anonymous')
-    )
+    ) {
+      logger.info(`route</chart/{id}> Chart- ${id} found`);
       return chart;
-    else return {name: '', error: 'Unauthorized'};
+    } else {
+      logger.error(`route</chart/{id}> Unauthorized access to chart- ${id}`);
+      return {name: '', error: 'Unauthorized'};
+    }
   }
 
   @get('/chart/public/{id}')
@@ -300,12 +328,18 @@ export class ChartsController {
     filter?: FilterExcludingWhere<Chart>,
   ): Promise<Chart | {name: string; error: string}> {
     const chart = await this.chartRepository.findById(id, filter);
-    if (chart.public) return chart;
-    else return {name: '', error: 'Unauthorized'};
+    if (chart.public) {
+      logger.info(`route</chart/public/{id}> Fetching public chart- ${id}`);
+      return chart;
+    } else {
+      logger.error(
+        `route</chart/public/{id}> Unauthorized access to public chart- ${id}`,
+      );
+      return {name: '', error: 'Unauthorized'};
+    }
   }
 
   /* render chart */
-
   @post('/chart/{id}/render')
   @response(200, {
     description: 'Chart model instance',
@@ -320,6 +354,8 @@ export class ChartsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
+    logger.info(`route</chart/{id}/render> Rendering chart- ${id}`);
+
     return renderChart(
       this.chartRepository,
       id,
@@ -327,7 +363,7 @@ export class ChartsController {
       _.get(this.req, 'user.sub', 'anonymous'),
     );
   }
-
+  /* render chart; public */
   @post('/chart/{id}/render/public')
   @response(200, {
     description: 'Chart model instance',
@@ -341,6 +377,9 @@ export class ChartsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
+    logger.info(
+      `route</chart/{id}/render/public> Rendering public chart- ${id}`,
+    );
     return renderChart(
       this.chartRepository,
       id,
@@ -371,10 +410,10 @@ export class ChartsController {
       ...chart,
       updatedDate: new Date().toISOString(),
     });
+    logger.info(`route</chart/{id}> Updating chart- ${id}`);
   }
 
   /* put chart */
-
   @put('/chart/{id}')
   @response(204, {
     description: 'Chart PUT success',
@@ -384,22 +423,22 @@ export class ChartsController {
     @param.path.string('id') id: string,
     @requestBody() chart: Chart,
   ): Promise<void> {
+    logger.info(`route</chart/{id}> Replacing chart- ${id}`);
     await this.chartRepository.replaceById(id, chart);
   }
 
   /* delete chart */
-
   @del('/chart/{id}')
   @response(204, {
     description: 'Chart DELETE success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async deleteById(@param.path.string('id') id: string): Promise<void> {
+    logger.info(`route</chart/{id}> Deleting chart- ${id}`);
     await this.chartRepository.deleteById(id);
   }
 
   /* duplicate chart */
-
   @get('/chart/duplicate/{id}')
   @response(200, {
     description: 'Chart model instance',
@@ -411,6 +450,7 @@ export class ChartsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async duplicate(@param.path.string('id') id: string): Promise<Chart> {
+    logger.info(`route </chart/duplicate/{id}> Duplicating chart- ${id}`);
     const fChart = await this.chartRepository.findById(id);
     return this.chartRepository.create({
       name: `${fChart.name} (Copy)`,
