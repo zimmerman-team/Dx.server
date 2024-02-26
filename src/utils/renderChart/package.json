@@ -4,7 +4,8 @@
   "type": "module",
   "dependencies": {
     "@rawgraphs/rawgraphs-core": "^1.0.0-beta.17",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "webpack": "^5.88.2",

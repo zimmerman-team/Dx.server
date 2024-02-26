@@ -1,13 +1,9 @@
 import {Provider} from '@loopback/context';
-import {inject} from '@loopback/core';
-import {LoggingBindings, WinstonLogger} from '@loopback/logging';
 import {LogError, Request} from '@loopback/rest';
 import {createLogger, Logger} from 'winston';
-
+import {winstonLogger as logger} from './winston-logger';
 export class LogErrorProvider implements Provider<LogError> {
-  constructor(
-    @inject(LoggingBindings.WINSTON_LOGGER) protected logger: WinstonLogger,
-  ) {
+  constructor() {
     createLogger();
   }
 
@@ -20,7 +16,7 @@ export class LogErrorProvider implements Provider<LogError> {
       return;
     }
 
-    this.logger.error(
+    logger.error(
       `HTTP ${statusCode} on ${req.method} ${req.url}: ${err.stack ?? err}`,
       {},
     );

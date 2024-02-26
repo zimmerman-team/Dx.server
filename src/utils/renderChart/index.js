@@ -56,6 +56,9 @@ import {
   // } from "@rawgraphs/rawgraphs-charts";
 } from './rawgraphs-charts/lib/index.cjs.js';
 
+import { winstonLogger } from './winston-logger.js';
+
+
 // consts
 const charts = {
   alluvialdiagram,
@@ -249,6 +252,7 @@ export async function renderChartData(id, body, chartData) {
     parsed = JSON.parse(parsedData.toString());
   } catch (error) {
     console.log('Error reading parsed data file', error);
+    winstonLogger.error(`route <utils/renderchart/index.js>: Error reading parsed data file: ${error}`);
   }
   // Check if there are either filters in the item.appliedFilters or in the body.previewAppliedFilters
   const itemAppliedFilters = _.get(body, `previewAppliedFilters[0][0]`, null);
@@ -277,12 +281,14 @@ export async function renderChartData(id, body, chartData) {
     `${__dirname}/rendering/${id}_rendered.json`,
     JSON.stringify(renderedChart),
   );
+winstonLogger.debug(`route <utils/renderchart/index.js>: Render chart success`);
   console.log('Success...');
 }
 
 try {
   // if argv2 is undefined, return error
   if (process.argv[2] === undefined) {
+    winstonLogger.error('route <utils/renderchart/index.js>: No id provided');
     console.error('No id provided');
   } else {
     // read the first argument as id
@@ -293,7 +299,10 @@ try {
     const body = parsedData.body;
     const chartData = parsedData.chartData;
     renderChartData(id, body, chartData);
+    winstonLogger.debug(`route <utils/renderchart/index.js>: Rendered chart with id: ${id}`);
+
   }
 } catch (error) {
+  winstonLogger.error(`route <utils/renderchart/index.js>: Error rendering chart: ${error}`);
   console.error('Something went wrong...\n');
 }
