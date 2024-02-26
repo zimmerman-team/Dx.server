@@ -370,7 +370,12 @@ export class DatasetController {
   ): Promise<any> {
     try {
       const sources = ['Kaggle', 'World Bank', 'WHO'];
+      const dayInMs = 1000 * 60 * 60 * 24;
       const promises: Promise<AxiosResponse<any, any>>[] = [];
+
+      const updateCache = (data: any) => {
+        mcache.put('external_sources_data', JSON.stringify(data), dayInMs);
+      };
 
       sources.forEach(source => {
         promises.push(
@@ -398,6 +403,7 @@ export class DatasetController {
         const cachedData = mcache.get('external_sources_data');
 
         if (cachedData) {
+          // Caching the data in a progressive fashion based on the limit and offset
           const data = JSON.parse(cachedData)[limit][offset];
 
           if (data) {
@@ -411,11 +417,7 @@ export class DatasetController {
                 [offset]: data,
               },
             };
-            mcache.put(
-              'external_sources_data',
-              JSON.stringify(dataToCache),
-              1000 * 60 * 60 * 24,
-            );
+            updateCache(dataToCache);
             return _.shuffle(data);
           }
         } else {
@@ -423,11 +425,7 @@ export class DatasetController {
           const dataToCache = {
             [limit]: {[offset]: data},
           };
-          mcache.put(
-            'external_sources_data',
-            JSON.stringify(dataToCache),
-            1000 * 60 * 60 * 24,
-          );
+          updateCache(dataToCache);
           return _.shuffle(data);
         }
       } else {
