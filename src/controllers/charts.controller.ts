@@ -63,6 +63,7 @@ async function renderChart(
   owner: string,
 ) {
   try {
+    logger.info('fn <renderChart()> calling renderChart function');
     const chartData = id === 'new' ? {} : await chartRepository.findById(id);
     if (
       id !== 'new' &&
@@ -85,7 +86,7 @@ async function renderChart(
     logger.debug(`fn <renderChart()> executing renderChart for chart- ${id}`);
     execSync(`node ./src/utils/renderChart/dist/index.cjs ${id}`, {
       timeout: 0,
-      stdio: 'pipe',
+      stdio: 'ignore',
     });
     // once the rendering is done, read the output file
     logger.debug(
@@ -95,20 +96,30 @@ async function renderChart(
       `./src/utils/renderChart/dist/rendering/${id}_rendered.json`,
     );
 
+    logger.debug(
+      `fn <renderChart()> Reading rendered chart data from file- ${id}_rendered.json`,
+    );
+    logger.verbose(
+      `fn <renderChart()> rendered chart data: ${data.toString()}`,
+    );
+
     // clean temp files
     logger.debug(`fn <renderChart()> Cleaning temp files for chart- ${id}`);
     fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}.json`);
     fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}_rendered.json`);
 
     // return jsonified data
-    logger.info(`fn <renderChart()> Chart- ${id} rendered`);
+    logger.info(
+      `fn <renderChart()> Chart with id: ${id} rendered data: ${JSON.parse(
+        data.toString(),
+      )}`,
+    );
     return JSON.parse(data.toString());
   } catch (err) {
-    logger.error(
-      `fn <renderChart()> Error rendering chart- ${id}; ${err.stack ?? err}`,
-    );
+    logger.error(`fn <renderChart()> Error rendering chart with id: ${id}; `);
     console.error(err);
-    return {error: err};
+    // console.log('error', err.stdout.toString());
+    return {error: String(err)};
   }
 }
 
