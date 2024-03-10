@@ -365,6 +365,36 @@ export class ChartsController {
     @requestBody() body: any,
   ) {
     logger.info(`route</chart/{id}/render> Rendering chart- ${id}`);
+    const chartData =
+      id === 'new'
+        ? {datasetId: body.rows[0][0].datasetId}
+        : await this.chartRepository.findById(id);
+
+    let parsed = null;
+
+    try {
+      const filePath =
+        process.env.PARSED_DATA_FILES_PATH ||
+        `../dx.backend/parsed-data-files/`;
+      const parsedData = fs.readFileSync(
+        `${filePath}${chartData.datasetId}.json`,
+      );
+      parsed = JSON.parse(parsedData.toString());
+    } catch (err) {
+      logger.error(
+        `route</chart/{id}/render> Error fetching parsed data for dataset- ${chartData.datasetId}`,
+      );
+      console.error(err);
+    }
+
+    if (!parsed?.dataset) {
+      logger.error(
+        `route</chart/{id}/render> could not find parsed dataset with id- ${chartData.datasetId}`,
+      );
+      return {
+        error: 'The data for this chart is no longer available.',
+      };
+    }
 
     return renderChart(
       this.chartRepository,

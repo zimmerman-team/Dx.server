@@ -242,7 +242,7 @@ export class DatasetController {
           ? `dx-backend-${process.env.ENV_TYPE}`
           : host;
       axios
-        .post(`${host}:4004/delete-dataset/dx${id}`)
+        .post(`http://${host}:4004/delete-dataset/dx${id}`)
         .then(_ => {
           logger.info(
             `route </datasets/{id}> -  File ${id} removed from DX Backend`,
