@@ -23,9 +23,9 @@ import {
 } from '@loopback/rest';
 import axios from 'axios';
 import _ from 'lodash';
+import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Report} from '../models';
 import {ReportRepository} from '../repositories';
-import {winstonLogger as logger} from '../config/logger/winston-logger';
 
 async function getReportsCount(
   reportRepository: ReportRepository,
@@ -136,7 +136,7 @@ export class ReportsController {
     logger.info(`route </reports/count/public> getting public reports count`);
     return getReportsCount(
       this.ReportRepository,
-      _.get(this.req, 'user.sub', 'anonymous'),
+      process.env.DATA_CREATOR_ID ?? 'anonymous',
       where,
     );
   }
@@ -181,7 +181,7 @@ export class ReportsController {
     logger.info(`route </reports/public> getting public reports`);
     return getReports(
       this.ReportRepository,
-      _.get(this.req, 'user.sub', 'anonymous'),
+      process.env.DATA_CREATOR_ID ?? 'anonymous',
       filter,
     );
   }
@@ -253,7 +253,7 @@ export class ReportsController {
       `route </report/public/{id}> getting public report by id ${id}`,
     );
     const report = await this.ReportRepository.findById(id, filter);
-    if (report.public) {
+    if (report.public || report.owner === process.env.DATA_CREATOR_ID) {
       logger.info(`route </report/public/{id}> report found`);
       return report;
     } else {
@@ -305,7 +305,7 @@ export class ReportsController {
       this.ReportRepository,
       id,
       body,
-      _.get(this.req, 'user.sub', 'anonymous'),
+      process.env.DATA_CREATOR_ID ?? 'anonymous',
     );
   }
 

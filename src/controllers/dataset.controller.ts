@@ -97,7 +97,7 @@ export class DatasetController {
     logger.info(`route </datasets/count/public> -  get public datasets count`);
     return this.datasetRepository.count({
       ...where,
-      or: [{public: true}],
+      or: [{public: true}, {owner: process.env.DATA_CREATOR_ID ?? 'anonymous'}],
     });
   }
 
@@ -147,7 +147,10 @@ export class DatasetController {
       ...filter,
       where: {
         ...filter?.where,
-        or: [{public: true}],
+        or: [
+          {public: true},
+          {owner: process.env.DATA_CREATOR_ID ?? 'anonymous'},
+        ],
       },
     });
   }
@@ -242,7 +245,7 @@ export class DatasetController {
           ? `dx-backend-${process.env.ENV_TYPE}`
           : host;
       axios
-        .post(`${host}:4004/delete-dataset/dx${id}`)
+        .post(`http://${host}:4004/delete-dataset/dx${id}`)
         .then(_ => {
           logger.info(
             `route </datasets/{id}> -  File ${id} removed from DX Backend`,
@@ -253,7 +256,10 @@ export class DatasetController {
           logger.error(
             `route </datasets/{id}> -  Failed to remove the dataset ${id} from DX Backend`,
           );
-          console.log('Failed to remove the dataset from DX Backend');
+          console.log(
+            'Failed to remove the dataset from DX Backend',
+            String(_),
+          );
         });
     });
     await this.datasetRepository.deleteById(id);

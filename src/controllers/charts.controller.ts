@@ -25,9 +25,9 @@ import axios from 'axios';
 import {execSync} from 'child_process';
 import fs from 'fs-extra';
 import _ from 'lodash';
+import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Chart} from '../models';
 import {ChartRepository} from '../repositories';
-import {winstonLogger as logger} from '../config/logger/winston-logger';
 
 async function getChartsCount(
   chartRepository: ChartRepository,
@@ -204,7 +204,7 @@ export class ChartsController {
     logger.info(`route </charts/count/public> Fetching public chart count`);
     return getChartsCount(
       this.chartRepository,
-      _.get(this.req, 'user.sub', 'anonymous'),
+      process.env.DATA_CREATOR_ID ?? 'anonymous',
       where,
     );
   }
@@ -250,7 +250,7 @@ export class ChartsController {
     logger.info(`Fetching public charts`);
     return getCharts(
       this.chartRepository,
-      _.get(this.req, 'user.sub', 'anonymous'),
+      process.env.DATA_CREATOR_ID ?? 'anonymous',
       filter,
     );
   }
@@ -328,7 +328,7 @@ export class ChartsController {
     filter?: FilterExcludingWhere<Chart>,
   ): Promise<Chart | {name: string; error: string}> {
     const chart = await this.chartRepository.findById(id, filter);
-    if (chart.public) {
+    if (chart.public || chart.owner === process.env.DATA_CREATOR_ID) {
       logger.info(`route</chart/public/{id}> Fetching public chart- ${id}`);
       return chart;
     } else {
@@ -384,7 +384,7 @@ export class ChartsController {
       this.chartRepository,
       id,
       body,
-      _.get(this.req, 'user.sub', 'anonymous'),
+      process.env.DATA_CREATOR_ID ?? 'anonymous',
     );
   }
 
