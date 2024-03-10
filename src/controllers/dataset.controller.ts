@@ -23,7 +23,7 @@ import {
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import {Dataset} from '../models';
-import {DatasetRepository} from '../repositories';
+import {DatasetRepository, ChartRepository} from '../repositories';
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
@@ -45,6 +45,10 @@ export class DatasetController {
     @inject(RestBindings.Http.REQUEST) private req: Request,
     @repository(DatasetRepository)
     public datasetRepository: DatasetRepository,
+
+    @repository(ChartRepository)
+    public chartRepository: ChartRepository,
+
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
   ) {}
 
@@ -257,6 +261,10 @@ export class DatasetController {
         });
     });
     await this.datasetRepository.deleteById(id);
+    logger.info(
+      `route </datasets/{id}> -  Deleting all charts that use dataset with id - ${id}`,
+    );
+    await this.chartRepository.deleteAll({datasetId: id});
     logger.info(`route </datasets/{id}> -  Dataset ${id} removed from db`);
   }
 
