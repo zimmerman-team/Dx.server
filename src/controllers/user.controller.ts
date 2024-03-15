@@ -37,7 +37,7 @@ export class UserController {
     );
     const loginsCount = _.get(userProfile, 'logins_count', 0);
     // To know if the user is logging in for the first time
-    if (loginsCount === 0) {
+    if (loginsCount === 1) {
       const datasetsIds: {ds_name: string; new_ds_name: string}[] = [];
 
       const datasets = await this.datasetRepository.find({
