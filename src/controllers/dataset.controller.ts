@@ -21,14 +21,16 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
 import {Dataset} from '../models';
-import {DatasetRepository} from '../repositories';
+import {DatasetRepository, ChartRepository} from '../repositories';
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
+import mcache from 'memory-cache';
 import {UserProfile} from '../authentication-strategies/user-profile';
 import {AUTH0_MGMT_API_CALL, getUsersOrganizationMembers} from '../utils/auth';
+import {winstonLogger as logger} from '../config/logger/winston-logger';
 
 type FileUploadHandler = RequestHandler;
 
@@ -44,6 +46,10 @@ export class DatasetController {
     @inject(RestBindings.Http.REQUEST) private req: Request,
     @repository(DatasetRepository)
     public datasetRepository: DatasetRepository,
+
+    @repository(ChartRepository)
+    public chartRepository: ChartRepository,
+
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
   ) {}
 
@@ -67,6 +73,7 @@ export class DatasetController {
     dataset: Dataset,
   ): Promise<Dataset> {
     dataset.owner = _.get(this.req, 'user.sub', 'anonymous');
+    logger.info(`route </datasets> -  Dataset created`);
     return this.datasetRepository.create(dataset);
   }
 
@@ -77,6 +84,7 @@ export class DatasetController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Dataset) where?: Where<Dataset>): Promise<Count> {
+    logger.info(`route </datasets/count> -  get datasets count`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     return getUsersOrganizationMembers(userId)
       .then((orgUsers: any) => {
@@ -109,9 +117,10 @@ export class DatasetController {
   async countPublic(
     @param.where(Dataset) where?: Where<Dataset>,
   ): Promise<Count> {
+    logger.info(`route </datasets/count/public> -  get public datasets count`);
     return this.datasetRepository.count({
       ...where,
-      or: [{public: true}],
+      or: [{public: true}, {owner: process.env.DATA_CREATOR_ID ?? 'anonymous'}],
     });
   }
 
@@ -131,6 +140,7 @@ export class DatasetController {
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
+    logger.info(`route </datasets> -  get datasets`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     return getUsersOrganizationMembers(userId)
       .then((orgUsers: any) => {
@@ -176,11 +186,15 @@ export class DatasetController {
   async findPublic(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
+    logger.info(`route </datasets/public> -  get public datasets`);
     return this.datasetRepository.find({
       ...filter,
       where: {
         ...filter?.where,
-        or: [{public: true}],
+        or: [
+          {public: true},
+          {owner: process.env.DATA_CREATOR_ID ?? 'anonymous'},
+        ],
       },
     });
   }
@@ -202,6 +216,7 @@ export class DatasetController {
     dataset: Dataset,
     @param.where(Dataset) where?: Where<Dataset>,
   ): Promise<Count> {
+    logger.info(`route </datasets> -  update all datasets`);
     return this.datasetRepository.updateAll(dataset, where);
   }
 
@@ -220,6 +235,7 @@ export class DatasetController {
     @param.filter(Dataset, {exclude: 'where'})
     filter?: FilterExcludingWhere<Dataset>,
   ): Promise<Dataset> {
+    logger.info(`route </datasets/{id}> -  get dataset by id: ${id}`);
     return this.datasetRepository.findById(id, filter);
   }
 
@@ -239,6 +255,7 @@ export class DatasetController {
     })
     dataset: Dataset,
   ): Promise<void> {
+    logger.info(`route </datasets/{id}> -  update dataset by id: ${id}`);
     await this.datasetRepository.updateById(id, {
       ...dataset,
       updatedDate: new Date().toISOString(),
@@ -255,6 +272,7 @@ export class DatasetController {
     @requestBody() dataset: Dataset,
   ): Promise<void> {
     await this.datasetRepository.replaceById(id, dataset);
+    logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }
 
   @del('/datasets/{id}')
@@ -271,13 +289,29 @@ export class DatasetController {
           ? `dx-backend-${process.env.ENV_TYPE}`
           : host;
       axios
-        .post(`${host}:4004/delete-dataset/dx${id}`)
-        .then(_ => console.log('File removed from DX Backend'))
+        .post(`http://${host}:4004/delete-dataset/dx${id}`)
+        .then(_ => {
+          logger.info(
+            `route </datasets/{id}> -  File ${id} removed from DX Backend`,
+          );
+          console.log('File removed from DX Backend');
+        })
         .catch(_ => {
-          console.log('Failed to remove the dataset from DX Backend');
+          logger.error(
+            `route </datasets/{id}> -  Failed to remove the dataset ${id} from DX Backend`,
+          );
+          console.log(
+            'Failed to remove the dataset from DX Backend',
+            String(_),
+          );
         });
     });
     await this.datasetRepository.deleteById(id);
+    logger.info(
+      `route </datasets/{id}> -  Deleting all charts that use dataset with id - ${id}`,
+    );
+    await this.chartRepository.deleteAll({datasetId: id});
+    logger.info(`route </datasets/{id}> -  Dataset ${id} removed from db`);
   }
 
   @get('/dataset/duplicate/{id}')
@@ -291,6 +325,9 @@ export class DatasetController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async duplicate(@param.path.string('id') id: string): Promise<Dataset> {
+    logger.info(
+      `route </dataset/duplicate/{id}> -  finding dataset by id: ${id}`,
+    );
     const fDataset = await this.datasetRepository.findById(id);
     const newDatasetPromise = this.datasetRepository.create({
       name: `${fDataset.name} (Copy)`,
@@ -303,12 +340,24 @@ export class DatasetController {
     });
 
     const newDataset = await newDatasetPromise;
+    logger.info(
+      `route </dataset/duplicate/{id}> -  DX Backend duplication started`,
+    );
 
     await axios
       .post(`http://${host}:4004/duplicate-dataset/${id}/${newDataset.id}`)
-      .then(_ => console.log('DX Backend duplication complete'))
+      .then(_ => {
+        logger.info(
+          `route </dataset/duplicate/{id}> -  DX Backend duplication complete`,
+        );
+        console.log('DX Backend duplication complete');
+      })
       .catch(e => {
         console.log('DX Backend duplication failed', e);
+        logger.error(
+          `route </dataset/duplicate/{id}> -  DX Backend duplication failed`,
+          e,
+        );
         return {error: 'Error duplicating files'};
       });
 
@@ -321,13 +370,20 @@ export class DatasetController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async getUserToken(): Promise<string> {
+    logger.info('route </dataset/google-drive/user-token> -  get user Token');
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const profile = await UserProfile.getUserProfile(userId);
-    return profile.identities[0].access_token;
+    const token = profile.identities[0].access_token;
+    logger.info(
+      'route </dataset/google-drive/user-token> -  user Token',
+      token,
+    );
+    return token;
   }
 
-  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  //external sources search
   @get('/external-sources/search')
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @response(200, {
     description: 'Dataset external search instance',
   })
@@ -335,14 +391,101 @@ export class DatasetController {
     @param.query.string('q') q: string,
   ): Promise<any> {
     try {
+      logger.info(
+        'route </external-sources/search> -  Search external sources',
+      );
       const response = await axios.post(
-        `http://${host}:4004//external-sources/search`,
+        `http://${host}:4004/external-sources/search`,
         {
           owner: _.get(this.req, 'user.sub', 'anonymous'),
           query: q,
         },
       );
+      logger.info(
+        'route </external-sources/search> -  Searched external sources',
+      );
       return response.data;
+    } catch (e) {
+      console.log(e);
+      logger.error('route </external-sources/search> -  Error', e);
+    }
+  }
+
+  //external sources limited search
+  @get('/external-sources/search-limited')
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @response(200, {
+    description: 'Dataset external search instance',
+  })
+  async LimitedSearchExternalSources(
+    @param.query.string('q') q: string,
+    @param.query.string('limit') limit: string,
+    @param.query.string('offset') offset: string,
+  ): Promise<any> {
+    try {
+      const sources = ['Kaggle', 'World Bank', 'WHO'];
+      const dayInMs = 1000 * 60 * 60 * 24;
+      const promises: Promise<AxiosResponse<any, any>>[] = [];
+
+      const updateCache = (data: any) => {
+        mcache.put('external_sources_data', JSON.stringify(data), dayInMs);
+      };
+
+      sources.forEach(source => {
+        promises.push(
+          axios.post(`http://${host}:4004/external-sources/search-limited`, {
+            owner: _.get(this.req, 'user.sub', 'anonymous'),
+            query: q,
+            source,
+            limit: Number(limit),
+            offset: Number(offset),
+          }),
+        );
+      });
+      const getData = async () => {
+        const responses = await Promise.all(promises);
+
+        const data = responses.reduce(
+          (prev: any, curr) => [...prev, ...curr.data],
+          [],
+        );
+        return data;
+      };
+
+      if (q === '') {
+        // caching data for empty string searches
+        const cachedData = mcache.get('external_sources_data');
+
+        if (cachedData) {
+          // Caching the data in a progressive fashion based on the limit and offset
+          const data = JSON.parse(cachedData)[limit][offset];
+
+          if (data) {
+            return _.shuffle(data);
+          } else {
+            const data = await getData();
+            const dataToCache = {
+              ...JSON.parse(cachedData),
+              [limit]: {
+                ...JSON.parse(cachedData)[limit],
+                [offset]: data,
+              },
+            };
+            updateCache(dataToCache);
+            return _.shuffle(data);
+          }
+        } else {
+          const data = await getData();
+          const dataToCache = {
+            [limit]: {[offset]: data},
+          };
+          updateCache(dataToCache);
+          return _.shuffle(data);
+        }
+      } else {
+        const data = await getData();
+        return _.shuffle(data);
+      }
     } catch (e) {
       console.log(e);
     }
@@ -369,6 +512,9 @@ export class DatasetController {
     },
   ): Promise<any> {
     try {
+      logger.info(
+        'route </external-sources/download> -  Download external sources',
+      );
       const response = await axios.post(
         `http://${host}:4004/external-sources/download`,
         {
@@ -379,9 +525,13 @@ export class DatasetController {
           },
         },
       );
+      logger.info(
+        'route </external-sources/download> -  Downloaded external sources',
+      );
       return response.data;
     } catch (e) {
       console.log(e);
+      logger.error('route </external-sources/download> -  Error', e);
     }
   }
 }
