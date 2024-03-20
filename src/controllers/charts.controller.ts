@@ -28,12 +28,23 @@ import _ from 'lodash';
 import {Chart} from '../models';
 import {ChartRepository} from '../repositories';
 import {LoggingBindings, WinstonLogger, logInvocation} from '@loopback/logging';
+import {getUsersOrganizationMembers} from '../utils/auth';
 
 async function getChartsCount(
   chartRepository: ChartRepository,
   owner?: string,
   where?: Where<Chart>,
 ) {
+  if (owner && owner !== 'anonymous') {
+    const orgMembers = await getUsersOrganizationMembers(owner);
+    if (orgMembers.length) {
+      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+      return chartRepository.count({
+        ...where,
+        or: [{public: true}, {owner: {inq: orgMemberIds}}],
+      });
+    }
+  }
   return chartRepository.count({
     ...where,
     or: [{owner: owner}, {public: true}],
@@ -45,6 +56,20 @@ async function getCharts(
   owner?: string,
   filter?: Filter<Chart>,
 ) {
+  if (owner && owner !== 'anonymous') {
+    const orgMembers = await getUsersOrganizationMembers(owner);
+    if (orgMembers.length) {
+      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+      return chartRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          or: [{public: true}, {owner: {inq: orgMemberIds}}],
+        },
+        fields: ['id', 'name', 'vizType', 'datasetId', 'public', 'createdDate'],
+      });
+    }
+  }
   return chartRepository.find({
     ...filter,
     where: {
@@ -62,11 +87,14 @@ async function renderChart(
   owner: string,
 ) {
   try {
+    const orgMembers = await getUsersOrganizationMembers(owner);
     const chartData = id === 'new' ? {} : await chartRepository.findById(id);
     if (
       id !== 'new' &&
       !_.get(chartData, 'public') &&
-      _.get(chartData, 'owner', '') !== owner
+      orgMembers
+        .map((m: any) => m.user_id)
+        .indexOf(_.get(chartData, 'owner', '')) === -1
     ) {
       return;
     }
@@ -276,10 +304,14 @@ export class ChartsController {
     @param.filter(Chart, {exclude: 'where'})
     filter?: FilterExcludingWhere<Chart>,
   ): Promise<Chart | {name: string; error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const orgMembers = await getUsersOrganizationMembers(userId);
     const chart = await this.chartRepository.findById(id, filter);
     if (
       chart.public ||
-      chart.owner === _.get(this.req, 'user.sub', 'anonymous')
+      orgMembers
+        .map((o: any) => o.user_id)
+        .indexOf(_.get(chart, 'owner', '')) !== -1
     )
       return chart;
     else return {name: '', error: 'Unauthorized'};

@@ -28,6 +28,7 @@ import {DatasetRepository} from '../repositories';
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
 import {UserProfile} from '../authentication-strategies/user-profile';
+import {AUTH0_MGMT_API_CALL, getUsersOrganizationMembers} from '../utils/auth';
 
 type FileUploadHandler = RequestHandler;
 
@@ -76,10 +77,28 @@ export class DatasetController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(@param.where(Dataset) where?: Where<Dataset>): Promise<Count> {
-    return this.datasetRepository.count({
-      ...where,
-      or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
-    });
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    return getUsersOrganizationMembers(userId)
+      .then((orgUsers: any) => {
+        return this.datasetRepository.count({
+          ...where,
+          or: [
+            {
+              owner: {
+                inq: orgUsers.map((orgUser: any) => orgUser.user_id),
+              },
+            },
+            {public: true},
+          ],
+        });
+      })
+      .catch((e: any) => {
+        console.log(e);
+        return this.datasetRepository.count({
+          ...where,
+          or: [{owner: userId}, {public: true}],
+        });
+      });
   }
 
   @get('/datasets/count/public')
@@ -112,13 +131,34 @@ export class DatasetController {
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
-    return this.datasetRepository.find({
-      ...filter,
-      where: {
-        ...filter?.where,
-        or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}, {public: true}],
-      },
-    });
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    return getUsersOrganizationMembers(userId)
+      .then((orgUsers: any) => {
+        return this.datasetRepository.find({
+          ...filter,
+          where: {
+            ...filter?.where,
+            or: [
+              {
+                owner: {
+                  inq: orgUsers.map((orgUser: any) => orgUser.user_id),
+                },
+              },
+              {public: true},
+            ],
+          },
+        });
+      })
+      .catch((e: any) => {
+        console.log(e);
+        return this.datasetRepository.find({
+          ...filter,
+          where: {
+            ...filter?.where,
+            or: [{owner: userId}, {public: true}],
+          },
+        });
+      });
   }
 
   @get('/datasets/public')
@@ -285,6 +325,7 @@ export class DatasetController {
     const profile = await UserProfile.getUserProfile(userId);
     return profile.identities[0].access_token;
   }
+
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @get('/external-sources/search')
   @response(200, {

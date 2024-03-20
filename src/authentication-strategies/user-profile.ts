@@ -1,6 +1,7 @@
 import axios from 'axios';
 import mcache from 'memory-cache';
 import queryString from 'querystring';
+
 export class UserProfile {
   static async getAccessToken(): Promise<string> {
     const body = {
