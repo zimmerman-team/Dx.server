@@ -112,7 +112,7 @@ const charts = {
 };
 
 // utils
-function getDatasetFilterOptions(dataset, onlyKeys) {
+function getDatasetFilterOptions(dataset, dataTypes,onlyKeys) {
   const filterOptions = [];
   if (!dataset || dataset.length === 0) {
     return filterOptions;
@@ -138,16 +138,17 @@ function getDatasetFilterOptions(dataset, onlyKeys) {
     const name = key;
 
     if (options.length > 0) {
+    
       filterOptions.push({
         name,
         enabled: true,
         options: _.orderBy(
-          _.uniq(options).map(o => ({
+          _.uniq(options).map((o)=>dataTypes[key] === 'number' ? Number(o): o).map(o => ({
             label: o,
             value: o,
           })),
           'label',
-          'asc',
+          dataTypes[key] === 'number' ? 'desc' : 'asc',
         ),
       });
     }
@@ -203,7 +204,7 @@ function renderChart(
       dataTypes: parsed.dataTypes,
     });
 
-    const vizData = viz._getVizData();
+    let vizData = viz._getVizData();
 
     if (vizType === 'bigNumber') {
       // remove header, subheader, unitofmeasurement from item.mapping
@@ -219,7 +220,7 @@ function renderChart(
     let tabItem = {
       renderedContent: '',
       appliedFilters: itemAppliedFilters || item.appliedFilters,
-      filterOptionGroups: getDatasetFilterOptions(initialParsedDataset),
+      filterOptionGroups: getDatasetFilterOptions(initialParsedDataset, parsed.dataTypes),
       enabledFilterOptionGroups: item.enabledFilterOptionGroups,
       dataTypes: parsed.dataTypes,
       mappedData: vizData,

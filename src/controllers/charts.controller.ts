@@ -146,7 +146,7 @@ async function renderChart(
   } catch (err) {
     logger.error(`fn <renderChart()> Error rendering chart with id: ${id}; `);
     console.error(err);
-    return {error: String(err)};
+    return {error: 'Error rendering chart!'};
   }
 }
 
