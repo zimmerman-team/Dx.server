@@ -26,12 +26,23 @@ import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Report} from '../models';
 import {ReportRepository} from '../repositories';
+import {getUsersOrganizationMembers} from '../utils/auth';
 
 async function getReportsCount(
   reportRepository: ReportRepository,
   owner?: string,
   where?: Where<Report>,
 ) {
+  if (owner && owner !== 'anonymous') {
+    const orgMembers = await getUsersOrganizationMembers(owner);
+    if (orgMembers.length) {
+      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+      return reportRepository.count({
+        ...where,
+        or: [{public: true}, {owner: {inq: orgMemberIds}}],
+      });
+    }
+  }
   return reportRepository.count({
     ...where,
     or: [{owner: owner}, {public: true}],
@@ -43,6 +54,29 @@ async function getReports(
   owner?: string,
   filter?: Filter<Report>,
 ) {
+  if (owner && owner !== 'anonymous') {
+    const orgMembers = await getUsersOrganizationMembers(owner);
+    if (orgMembers.length) {
+      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+      return reportRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          or: [{public: true}, {owner: {inq: orgMemberIds}}],
+        },
+        fields: [
+          'id',
+          'name',
+          'createdDate',
+          'showHeader',
+          'backgroundColor',
+          'title',
+          'subTitle',
+          'public',
+        ],
+      });
+    }
+  }
   return reportRepository.find({
     ...filter,
     where: {
@@ -69,7 +103,14 @@ async function renderReport(
   owner: string,
 ) {
   const report = await chartRepository.findById(id);
-  if (!report || (!report.public && report.owner !== owner)) {
+  const orgMembers = await getUsersOrganizationMembers(owner);
+  if (
+    !report ||
+    (!report.public &&
+      orgMembers
+        .map((m: any) => m.user_id)
+        .indexOf(_.get(report, 'owner', '')) === -1)
+  ) {
     return;
   }
   const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
@@ -223,12 +264,15 @@ export class ReportsController {
     filter?: FilterExcludingWhere<Report>,
   ): Promise<Report | {error: string}> {
     logger.info(`route </report/{id}> getting report by id ${id}`);
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const orgMembers = await getUsersOrganizationMembers(userId);
     const report = await this.ReportRepository.findById(id, filter);
     if (
       report.public ||
-      report.owner === _.get(this.req, 'user.sub', 'anonymous')
+      orgMembers
+        .map((o: any) => o.user_id)
+        .indexOf(_.get(report, 'owner', '')) !== -1
     ) {
-      logger.info(`route </report/{id}> report found`);
       return report;
     }
     logger.info(`route </report/{id}> unauthorized`);
