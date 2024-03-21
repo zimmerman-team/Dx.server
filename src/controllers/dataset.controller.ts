@@ -23,14 +23,14 @@ import {
 } from '@loopback/rest';
 import axios, {AxiosResponse} from 'axios';
 import {Dataset} from '../models';
-import {DatasetRepository, ChartRepository} from '../repositories';
+import {ChartRepository, DatasetRepository} from '../repositories';
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
 import mcache from 'memory-cache';
 import {UserProfile} from '../authentication-strategies/user-profile';
-import {AUTH0_MGMT_API_CALL, getUsersOrganizationMembers} from '../utils/auth';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {getUsersOrganizationMembers} from '../utils/auth';
 
 type FileUploadHandler = RequestHandler;
 
@@ -142,8 +142,10 @@ export class DatasetController {
   ): Promise<Dataset[]> {
     logger.info(`route </datasets> -  get datasets`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
-    return getUsersOrganizationMembers(userId)
-      .then((orgUsers: any) => {
+    if (userId && userId !== 'anonymous') {
+      const orgMembers = await getUsersOrganizationMembers(userId);
+      if (orgMembers.length) {
+        const orgMemberIds = orgMembers.map((m: any) => m.user_id);
         return this.datasetRepository.find({
           ...filter,
           where: {
@@ -151,24 +153,22 @@ export class DatasetController {
             or: [
               {
                 owner: {
-                  inq: orgUsers.map((orgUser: any) => orgUser.user_id),
+                  inq: orgMemberIds,
                 },
               },
               {public: true},
             ],
           },
         });
-      })
-      .catch((e: any) => {
-        console.log(e);
-        return this.datasetRepository.find({
-          ...filter,
-          where: {
-            ...filter?.where,
-            or: [{owner: userId}, {public: true}],
-          },
-        });
-      });
+      }
+    }
+    return this.datasetRepository.find({
+      ...filter,
+      where: {
+        ...filter?.where,
+        or: [{owner: userId}, {public: true}],
+      },
+    });
   }
 
   @get('/datasets/public')

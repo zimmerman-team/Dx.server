@@ -96,7 +96,8 @@ async function renderChart(
       !_.get(chartData, 'public') &&
       orgMembers
         .map((m: any) => m.user_id)
-        .indexOf(_.get(chartData, 'owner', '')) === -1
+        .indexOf(_.get(chartData, 'owner', '')) === -1 &&
+      _.get(chartData, 'owner', '') !== owner
     ) {
       return;
     }
@@ -345,7 +346,8 @@ export class ChartsController {
       chart.public ||
       orgMembers
         .map((o: any) => o.user_id)
-        .indexOf(_.get(chart, 'owner', '')) !== -1
+        .indexOf(_.get(chart, 'owner', '')) !== -1 ||
+      _.get(chart, 'owner', '') === userId
     ) {
       logger.info(`route</chart/{id}> Chart- ${id} found`);
       return chart;

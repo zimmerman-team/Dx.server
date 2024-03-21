@@ -11,6 +11,7 @@ import {
   DatasetRepository,
   ReportRepository,
 } from '../repositories';
+import {getOrganizationMembers} from '../utils/auth';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -37,22 +38,47 @@ export class UserController {
     );
     const loginsCount = _.get(userProfile, 'logins_count', 0);
     // To know if the user is logging in for the first time
-    if (loginsCount === 1) {
+    if (loginsCount < 10) {
       const datasetsIds: {ds_name: string; new_ds_name: string}[] = [];
+
+      const organizationMembers = await getOrganizationMembers(
+        process.env.DEFAULT_ORG_ID!,
+      );
 
       const datasets = await this.datasetRepository.find({
         where: {
-          or: [{owner: process.env.DATA_CREATOR_ID ?? 'anonymous'}],
+          or: [
+            {
+              owner: {
+                inq: organizationMembers.map((orgUser: any) => orgUser.user_id),
+              },
+            },
+            {public: true},
+          ],
         },
       });
       const reports = await this.reportRepository.find({
         where: {
-          or: [{owner: process.env.DATA_CREATOR_ID ?? 'anonymous'}],
+          or: [
+            {
+              owner: {
+                inq: organizationMembers.map((orgUser: any) => orgUser.user_id),
+              },
+            },
+            {public: true},
+          ],
         },
       });
       const charts = await this.chartRepository.find({
         where: {
-          or: [{owner: process.env.DATA_CREATOR_ID ?? 'anonymous'}],
+          or: [
+            {
+              owner: {
+                inq: organizationMembers.map((orgUser: any) => orgUser.user_id),
+              },
+            },
+            {public: true},
+          ],
         },
       });
 

@@ -1,5 +1,5 @@
-import mcache from 'memory-cache';
 import axios, {Method} from 'axios';
+import mcache from 'memory-cache';
 import queryString from 'querystring';
 
 async function getAccessToken(): Promise<string> {
@@ -46,15 +46,22 @@ export async function AUTH0_MGMT_API_CALL(
   });
 }
 
+export async function getOrganizationMembers(organizationId: string) {
+  return AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
+    .then((orgUsers: any) => orgUsers)
+    .catch((e: any) => {
+      console.log(e);
+      return e;
+    });
+}
+
 export async function getUsersOrganizationMembers(userId: string) {
   return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`).then(
     (orgs: any) => {
-      return AUTH0_MGMT_API_CALL('GET', `organizations/${orgs[0].id}/members`)
-        .then((orgUsers: any) => orgUsers)
-        .catch((e: any) => {
-          console.log(e);
-          return e;
-        });
+      if (orgs.length > 0) {
+        return getOrganizationMembers(orgs[0].id);
+      }
+      return Promise.resolve([]);
     },
   );
 }
