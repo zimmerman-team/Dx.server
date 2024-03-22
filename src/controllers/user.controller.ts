@@ -38,7 +38,7 @@ export class UserController {
     );
     const loginsCount = _.get(userProfile, 'logins_count', 0);
     // To know if the user is logging in for the first time
-    if (loginsCount < 10) {
+    if (loginsCount < 2) {
       const datasetsIds: {ds_name: string; new_ds_name: string}[] = [];
 
       const organizationMembers = await getOrganizationMembers(
