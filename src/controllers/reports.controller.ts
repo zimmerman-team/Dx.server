@@ -109,7 +109,8 @@ async function renderReport(
     (!report.public &&
       orgMembers
         .map((m: any) => m.user_id)
-        .indexOf(_.get(report, 'owner', '')) === -1)
+        .indexOf(_.get(report, 'owner', '')) === -1 &&
+      _.get(report, 'owner', '') !== owner)
   ) {
     return;
   }
@@ -271,7 +272,8 @@ export class ReportsController {
       report.public ||
       orgMembers
         .map((o: any) => o.user_id)
-        .indexOf(_.get(report, 'owner', '')) !== -1
+        .indexOf(_.get(report, 'owner', '')) !== -1 ||
+      _.get(report, 'owner', '') === userId
     ) {
       return report;
     }
