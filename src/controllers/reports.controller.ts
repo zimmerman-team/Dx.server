@@ -494,4 +494,41 @@ export class ReportsController {
       return [];
     }
   }
+
+  @get('/unsplash/image/search')
+  @response(200, {
+    description: 'Unsplash search',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+        },
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async searchUnsplash(
+    @param.query.string('query') query: string,
+    @param.query.string('perPage') perPage: string,
+    @param.query.string('page') page: string,
+  ): Promise<object> {
+    logger.info(
+      `route </unsplash/image/search> searching unsplash for ${query}`,
+    );
+    try {
+      const response = await axios.get(
+        `https://api.unsplash.com/search/photos?per_page=${perPage}&page=${page}&query=${query}`,
+        {
+          headers: {
+            Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+          },
+        },
+      );
+
+      return response.data;
+    } catch (err) {
+      logger.error(`route </unsplash/image/search> ${err?.message}`);
+      return [];
+    }
+  }
 }
