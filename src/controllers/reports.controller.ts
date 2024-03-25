@@ -428,4 +428,70 @@ export class ReportsController {
       owner: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
+
+  @get('/youtube/search')
+  @response(200, {
+    description: 'Youtube search',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+        },
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async searchYoutube(
+    @param.query.string('q') q: string,
+    @param.query.string('maxResults') maxResults: string,
+    @param.query.string('pageToken') pageToken: string,
+  ): Promise<object> {
+    logger.info(`route </youtube/search> searching youtube for ${q}`);
+    try {
+      const response = await axios.get(
+        `https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&pageToken=${pageToken}&q=${q}&key=${process.env.GOOGLE_API_KEY}&type=video&videoEmbeddable=true&videoSyndicated=true`,
+      );
+      return response.data;
+    } catch (err) {
+      logger.error(`route </youtube/search> ${err}`);
+      return [];
+    }
+  }
+
+  @get('/shutterstock/image/search')
+  @response(200, {
+    description: 'Shutterstock search',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+        },
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async searchShutterstock(
+    @param.query.string('query') query: string,
+    @param.query.string('perPage') perPage: string,
+    @param.query.string('page') page: string,
+  ): Promise<object> {
+    logger.info(
+      `route </shutterstock/image/search> searching shutterstock for ${query}`,
+    );
+    try {
+      const response = await axios.get(
+        `https://api.shutterstock.com/v2/images/search?per_page=${perPage}&page=${page}&query=${query}&sort=popular`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.SHUTTERSTOCK_API_TOKEN}`,
+          },
+        },
+      );
+
+      return response.data;
+    } catch (err) {
+      logger.error(`route </shutterstock/image/search> ${err?.message}`);
+      return [];
+    }
+  }
 }
