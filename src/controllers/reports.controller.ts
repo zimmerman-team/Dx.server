@@ -460,6 +460,40 @@ export class ReportsController {
     }
   }
 
+  @get('/vimeo/search')
+  @response(200, {
+    description: 'Vimeo search',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+        },
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async searchVimeo(
+    @param.query.string('q') q: string,
+    @param.query.string('perPage') perPage: string,
+    @param.query.string('page') page: string,
+  ): Promise<object> {
+    logger.info(`route </vimeo/search> searching vimeo for ${q}`);
+    try {
+      const response = await axios.get(
+        `https://api.vimeo.com/videos?query=${q}&per_page=${perPage}&page=${page}`,
+        {
+          headers: {
+            Authorization: `bearer ${process.env.VIMEO_ACCESS_TOKEN}`,
+          },
+        },
+      );
+      return response.data;
+    } catch (err) {
+      logger.error(`route </vimeo/search> ${err}`);
+      return [];
+    }
+  }
+
   @get('/shutterstock/image/search')
   @response(200, {
     description: 'Shutterstock search',
@@ -473,16 +507,16 @@ export class ReportsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async searchShutterstock(
-    @param.query.string('query') query: string,
+    @param.query.string('q') q: string,
     @param.query.string('perPage') perPage: string,
     @param.query.string('page') page: string,
   ): Promise<object> {
     logger.info(
-      `route </shutterstock/image/search> searching shutterstock for ${query}`,
+      `route </shutterstock/image/search> searching shutterstock for ${q}`,
     );
     try {
       const response = await axios.get(
-        `https://api.shutterstock.com/v2/images/search?per_page=${perPage}&page=${page}&query=${query}&sort=popular`,
+        `https://api.shutterstock.com/v2/images/search?per_page=${perPage}&page=${page}&query=${q}&sort=popular`,
         {
           headers: {
             Authorization: `Bearer ${process.env.SHUTTERSTOCK_API_TOKEN}`,
@@ -510,16 +544,14 @@ export class ReportsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async searchUnsplash(
-    @param.query.string('query') query: string,
+    @param.query.string('q') q: string,
     @param.query.string('perPage') perPage: string,
     @param.query.string('page') page: string,
   ): Promise<object> {
-    logger.info(
-      `route </unsplash/image/search> searching unsplash for ${query}`,
-    );
+    logger.info(`route </unsplash/image/search> searching unsplash for ${q}`);
     try {
       const response = await axios.get(
-        `https://api.unsplash.com/search/photos?per_page=${perPage}&page=${page}&query=${query}`,
+        `https://api.unsplash.com/search/photos?per_page=${perPage}&page=${page}&query=${q}`,
         {
           headers: {
             Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
