@@ -423,7 +423,7 @@ export class DatasetController {
     @param.query.string('offset') offset: string,
   ): Promise<any> {
     try {
-      const sources = ['Kaggle', 'World Bank', 'WHO'];
+      const sources = ['Kaggle', 'World Bank', 'WHO', 'HDX'];
       const dayInMs = 1000 * 60 * 60 * 24;
       const promises: Promise<AxiosResponse<any, any>>[] = [];
 
