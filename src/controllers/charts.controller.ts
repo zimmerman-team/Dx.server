@@ -310,8 +310,50 @@ export class ChartsController {
     );
   }
 
-  /* patch charts */
+  /* get charts */
+  @get('/chart-types/ai-suggestions')
+  @response(200, {
+    description: 'AI Chart suggestion instance',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Chart, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async getChartTypes(@param.query.string('id') id: string) {
+    let host = process.env.AIAPI_SUBDOMAIN ? 'ai-api' : 'localhost';
+    if (process.env.ENV_TYPE !== 'prod')
+      host = process.env.ENV_TYPE ? `ai-api-${process.env.ENV_TYPE}` : host;
+    logger.info(
+      `route</chart-types/ai-suggestions> Fetching AI suggestions for chart type`,
+    );
+    try {
+      const response = await axios.get(
+        `http://${host}:5000/chart-suggest/ai-report-builder-from-existing?id=${id}`,
+        {
+          headers: {
+            Authorization: 'ZIMMERMAN',
+          },
+        },
+      );
+      logger.info(
+        `route</chart-types/ai-suggestions> AI suggestions fetched returning ${JSON.stringify(
+          response.data,
+        )}`,
+      );
+      const result = response.data.result;
+      return result.map((r: string) => JSON.parse(r));
+    } catch (e) {
+      console.log(e, 'error');
+      return {error: 'Error fetching AI suggestions'};
+    }
+  }
 
+  /* patch charts */
   @patch('/chart')
   @response(200, {
     description: 'Chart PATCH success count',
