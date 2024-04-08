@@ -3,7 +3,7 @@ import mcache from 'memory-cache';
 import queryString from 'querystring';
 
 async function getAccessToken(): Promise<string> {
-  let cachedToken = mcache.get('auth0_token');
+  const cachedToken = mcache.get('auth0_token');
   if (cachedToken) {
     return cachedToken;
   }
