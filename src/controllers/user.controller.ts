@@ -37,8 +37,9 @@ export class UserController {
     );
     const loginsCount = _.get(userProfile, 'logins_count', 0);
     // To know if the user is logging in for the first time
-    if (loginsCount < 1) {
+    if (loginsCount === 1) {
       const datasetsIds: {ds_name: string; new_ds_name: string}[] = [];
+      const chartsIds: {chart_id: string; new_chart_id: string}[] = [];
 
       const datasets = await this.datasetRepository.find({
         where: {public: true},
@@ -104,21 +105,28 @@ export class UserController {
           });
 
         // Duplicate  Charts
-        charts.forEach(chart => {
-          this.chartRepository.create({
-            name: `${chart.name} (Copy)`,
-            public: false,
-            vizType: chart.vizType,
-            datasetId:
-              datasetsIds.find(d => d.ds_name === chart.datasetId)
-                ?.new_ds_name ?? chart.datasetId,
-            mapping: chart.mapping,
-            vizOptions: chart.vizOptions,
-            appliedFilters: chart.appliedFilters,
-            enabledFilterOptionGroups: chart.enabledFilterOptionGroups,
-            owner: _.get(this.req, 'user.sub', 'anonymous'),
-          });
-        });
+        await Promise.all(
+          charts.map(async chart => {
+            const newChart = await this.chartRepository.create({
+              name: `${chart.name} (Copy)`,
+              public: false,
+              vizType: chart.vizType,
+              datasetId:
+                datasetsIds.find(d => d.ds_name === chart.datasetId)
+                  ?.new_ds_name ?? chart.datasetId,
+              mapping: chart.mapping,
+              vizOptions: chart.vizOptions,
+              appliedFilters: chart.appliedFilters,
+              enabledFilterOptionGroups: chart.enabledFilterOptionGroups,
+              owner: _.get(this.req, 'user.sub', 'anonymous'),
+            });
+
+            chartsIds.push({
+              chart_id: chart.id ?? '',
+              new_chart_id: newChart.id ?? '',
+            });
+          }),
+        );
 
         // Duplicate Reports
         reports.forEach(report => {
@@ -127,7 +135,22 @@ export class UserController {
             showHeader: report.showHeader,
             title: report.title,
             subTitle: report.subTitle,
-            rows: report.rows,
+            rows: report.rows.map(row => {
+              // Update the old chartIds to the new ones
+              return {
+                ...row,
+                items: row.items.map(item => {
+                  if (typeof item === 'string') {
+                    return (
+                      chartsIds.find(c => c.chart_id === item)?.new_chart_id ??
+                      item
+                    );
+                  } else {
+                    return item;
+                  }
+                }),
+              };
+            }),
             public: false,
             backgroundColor: report.backgroundColor,
             titleColor: report.titleColor,
