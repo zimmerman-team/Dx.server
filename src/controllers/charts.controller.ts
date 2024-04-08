@@ -67,7 +67,15 @@ async function getCharts(
           ...filter?.where,
           or: [{public: true}, {owner: {inq: orgMemberIds}}],
         },
-        fields: ['id', 'name', 'vizType', 'datasetId', 'public', 'createdDate'],
+        fields: [
+          'id',
+          'name',
+          'vizType',
+          'datasetId',
+          'public',
+          'createdDate',
+          'isMappingValid',
+        ],
       });
     }
   }
@@ -77,7 +85,15 @@ async function getCharts(
       ...filter?.where,
       or: [{owner: owner}, {public: true}],
     },
-    fields: ['id', 'name', 'vizType', 'datasetId', 'public', 'createdDate'],
+    fields: [
+      'id',
+      'name',
+      'vizType',
+      'datasetId',
+      'public',
+      'createdDate',
+      'isMappingValid',
+    ],
   });
 }
 

@@ -22,6 +22,12 @@ export class Chart extends Entity {
   public: boolean;
 
   @property({
+    type: 'boolean',
+    default: false,
+  })
+  isMappingValid: boolean;
+
+  @property({
     type: 'string',
     required: true,
   })
@@ -38,6 +44,12 @@ export class Chart extends Entity {
     required: true,
   })
   mapping: object;
+
+  @property({
+    type: 'object',
+    required: true,
+  })
+  dataTypes: object;
 
   @property({
     type: 'object',
