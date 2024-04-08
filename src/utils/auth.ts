@@ -58,7 +58,7 @@ export async function getOrganizationMembers(organizationId: string) {
 export async function getUsersOrganizationMembers(userId: string) {
   return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`).then(
     (orgs: any) => {
-      if (orgs.length > 0) {
+      if (orgs.length) {
         return getOrganizationMembers(orgs[0].id);
       }
       return Promise.resolve([]);
