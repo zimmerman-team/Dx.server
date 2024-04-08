@@ -535,6 +535,8 @@ export class ChartsController {
       appliedFilters: fChart.appliedFilters,
       enabledFilterOptionGroups: fChart.enabledFilterOptionGroups,
       owner: _.get(this.req, 'user.sub', 'anonymous'),
+      isMappingValid: fChart.isMappingValid ?? true,
+      dataTypes: fChart.dataTypes ?? {},
     });
   }
 }
