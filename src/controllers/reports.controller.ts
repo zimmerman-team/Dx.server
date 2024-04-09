@@ -35,13 +35,11 @@ async function getReportsCount(
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
-    if (orgMembers.length) {
-      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-      return reportRepository.count({
-        ...where,
-        or: [{public: true}, {owner: {inq: orgMemberIds}}],
-      });
-    }
+    const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    return reportRepository.count({
+      ...where,
+      or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+    });
   }
   return reportRepository.count({
     ...where,
@@ -56,26 +54,24 @@ async function getReports(
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
-    if (orgMembers.length) {
-      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-      return reportRepository.find({
-        ...filter,
-        where: {
-          ...filter?.where,
-          or: [{public: true}, {owner: {inq: orgMemberIds}}],
-        },
-        fields: [
-          'id',
-          'name',
-          'createdDate',
-          'showHeader',
-          'backgroundColor',
-          'title',
-          'subTitle',
-          'public',
-        ],
-      });
-    }
+    const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    return reportRepository.find({
+      ...filter,
+      where: {
+        ...filter?.where,
+        or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+      },
+      fields: [
+        'id',
+        'name',
+        'createdDate',
+        'showHeader',
+        'backgroundColor',
+        'title',
+        'subTitle',
+        'public',
+      ],
+    });
   }
   return reportRepository.find({
     ...filter,
@@ -176,11 +172,7 @@ export class ReportsController {
     @param.where(Report) where?: Where<Report>,
   ): Promise<Count> {
     logger.info(`route </reports/count/public> getting public reports count`);
-    return getReportsCount(
-      this.ReportRepository,
-      process.env.DATA_CREATOR_ID ?? 'anonymous',
-      where,
-    );
+    return getReportsCount(this.ReportRepository, 'anonymous', where);
   }
 
   @get('/reports')
@@ -221,11 +213,7 @@ export class ReportsController {
     @param.filter(Report) filter?: Filter<Report>,
   ): Promise<Report[]> {
     logger.info(`route </reports/public> getting public reports`);
-    return getReports(
-      this.ReportRepository,
-      process.env.DATA_CREATOR_ID ?? 'anonymous',
-      filter,
-    );
+    return getReports(this.ReportRepository, 'anonymous', filter);
   }
 
   @patch('/report')
@@ -299,7 +287,7 @@ export class ReportsController {
       `route </report/public/{id}> getting public report by id ${id}`,
     );
     const report = await this.ReportRepository.findById(id, filter);
-    if (report.public || report.owner === process.env.DATA_CREATOR_ID) {
+    if (report.public || report.owner === 'anonymous') {
       logger.info(`route </report/public/{id}> report found`);
       return report;
     } else {
@@ -347,12 +335,7 @@ export class ReportsController {
     logger.info(
       `route </report/{id}/render/public> rendering public report by id ${id}`,
     );
-    return renderReport(
-      this.ReportRepository,
-      id,
-      body,
-      process.env.DATA_CREATOR_ID ?? 'anonymous',
-    );
+    return renderReport(this.ReportRepository, id, body, 'anonymous');
   }
 
   @patch('/report/{id}')
@@ -480,7 +463,7 @@ export class ReportsController {
     logger.info(`route </vimeo/search> searching vimeo for ${q}`);
     try {
       const response = await axios.get(
-        `https://api.vimeo.com/videos?query=${q}&per_page=${perPage}&page=${page}`,
+        `https://api.vimeo.com/videos?query=${q}&per_page=${perPage}&page=${page}&filter=content_rating&filter_content_rating=safe`,
         {
           headers: {
             Authorization: `bearer ${process.env.VIMEO_ACCESS_TOKEN}`,

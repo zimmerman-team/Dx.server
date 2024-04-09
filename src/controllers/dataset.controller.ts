@@ -86,27 +86,25 @@ export class DatasetController {
   async count(@param.where(Dataset) where?: Where<Dataset>): Promise<Count> {
     logger.info(`route </datasets/count> -  get datasets count`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
-    return getUsersOrganizationMembers(userId)
-      .then((orgUsers: any) => {
-        return this.datasetRepository.count({
-          ...where,
-          or: [
-            {
-              owner: {
-                inq: orgUsers.map((orgUser: any) => orgUser.user_id),
-              },
+    if (userId && userId !== 'anonymous') {
+      const orgMembers = await getUsersOrganizationMembers(userId);
+      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+      return this.datasetRepository.count({
+        ...where,
+        or: [
+          {owner: userId},
+          {
+            owner: {
+              inq: orgMemberIds,
             },
-            {public: true},
-          ],
-        });
-      })
-      .catch((e: any) => {
-        console.log(e);
-        return this.datasetRepository.count({
-          ...where,
-          or: [{owner: userId}, {public: true}],
-        });
+          },
+        ],
       });
+    }
+    return this.datasetRepository.count({
+      ...where,
+      or: [{owner: userId}, {public: true}],
+    });
   }
 
   @get('/datasets/count/public')
@@ -120,7 +118,7 @@ export class DatasetController {
     logger.info(`route </datasets/count/public> -  get public datasets count`);
     return this.datasetRepository.count({
       ...where,
-      or: [{public: true}, {owner: process.env.DATA_CREATOR_ID ?? 'anonymous'}],
+      or: [{public: true}, {owner: 'anonymous'}],
     });
   }
 
@@ -144,23 +142,21 @@ export class DatasetController {
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     if (userId && userId !== 'anonymous') {
       const orgMembers = await getUsersOrganizationMembers(userId);
-      if (orgMembers.length) {
-        const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-        return this.datasetRepository.find({
-          ...filter,
-          where: {
-            ...filter?.where,
-            or: [
-              {
-                owner: {
-                  inq: orgMemberIds,
-                },
+      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+      return this.datasetRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          or: [
+            {owner: userId},
+            {
+              owner: {
+                inq: orgMemberIds,
               },
-              {public: true},
-            ],
-          },
-        });
-      }
+            },
+          ],
+        },
+      });
     }
     return this.datasetRepository.find({
       ...filter,
@@ -191,10 +187,7 @@ export class DatasetController {
       ...filter,
       where: {
         ...filter?.where,
-        or: [
-          {public: true},
-          {owner: process.env.DATA_CREATOR_ID ?? 'anonymous'},
-        ],
+        or: [{public: true}, {owner: 'anonymous'}],
       },
     });
   }

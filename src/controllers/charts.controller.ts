@@ -37,13 +37,11 @@ async function getChartsCount(
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
-    if (orgMembers.length) {
-      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-      return chartRepository.count({
-        ...where,
-        or: [{public: true}, {owner: {inq: orgMemberIds}}],
-      });
-    }
+    const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    return chartRepository.count({
+      ...where,
+      or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+    });
   }
   logger.info(`route </charts/count> Fetching chart count for owner- ${owner}`);
   return chartRepository.count({
@@ -59,25 +57,23 @@ async function getCharts(
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
-    if (orgMembers.length) {
-      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-      return chartRepository.find({
-        ...filter,
-        where: {
-          ...filter?.where,
-          or: [{public: true}, {owner: {inq: orgMemberIds}}],
-        },
-        fields: [
-          'id',
-          'name',
-          'vizType',
-          'datasetId',
-          'public',
-          'createdDate',
-          'isMappingValid',
-        ],
-      });
-    }
+    const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    return chartRepository.find({
+      ...filter,
+      where: {
+        ...filter?.where,
+        or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+      },
+      fields: [
+        'id',
+        'name',
+        'vizType',
+        'datasetId',
+        'public',
+        'createdDate',
+        'isMappingValid',
+      ],
+    });
   }
   return chartRepository.find({
     ...filter,
@@ -257,11 +253,7 @@ export class ChartsController {
   })
   async countPublic(@param.where(Chart) where?: Where<Chart>): Promise<Count> {
     logger.info(`route </charts/count/public> Fetching public chart count`);
-    return getChartsCount(
-      this.chartRepository,
-      process.env.DATA_CREATOR_ID ?? 'anonymous',
-      where,
-    );
+    return getChartsCount(this.chartRepository, 'anonymous', where);
   }
 
   /* get charts */
@@ -303,11 +295,7 @@ export class ChartsController {
     @param.filter(Chart) filter?: Filter<Chart>,
   ): Promise<Chart[]> {
     logger.info(`Fetching public charts`);
-    return getCharts(
-      this.chartRepository,
-      process.env.DATA_CREATOR_ID ?? 'anonymous',
-      filter,
-    );
+    return getCharts(this.chartRepository, 'anonymous', filter);
   }
 
   /* get charts */
@@ -430,7 +418,7 @@ export class ChartsController {
     filter?: FilterExcludingWhere<Chart>,
   ): Promise<Chart | {name: string; error: string}> {
     const chart = await this.chartRepository.findById(id, filter);
-    if (chart.public || chart.owner === process.env.DATA_CREATOR_ID) {
+    if (chart.public || chart.owner === 'anonymous') {
       logger.info(`route</chart/public/{id}> Fetching public chart- ${id}`);
       return chart;
     } else {
@@ -512,12 +500,7 @@ export class ChartsController {
     logger.info(
       `route</chart/{id}/render/public> Rendering public chart- ${id}`,
     );
-    return renderChart(
-      this.chartRepository,
-      id,
-      body,
-      process.env.DATA_CREATOR_ID ?? 'anonymous',
-    );
+    return renderChart(this.chartRepository, id, body, 'anonymous');
   }
 
   /* patch chart */
@@ -594,6 +577,8 @@ export class ChartsController {
       appliedFilters: fChart.appliedFilters,
       enabledFilterOptionGroups: fChart.enabledFilterOptionGroups,
       owner: _.get(this.req, 'user.sub', 'anonymous'),
+      isMappingValid: fChart.isMappingValid ?? true,
+      dataTypes: fChart.dataTypes ?? {},
     });
   }
 }
