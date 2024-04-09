@@ -463,7 +463,7 @@ export class ReportsController {
     logger.info(`route </vimeo/search> searching vimeo for ${q}`);
     try {
       const response = await axios.get(
-        `https://api.vimeo.com/videos?query=${q}&per_page=${perPage}&page=${page}`,
+        `https://api.vimeo.com/videos?query=${q}&per_page=${perPage}&page=${page}&filter=content_rating&filter_content_rating=safe`,
         {
           headers: {
             Authorization: `bearer ${process.env.VIMEO_ACCESS_TOKEN}`,
