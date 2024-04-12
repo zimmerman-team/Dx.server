@@ -1,6 +1,8 @@
 import axios, {Method} from 'axios';
+import {isArray} from 'lodash';
 import mcache from 'memory-cache';
 import queryString from 'querystring';
+import {winstonLogger as logger} from '../config/logger/winston-logger';
 
 async function getAccessToken(): Promise<string> {
   const cachedToken = mcache.get('auth0_token');
@@ -42,7 +44,9 @@ export async function AUTH0_MGMT_API_CALL(
         },
       })
       .then(response => response.data)
-      .catch(err => err);
+      .catch(err => {
+        throw err;
+      });
   });
 }
 
@@ -50,18 +54,21 @@ export async function getOrganizationMembers(organizationId: string) {
   return AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
     .then((orgUsers: any) => orgUsers)
     .catch((e: any) => {
-      console.log(e);
-      return e;
+      logger.error(`fn <getOrganizationMembers()> ${String(e)}`);
+      return [];
     });
 }
 
 export async function getUsersOrganizationMembers(userId: string) {
-  return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`).then(
-    (orgs: any) => {
-      if (orgs.length) {
+  return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`)
+    .then((orgs: any) => {
+      if (isArray(orgs) && orgs.length) {
         return getOrganizationMembers(orgs[0].id);
       }
-      return Promise.resolve([]);
-    },
-  );
+      return [];
+    })
+    .catch((e: any) => {
+      logger.error(`fn <getUsersOrganizationMembers()> ${String(e)}`);
+      return [];
+    });
 }
