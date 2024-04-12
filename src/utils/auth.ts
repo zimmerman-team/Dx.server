@@ -51,8 +51,34 @@ export async function AUTH0_MGMT_API_CALL(
 }
 
 export async function getOrganizationMembers(organizationId: string) {
+  /*
+   cache structure:
+
+   organisationMembers: {
+      [organisationId]: [members]
+   }
+
+   */
+  const cachedOrgMembers = JSON.parse(
+    mcache.get('organisationMembers') || '{}',
+  );
+
+  if (cachedOrgMembers[organizationId]) {
+    return cachedOrgMembers[organizationId];
+  }
+
   return AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
-    .then((orgUsers: any) => orgUsers)
+    .then((orgUsers: any) => {
+      mcache.put(
+        'organisationMembers',
+        JSON.stringify({
+          ...cachedOrgMembers,
+          [organizationId]: orgUsers,
+        }),
+        1000 * 60 * 5, // 5 minutes
+      );
+      return orgUsers;
+    })
     .catch((e: any) => {
       logger.error(`fn <getOrganizationMembers()> ${String(e)}`);
       return [];
@@ -60,9 +86,31 @@ export async function getOrganizationMembers(organizationId: string) {
 }
 
 export async function getUsersOrganizationMembers(userId: string) {
+  /*
+  cache structure:
+
+  usersOrganisations: {
+    [userId]: organisationId
+  }
+
+  */
+  const cachedUsersOrganisations = JSON.parse(
+    mcache.get('usersOrganisations') || '{}',
+  );
+  if (cachedUsersOrganisations[userId]) {
+    return getOrganizationMembers(cachedUsersOrganisations[userId]);
+  }
   return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`)
     .then((orgs: any) => {
       if (isArray(orgs) && orgs.length) {
+        mcache.put(
+          'usersOrganisations',
+          JSON.stringify({
+            ...cachedUsersOrganisations,
+            [userId]: orgs[0].id,
+          }),
+          1000 * 60 * 5, // 5 minutes
+        );
         return getOrganizationMembers(orgs[0].id);
       }
       return [];
