@@ -150,14 +150,14 @@ async function renderChart(
     fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}_rendered.json`);
 
     // return jsonified data
-    logger.info(
-      `fn <renderChart()> Chart with id: ${id} rendered data: ${JSON.parse(
-        data.toString(),
-      )}`,
+    logger.verbose(
+      `fn <renderChart()> Chart with id: ${id} rendered data: ${data.toString()}`,
     );
     return JSON.parse(data.toString());
   } catch (err) {
-    logger.error(`fn <renderChart()> Error rendering chart with id: ${id}; `);
+    logger.error(
+      `fn <renderChart()> Error rendering chart with id: ${id}; error:${err.toString()} `,
+    );
     console.error(err);
     return {error: 'Error rendering chart!'};
   }
