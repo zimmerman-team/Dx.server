@@ -120,7 +120,6 @@ export class UserController {
               enabledFilterOptionGroups: chart.enabledFilterOptionGroups,
               owner: _.get(this.req, 'user.sub', 'anonymous'),
               isMappingValid: chart.isMappingValid ?? true,
-              dataTypes: chart.dataTypes ?? {},
             });
 
             chartsIds.push({

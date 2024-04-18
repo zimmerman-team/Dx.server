@@ -72,6 +72,7 @@ async function getCharts(
         'public',
         'createdDate',
         'isMappingValid',
+        'owner',
       ],
     });
   }
@@ -89,6 +90,7 @@ async function getCharts(
       'public',
       'createdDate',
       'isMappingValid',
+      'owner',
     ],
   });
 }
@@ -536,7 +538,6 @@ export class ChartsController {
       enabledFilterOptionGroups: fChart.enabledFilterOptionGroups,
       owner: _.get(this.req, 'user.sub', 'anonymous'),
       isMappingValid: fChart.isMappingValid ?? true,
-      dataTypes: fChart.dataTypes ?? {},
     });
   }
 }
