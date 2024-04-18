@@ -25,13 +25,13 @@ export class DataThemesRawDataController {
     return axios
       .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {
-        return res.data;
+        return res.data.result;
       })
-      .catch(error => {
-        console.log(error);
+      .catch(e => {
+        console.log(e);
         return {
           data: [],
-          error,
+          error: e.response.data.result,
         };
       });
   }
