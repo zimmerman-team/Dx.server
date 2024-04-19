@@ -253,6 +253,9 @@ export async function renderChartData(id, body, chartData) {
   let internalData;
   if (id === 'new' || body.rows) {
     if (!body.rows || body.rows.length === 0) {
+      winstonLogger.error(
+        `route <utils/renderchart/index.js>;fn <renderChartData()>: Error rendering chart: No rows`,
+      );
       return {error: 'no rows'};
     }
     internalData = body.rows;
@@ -269,13 +272,13 @@ export async function renderChartData(id, body, chartData) {
   try {
     const filePath =
       process.env.PARSED_DATA_FILES_PATH || `../dx.backend/parsed-data-files/`;
-    const parsedData = fs.readFileSync(`${filePath}${item.datasetId}.json`);
+    const parsedData = fs.readFileSync(`${filePath}${item?.datasetId}.json`);
     parsed = JSON.parse(parsedData.toString());
-  } catch (error) {
-    console.log('Error reading parsed data file', error);
+      } catch (error) {
     winstonLogger.error(
       `route <utils/renderchart/index.js>;fn <renderChartData()>: Error reading parsed data file: ${error}`,
     );
+    console.log('Error reading parsed data file', error);
   }
   // Check if there are either filters in the item.appliedFilters or in the body.previewAppliedFilters
   const itemAppliedFilters = _.get(body, `previewAppliedFilters[0][0]`, null);
@@ -314,7 +317,7 @@ export async function renderChartData(id, body, chartData) {
     winstonLogger.error(
       `route <utils/renderchart/index.js>;fn <renderChartData()>: Error rendering chart: ${e}`,
     );
-  }
+      }
 }
 
 try {

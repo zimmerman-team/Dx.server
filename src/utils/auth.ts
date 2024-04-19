@@ -1,6 +1,8 @@
 import axios, {Method} from 'axios';
+import {isArray} from 'lodash';
 import mcache from 'memory-cache';
 import queryString from 'querystring';
+import {winstonLogger as logger} from '../config/logger/winston-logger';
 
 async function getAccessToken(): Promise<string> {
   const cachedToken = mcache.get('auth0_token');
@@ -42,26 +44,79 @@ export async function AUTH0_MGMT_API_CALL(
         },
       })
       .then(response => response.data)
-      .catch(err => err);
+      .catch(err => {
+        throw err;
+      });
   });
 }
 
 export async function getOrganizationMembers(organizationId: string) {
+  /*
+   cache structure:
+
+   organisationMembers: {
+      [organisationId]: [members]
+   }
+
+   */
+  const cachedOrgMembers = JSON.parse(
+    mcache.get('organisationMembers') || '{}',
+  );
+
+  if (cachedOrgMembers[organizationId]) {
+    return cachedOrgMembers[organizationId];
+  }
+
   return AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
-    .then((orgUsers: any) => orgUsers)
+    .then((orgUsers: any) => {
+      mcache.put(
+        'organisationMembers',
+        JSON.stringify({
+          ...cachedOrgMembers,
+          [organizationId]: orgUsers,
+        }),
+        1000 * 60 * 5, // 5 minutes
+      );
+      return orgUsers;
+    })
     .catch((e: any) => {
-      console.log(e);
-      return e;
+      logger.error(`fn <getOrganizationMembers()> ${String(e)}`);
+      return [];
     });
 }
 
 export async function getUsersOrganizationMembers(userId: string) {
-  return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`).then(
-    (orgs: any) => {
-      if (orgs.length) {
+  /*
+  cache structure:
+
+  usersOrganisations: {
+    [userId]: organisationId
+  }
+
+  */
+  const cachedUsersOrganisations = JSON.parse(
+    mcache.get('usersOrganisations') || '{}',
+  );
+  if (cachedUsersOrganisations[userId]) {
+    return getOrganizationMembers(cachedUsersOrganisations[userId]);
+  }
+  return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`)
+    .then((orgs: any) => {
+      if (isArray(orgs) && orgs.length) {
+        mcache.put(
+          'usersOrganisations',
+          JSON.stringify({
+            ...cachedUsersOrganisations,
+            [userId]: orgs[0].id,
+          }),
+          1000 * 60 * 5, // 5 minutes
+        );
         return getOrganizationMembers(orgs[0].id);
       }
-      return Promise.resolve([]);
-    },
-  );
+      return [];
+    })
+    .catch((e: any) => {
+      logger.error(`fn <getUsersOrganizationMembers()> ${String(e)}`);
+      return [];
+    });
 }

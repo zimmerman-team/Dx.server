@@ -70,6 +70,7 @@ async function getReports(
         'title',
         'subTitle',
         'public',
+        'owner',
       ],
     });
   }
