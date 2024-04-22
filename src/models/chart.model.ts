@@ -49,12 +49,6 @@ export class Chart extends Entity {
     type: 'object',
     required: true,
   })
-  dataTypes: object;
-
-  @property({
-    type: 'object',
-    required: true,
-  })
   vizOptions: object;
 
   @property({
