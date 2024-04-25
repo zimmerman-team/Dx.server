@@ -232,6 +232,46 @@ export class DatasetController {
     return this.datasetRepository.findById(id, filter);
   }
 
+  @get('/datasets/{id}/data')
+  @response(200, {
+    description: 'Dataset content',
+    content: {
+      'application/json': {
+        schema: [],
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async datasetContent(
+    @param.path.string('id') id: string,
+    @param.query.string('page') page: string,
+    @param.query.string('pageSize') pageSize: string,
+  ): Promise<any> {
+    logger.info(
+      `route </datasets/{id}/data> -  get dataset content by id: ${id}`,
+    );
+    return axios
+      .get(
+        `http://${host}:4004/dataset/${id}?page=${page}&page_size=${pageSize}`,
+      )
+      .then(res => {
+        logger.info(
+          `route </datasets/{id}/data> Data fetched for dataset ${id}`,
+        );
+        return res.data;
+      })
+      .catch(error => {
+        console.log(error);
+        logger.error(
+          `route </datasets/{id}/data> Error fetching data for dataset ${id}; ${error}`,
+        );
+        return {
+          data: [],
+          error,
+        };
+      });
+  }
+
   @patch('/datasets/{id}')
   @response(204, {
     description: 'Dataset PATCH success',
