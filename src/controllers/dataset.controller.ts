@@ -438,9 +438,8 @@ export class DatasetController {
       });
       const getData = async () => {
         const responses = await Promise.all(promises);
-
         const data = responses.reduce(
-          (prev: any, curr) => [...prev, ...curr.data.result],
+          (prev: any, curr) => curr.data.result ? [...prev, ...curr.data.result] : prev,
           [],
         );
         return data;
