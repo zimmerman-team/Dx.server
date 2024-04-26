@@ -72,6 +72,7 @@ async function getCharts(
         'public',
         'createdDate',
         'isMappingValid',
+        'isAIAssisted',
         'owner',
       ],
     });
@@ -90,6 +91,7 @@ async function getCharts(
       'public',
       'createdDate',
       'isMappingValid',
+      'isAIAssisted',
       'owner',
     ],
   });
@@ -336,7 +338,17 @@ export class ChartsController {
         )}`,
       );
       const result = response.data.result;
-      return result.map((r: string) => JSON.parse(r));
+      const parsedResult = result.map((r: string) => JSON.parse(r));
+      const lowercaseParsedResult = parsedResult.map(
+        (r: any, index: number) => {
+          const newObject: any = {};
+          Object.keys(r).forEach((key: string) => {
+            newObject[key.toLowerCase()] = r[key];
+          });
+          return newObject;
+        },
+      );
+      return lowercaseParsedResult;
     } catch (e) {
       console.log(e, 'error');
       return {error: 'Error fetching AI suggestions'};
@@ -580,6 +592,7 @@ export class ChartsController {
       enabledFilterOptionGroups: fChart.enabledFilterOptionGroups,
       owner: _.get(this.req, 'user.sub', 'anonymous'),
       isMappingValid: fChart.isMappingValid ?? true,
+      isAIAssisted: fChart.isAIAssisted ?? false,
     });
   }
 }
