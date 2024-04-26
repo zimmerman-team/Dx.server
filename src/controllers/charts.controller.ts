@@ -534,12 +534,13 @@ export class ChartsController {
       },
     })
     chart: Chart,
-  ): Promise<void> {
+  ): Promise<Chart> {
     await this.chartRepository.updateById(id, {
       ...chart,
       updatedDate: new Date().toISOString(),
     });
     logger.info(`route</chart/{id}> Updating chart- ${id}`);
+    return this.chartRepository.findById(id);
   }
 
   /* put chart */
