@@ -28,6 +28,12 @@ export class Chart extends Entity {
   isMappingValid: boolean;
 
   @property({
+    type: 'boolean',
+    default: false,
+  })
+  isAIAssisted: boolean;
+
+  @property({
     type: 'string',
     required: true,
   })
