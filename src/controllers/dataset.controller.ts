@@ -382,17 +382,21 @@ export class DatasetController {
   async searchExternalSources(
     @param.query.string('q') q: string,
     @param.query.string('source') source: string,
+    @param.query.string('limit') limit: string,
+    @param.query.string('offset') offset: string,
   ): Promise<any> {
     try {
       logger.info(
         'route </external-sources/search> -  Search external sources',
       );
       const response = await axios.post(
-        `http://${host}:4004/external-sources/search`,
+        `http://${host}:4004/external-sources/search-limited`,
         {
           owner: _.get(this.req, 'user.sub', 'anonymous'),
           query: q,
           source,
+          limit: Number(limit),
+          offset: Number(offset),
         },
       );
       logger.info(
