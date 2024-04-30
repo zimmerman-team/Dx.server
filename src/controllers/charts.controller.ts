@@ -214,21 +214,21 @@ export class ChartsController {
           `route </chart/sample-data/{datasetId}> Sample data fetched for dataset ${datasetId}`,
         );
         return {
-          count: _.get(res, 'data.count', []),
-          sample: _.get(res, 'data.sample', []),
-          dataTypes: _.get(res, 'data.dataTypes', []),
-          filterOptionGroups: _.get(res, 'data.filterOptionGroups', []),
-          stats: _.get(res, 'data.stats', []),
+          count: _.get(res, 'data.result.count', []),
+          sample: _.get(res, 'data.result.sample', []),
+          dataTypes: _.get(res, 'data.result.dataTypes', []),
+          filterOptionGroups: _.get(res, 'data.result.filterOptionGroups', []),
+          stats: _.get(res, 'data.result.stats', []),
         };
       })
-      .catch(error => {
-        console.log(error);
+      .catch(e => {
+        console.log(e);
         logger.error(
-          `route </chart/sample-data/{datasetId}> Error fetching sample data for dataset ${datasetId}; ${error}`,
+          `route </chart/sample-data/{datasetId}> Error fetching sample data for dataset ${datasetId}; ${e.response.data.result}`,
         );
         return {
           data: [],
-          error,
+          error: e.response.data.result,
         };
       });
   }
