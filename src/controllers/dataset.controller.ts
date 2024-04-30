@@ -54,7 +54,7 @@ export class DatasetController {
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
 
-    @repository(ChartRepository)
+    @repository(ReportRepository)
     public reportRepository: ReportRepository,
 
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
