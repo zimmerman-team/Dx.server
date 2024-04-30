@@ -189,17 +189,17 @@ function renderChart(
 
   try {
     if (vizType === 'bigNumber') {
-      // remove header, subheader, unitofmeasurement from item.mapping
+      // extract header, subheader, unitofmeasurement from item.mapping
       header = item.mapping.header;
       subheader = item.mapping.subheader;
       unitofmeasurement = item.mapping.unitofmeasurement;
       mainKPImetric = item.mapping.mainKPImetric;
-      item.mapping = {metric: item.mapping.metric};
+
     }
 
     const viz = rawChart(chart, {
       data: parsed.dataset,
-      mapping: item.mapping,
+      mapping: vizType === 'bigNumber' ? {metric: item.mapping.metric }: item.mapping,
       visualOptions: item.vizOptions,
       dataTypes: parsed.dataTypes,
     });

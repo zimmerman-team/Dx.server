@@ -72,6 +72,7 @@ async function getCharts(
         'public',
         'createdDate',
         'isMappingValid',
+        'isAIAssisted',
         'owner',
       ],
     });
@@ -90,6 +91,7 @@ async function getCharts(
       'public',
       'createdDate',
       'isMappingValid',
+      'isAIAssisted',
       'owner',
     ],
   });
@@ -300,8 +302,60 @@ export class ChartsController {
     return getCharts(this.chartRepository, 'anonymous', filter);
   }
 
-  /* patch charts */
+  /* get charts */
+  @get('/chart-types/ai-suggestions')
+  @response(200, {
+    description: 'AI Chart suggestion instance',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Chart, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async getChartTypes(@param.query.string('id') id: string) {
+    let host = process.env.AIAPI_SUBDOMAIN ? 'ai-api' : 'localhost';
+    if (process.env.ENV_TYPE !== 'prod')
+      host = process.env.ENV_TYPE ? `ai-api-${process.env.ENV_TYPE}` : host;
+    logger.info(
+      `route</chart-types/ai-suggestions> Fetching AI suggestions for chart type`,
+    );
+    try {
+      const response = await axios.get(
+        `http://${host}:5000/chart-suggest/ai-report-builder-from-existing?id=${id}`,
+        {
+          headers: {
+            Authorization: 'ZIMMERMAN',
+          },
+        },
+      );
+      logger.info(
+        `route</chart-types/ai-suggestions> AI suggestions fetched returning ${JSON.stringify(
+          response.data,
+        )}`,
+      );
+      const result = response.data.result;
+      const parsedResult = result.map((r: string) => JSON.parse(r));
+      const lowercaseParsedResult = parsedResult.map(
+        (r: any, index: number) => {
+          const newObject: any = {};
+          Object.keys(r).forEach((key: string) => {
+            newObject[key.toLowerCase()] = r[key];
+          });
+          return newObject;
+        },
+      );
+      return lowercaseParsedResult;
+    } catch (e) {
+      console.log(e, 'error');
+      return {error: 'Error fetching AI suggestions'};
+    }
+  }
 
+  /* patch charts */
   @patch('/chart')
   @response(200, {
     description: 'Chart PATCH success count',
@@ -480,12 +534,13 @@ export class ChartsController {
       },
     })
     chart: Chart,
-  ): Promise<void> {
+  ): Promise<Chart> {
     await this.chartRepository.updateById(id, {
       ...chart,
       updatedDate: new Date().toISOString(),
     });
     logger.info(`route</chart/{id}> Updating chart- ${id}`);
+    return this.chartRepository.findById(id);
   }
 
   /* put chart */
@@ -538,6 +593,7 @@ export class ChartsController {
       enabledFilterOptionGroups: fChart.enabledFilterOptionGroups,
       owner: _.get(this.req, 'user.sub', 'anonymous'),
       isMappingValid: fChart.isMappingValid ?? true,
+      isAIAssisted: fChart.isAIAssisted ?? false,
     });
   }
 }
