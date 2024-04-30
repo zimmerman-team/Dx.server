@@ -89,7 +89,7 @@ export class UserController {
 
         await axios
           .post(`http://${host}:4004/duplicate-datasets`, datasetsIds)
-          .then(res => {
+          .then(_ => {
             logger.info(
               `route <users/duplicate-assets> -  DX Backend duplication complete`,
             );
@@ -99,9 +99,9 @@ export class UserController {
             console.log('DX Backend duplication failed', e);
             logger.error(
               `route <users/duplicate-assets> -  DX Backend duplication failed`,
-              e,
+              e.response.data.result,
             );
-            return {error: 'Error duplicating files'};
+            return {error: e.response.data.result};
           });
 
         // Duplicate  Charts
