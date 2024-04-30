@@ -23,7 +23,11 @@ import {
 } from '@loopback/rest';
 import axios from 'axios';
 import {Dataset} from '../models';
-import {ChartRepository, DatasetRepository} from '../repositories';
+import {
+  ChartRepository,
+  DatasetRepository,
+  ReportRepository,
+} from '../repositories';
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
@@ -48,6 +52,9 @@ export class DatasetController {
 
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
+
+    @repository(ReportRepository)
+    public reportRepository: ReportRepository,
 
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
   ) {}
@@ -305,6 +312,35 @@ export class DatasetController {
   ): Promise<void> {
     await this.datasetRepository.replaceById(id, dataset);
     logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
+  }
+  @get('/datasets/{id}/charts-reports/count')
+  @response(200, {
+    description: 'Dataset model instance',
+    content: {
+      'application/json': {
+        schema: {chartsCount: Number, reportsCount: Number},
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async getChartsReportsCount(
+    @param.path.string('id') id: string,
+  ): Promise<{chartsCount: number; reportsCount: number}> {
+    logger.info(
+      `route </datasets/{id}/charts-reports/count> -  get charts and reports count by dataset id: ${id}`,
+    );
+
+    const chartIds = (
+      await this.chartRepository.find({where: {datasetId: id}})
+    ).map(c => c.id);
+    return {
+      chartsCount: (await this.chartRepository.count({datasetId: id})).count,
+      reportsCount: (await this.reportRepository.execute?.(
+        'Report',
+        'countDocuments',
+        {'rows.items': {$in: chartIds}},
+      )) as unknown as number,
+    };
   }
 
   @del('/datasets/{id}')
