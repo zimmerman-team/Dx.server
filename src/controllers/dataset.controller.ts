@@ -289,13 +289,13 @@ export class DatasetController {
           );
           console.log('File removed from DX Backend');
         })
-        .catch(_ => {
+        .catch(e => {
           logger.error(
             `route </datasets/{id}> -  Failed to remove the dataset ${id} from DX Backend`,
           );
           console.log(
             'Failed to remove the dataset from DX Backend',
-            String(_),
+            e.response.data.result,
           );
         });
     });
@@ -346,12 +346,12 @@ export class DatasetController {
         console.log('DX Backend duplication complete');
       })
       .catch(e => {
-        console.log('DX Backend duplication failed', e);
+        console.log('DX Backend duplication failed', e.response.data.result);
         logger.error(
           `route </dataset/duplicate/{id}> -  DX Backend duplication failed`,
           e,
         );
-        return {error: 'Error duplicating files'};
+        return {error: e.response.data.result};
       });
 
     return newDatasetPromise;
@@ -397,10 +397,11 @@ export class DatasetController {
       logger.info(
         'route </external-sources/search> -  Searched external sources',
       );
-      return response.data;
+      return response.data.result;
     } catch (e) {
-      console.log(e);
-      logger.error('route </external-sources/search> -  Error', e);
+      console.log(e.response.data.result);
+      logger.error('route </external-sources/search> -  Error', e.response.data.result);
+      return { error: e.response.data.result };
     }
   }
 
@@ -437,9 +438,8 @@ export class DatasetController {
       });
       const getData = async () => {
         const responses = await Promise.all(promises);
-
         const data = responses.reduce(
-          (prev: any, curr) => [...prev, ...curr.data],
+          (prev: any, curr) => curr.data.result ? [...prev, ...curr.data.result] : prev,
           [],
         );
         return data;
@@ -481,6 +481,7 @@ export class DatasetController {
       }
     } catch (e) {
       console.log(e);
+      return {error: e.response.data.result};
     }
   }
 
@@ -521,10 +522,11 @@ export class DatasetController {
       logger.info(
         'route </external-sources/download> -  Downloaded external sources',
       );
-      return response.data;
+      return response.data.result;
     } catch (e) {
       console.log(e);
       logger.error('route </external-sources/download> -  Error', e);
+      return { error: e.response.data.result };
     }
   }
 }
