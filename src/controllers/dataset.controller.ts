@@ -21,7 +21,7 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import axios, {AxiosResponse} from 'axios';
+import axios from 'axios';
 import {Dataset} from '../models';
 import {
   ChartRepository,
@@ -31,7 +31,6 @@ import {
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
-import mcache from 'memory-cache';
 import {UserProfile} from '../authentication-strategies/user-profile';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {getUsersOrganizationMembers} from '../utils/auth';
@@ -239,6 +238,46 @@ export class DatasetController {
     return this.datasetRepository.findById(id, filter);
   }
 
+  @get('/datasets/{id}/data')
+  @response(200, {
+    description: 'Dataset content',
+    content: {
+      'application/json': {
+        schema: [],
+      },
+    },
+  })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async datasetContent(
+    @param.path.string('id') id: string,
+    @param.query.string('page') page: string,
+    @param.query.string('pageSize') pageSize: string,
+  ): Promise<any> {
+    logger.info(
+      `route </datasets/{id}/data> -  get dataset content by id: ${id}`,
+    );
+    return axios
+      .get(
+        `http://${host}:4004/dataset/${id}?page=${page}&page_size=${pageSize}`,
+      )
+      .then(res => {
+        logger.info(
+          `route </datasets/{id}/data> Data fetched for dataset ${id}`,
+        );
+        return res.data;
+      })
+      .catch(error => {
+        console.log(error);
+        logger.error(
+          `route </datasets/{id}/data> Error fetching data for dataset ${id}; ${error}`,
+        );
+        return {
+          data: [],
+          error,
+        };
+      });
+  }
+
   @patch('/datasets/{id}')
   @response(204, {
     description: 'Dataset PATCH success',
@@ -325,13 +364,13 @@ export class DatasetController {
           );
           console.log('File removed from DX Backend');
         })
-        .catch(_ => {
+        .catch(e => {
           logger.error(
             `route </datasets/{id}> -  Failed to remove the dataset ${id} from DX Backend`,
           );
           console.log(
             'Failed to remove the dataset from DX Backend',
-            String(_),
+            e.response.data.result,
           );
         });
     });
@@ -382,12 +421,12 @@ export class DatasetController {
         console.log('DX Backend duplication complete');
       })
       .catch(e => {
-        console.log('DX Backend duplication failed', e);
+        console.log('DX Backend duplication failed', e.response.data.result);
         logger.error(
           `route </dataset/duplicate/{id}> -  DX Backend duplication failed`,
           e,
         );
-        return {error: 'Error duplicating files'};
+        return {error: e.response.data.result};
       });
 
     return newDatasetPromise;
@@ -418,105 +457,35 @@ export class DatasetController {
   })
   async searchExternalSources(
     @param.query.string('q') q: string,
+    @param.query.string('source') source: string,
+    @param.query.string('limit') limit: string,
+    @param.query.string('offset') offset: string,
   ): Promise<any> {
     try {
       logger.info(
         'route </external-sources/search> -  Search external sources',
       );
       const response = await axios.post(
-        `http://${host}:4004/external-sources/search`,
+        `http://${host}:4004/external-sources/search-limited`,
         {
           owner: _.get(this.req, 'user.sub', 'anonymous'),
           query: q,
+          source,
+          limit: Number(limit),
+          offset: Number(offset),
         },
       );
       logger.info(
         'route </external-sources/search> -  Searched external sources',
       );
-      return response.data;
+      return response.data.result;
     } catch (e) {
-      console.log(e);
-      logger.error('route </external-sources/search> -  Error', e);
-    }
-  }
-
-  //external sources limited search
-  @get('/external-sources/search-limited')
-  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  @response(200, {
-    description: 'Dataset external search instance',
-  })
-  async LimitedSearchExternalSources(
-    @param.query.string('q') q: string,
-    @param.query.string('limit') limit: string,
-    @param.query.string('offset') offset: string,
-  ): Promise<any> {
-    try {
-      const sources = ['Kaggle', 'World Bank', 'WHO', 'HDX'];
-      const dayInMs = 1000 * 60 * 60 * 24;
-      const promises: Promise<AxiosResponse<any, any>>[] = [];
-
-      const updateCache = (data: any) => {
-        mcache.put('external_sources_data', JSON.stringify(data), dayInMs);
-      };
-
-      sources.forEach(source => {
-        promises.push(
-          axios.post(`http://${host}:4004/external-sources/search-limited`, {
-            owner: _.get(this.req, 'user.sub', 'anonymous'),
-            query: q,
-            source,
-            limit: Number(limit),
-            offset: Number(offset),
-          }),
-        );
-      });
-      const getData = async () => {
-        const responses = await Promise.all(promises);
-
-        const data = responses.reduce(
-          (prev: any, curr) => [...prev, ...curr.data],
-          [],
-        );
-        return data;
-      };
-
-      if (q === '') {
-        // caching data for empty string searches
-        const cachedData = mcache.get('external_sources_data');
-
-        if (cachedData) {
-          // Caching the data in a progressive fashion based on the limit and offset
-          const data = JSON.parse(cachedData)[limit][offset];
-
-          if (data) {
-            return _.shuffle(data);
-          } else {
-            const data = await getData();
-            const dataToCache = {
-              ...JSON.parse(cachedData),
-              [limit]: {
-                ...JSON.parse(cachedData)[limit],
-                [offset]: data,
-              },
-            };
-            updateCache(dataToCache);
-            return _.shuffle(data);
-          }
-        } else {
-          const data = await getData();
-          const dataToCache = {
-            [limit]: {[offset]: data},
-          };
-          updateCache(dataToCache);
-          return _.shuffle(data);
-        }
-      } else {
-        const data = await getData();
-        return _.shuffle(data);
-      }
-    } catch (e) {
-      console.log(e);
+      console.log(e.response.data.result);
+      logger.error(
+        'route </external-sources/search> -  Error',
+        e.response.data.result,
+      );
+      return {error: e.response.data.result};
     }
   }
 
@@ -557,10 +526,11 @@ export class DatasetController {
       logger.info(
         'route </external-sources/download> -  Downloaded external sources',
       );
-      return response.data;
+      return response.data.result;
     } catch (e) {
       console.log(e);
       logger.error('route </external-sources/download> -  Error', e);
+      return {error: e.response.data.result};
     }
   }
 }

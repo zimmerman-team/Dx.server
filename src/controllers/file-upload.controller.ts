@@ -99,7 +99,7 @@ export class FileUploadController {
         .then(_ => console.log('DX Backend upload complete'))
         .catch(e => {
           console.log('DX Backend upload failed', e);
-          return {error: 'Error uploading files'};
+          return {error: e.response.data.result};
         });
     }
     return {files, fields: request.body};
