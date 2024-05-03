@@ -238,6 +238,24 @@ export class DatasetController {
     return this.datasetRepository.findById(id, filter);
   }
 
+  @get('/datasets/public/{id}')
+  @response(200, {
+    description: 'Dataset model instance',
+    content: {
+      'application/json': {
+        schema: getModelSchemaRef(Dataset, {includeRelations: true}),
+      },
+    },
+  })
+  async findByIdPublic(
+    @param.path.string('id') id: string,
+    @param.filter(Dataset, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Dataset>,
+  ): Promise<Dataset> {
+    logger.info(`route </datasets/{id}> -  get dataset by id: ${id}`);
+    return this.datasetRepository.findById(id, filter);
+  }
+
   @get('/datasets/{id}/data')
   @response(200, {
     description: 'Dataset content',
