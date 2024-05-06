@@ -168,4 +168,29 @@ export class UserController {
       return {message: 'User has already logged in before'};
     }
   }
+
+  @post('/users/delete-account')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async deleteAccount(): Promise<{message: string} | {error: string}> {
+    logger.info(`route <users/delete-account> -  delete user`);
+    try {
+      const userId = _.get(this.req, 'user.sub');
+      if (userId) {
+        await UserProfile.deleteUser(userId);
+
+        await this.datasetRepository.deleteAll({owner: userId});
+        await this.chartRepository.deleteAll({owner: userId});
+        await this.reportRepository.deleteAll({owner: userId});
+        return {message: 'success'};
+      } else {
+        return {error: 'User not found'};
+      }
+    } catch (error) {
+      logger.error(
+        `route <users/delete-account> -  Error deleting user account: ${error}`,
+      );
+      return {error: 'Error deleting user account'};
+    }
+  }
 }
