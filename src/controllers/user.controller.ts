@@ -1,7 +1,7 @@
 import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {post, Request, response, RestBindings} from '@loopback/rest';
+import {Request, RestBindings, get, post, response} from '@loopback/rest';
 import axios from 'axios';
 import _ from 'lodash';
 import {UserProfile} from '../authentication-strategies/user-profile';
@@ -167,5 +167,25 @@ export class UserController {
     } else {
       return {message: 'User has already logged in before'};
     }
+  }
+
+  @get('/users/intercom-hash')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async getIntercomHash(): Promise<{hash: string} | {error: string}> {
+    const userId = _.get(this.req, 'user.sub');
+    if (userId) {
+      const crypto = require('crypto');
+
+      const secretKey = process.env.INTERCOM_SECRET_KEY; // an Identity Verification secret key (web)
+      const hash = crypto
+        .createHmac('sha256', secretKey)
+        .update(userId)
+        .digest('hex');
+      return {hash};
+    }
+    return {
+      error: 'User not found',
+    };
   }
 }
