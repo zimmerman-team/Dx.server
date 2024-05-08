@@ -1,7 +1,14 @@
 import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {post, Request, response, RestBindings} from '@loopback/rest';
+import {
+  patch,
+  post,
+  Request,
+  requestBody,
+  response,
+  RestBindings,
+} from '@loopback/rest';
 import axios from 'axios';
 import _ from 'lodash';
 import {UserProfile} from '../authentication-strategies/user-profile';
@@ -191,6 +198,35 @@ export class UserController {
         `route <users/delete-account> -  Error deleting user account: ${error}`,
       );
       return {error: 'Error deleting user account'};
+    }
+  }
+
+  @patch('/users/update-profile')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async updateProfile(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {},
+        },
+      },
+    })
+    userDetails: {
+      name: string;
+    },
+  ): Promise<{name: string} | {error: string}> {
+    try {
+      const response = await UserProfile.updateUserProfile(
+        _.get(this.req, 'user.sub', 'anonymous'),
+        {name: userDetails.name},
+      );
+      return {name: response.name};
+    } catch (error) {
+      logger.error(
+        `route <users/update-profile> -  Error updating user profile: ${error}`,
+      );
+      return {error: 'Error updating user profile'};
     }
   }
 }
