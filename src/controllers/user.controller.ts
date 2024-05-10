@@ -2,12 +2,13 @@ import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {
+  Request,
+  RestBindings,
+  get,
   patch,
   post,
-  Request,
   requestBody,
   response,
-  RestBindings,
 } from '@loopback/rest';
 import axios from 'axios';
 import _ from 'lodash';
@@ -228,5 +229,25 @@ export class UserController {
       );
       return {error: 'Error updating user profile'};
     }
+  }
+
+  @get('/users/intercom-hash')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async getIntercomHash(): Promise<{hash: string} | {error: string}> {
+    const userId = _.get(this.req, 'user.sub');
+    if (userId) {
+      const crypto = require('crypto');
+
+      const secretKey = process.env.INTERCOM_SECRET_KEY; // an Identity Verification secret key (web)
+      const hash = crypto
+        .createHmac('sha256', secretKey)
+        .update(userId)
+        .digest('hex');
+      return {hash};
+    }
+    return {
+      error: 'User not found',
+    };
   }
 }
