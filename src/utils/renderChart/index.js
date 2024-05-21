@@ -166,7 +166,7 @@ function filterData(parsedDataset, appliedFilters) {
   const filteredData = _.filter(parsedDataset, item => {
     // Check if all conditions hold for each 'filterKey'
     return filterKeys.every(filterKey =>
-      appliedFilters[filterKey]?.includes(item[filterKey]?.toString()),
+      appliedFilters[filterKey]?.includes(item[filterKey]),
     );
   });
 
