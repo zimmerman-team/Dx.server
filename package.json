@@ -74,6 +74,7 @@
     "@turf/helpers": "^6.5.0",
     "@types/memory-cache": "^0.2.5",
     "axios": "^0.24.0",
+    "bson": "5.0.0",
     "dotenv": "^16.0.1",
     "express-jwt": "^6.1.0",
     "express-jwt-authz": "^2.4.1",
