@@ -73,7 +73,7 @@ export async function getOrganizationMembers(organizationId: string) {
     .then((orgUsers: any) => {
       mcache.put(
         `${organizationId}-org-members`,
-        JSON.stringify([orgUsers]),
+        JSON.stringify(orgUsers),
         1000 * 60 * 5, // 5 minutes
       );
       return orgUsers;
