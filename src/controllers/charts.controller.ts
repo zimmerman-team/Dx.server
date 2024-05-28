@@ -27,8 +27,12 @@ import fs from 'fs-extra';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Chart} from '../models';
-import {ChartRepository} from '../repositories';
+import {ChartRepository, DatasetRepository} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
+
+let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+if (process.env.ENV_TYPE !== 'prod')
+  host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
 
 async function getChartsCount(
   chartRepository: ChartRepository,
@@ -172,6 +176,9 @@ export class ChartsController {
     @inject(RestBindings.Http.REQUEST) private req: Request,
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
+
+    @repository(DatasetRepository)
+    public datasetRepository: DatasetRepository,
   ) {}
 
   /* create chart */
@@ -582,11 +589,42 @@ export class ChartsController {
   async duplicate(@param.path.string('id') id: string): Promise<Chart> {
     logger.info(`route </chart/duplicate/{id}> Duplicating chart- ${id}`);
     const fChart = await this.chartRepository.findById(id);
+    let newDatasetId = null;
+    if (fChart.owner !== _.get(this.req, 'user.sub', 'anonymous')) {
+      const dataset = await this.datasetRepository.findById(fChart.datasetId);
+      const newDataset = await this.datasetRepository.create({
+        name: `${dataset.name}`,
+        public: false,
+        category: dataset.category,
+        description: dataset.description,
+        source: dataset.source,
+        sourceUrl: dataset.sourceUrl,
+        owner: _.get(this.req, 'user.sub', 'anonymous'),
+      });
+
+      await axios
+        .post(`http://${host}:4004/duplicate-dataset/${id}/${newDataset.id}`)
+        .then(_ => {
+          logger.info(
+            `route </dataset/duplicate/{id}> -  DX Backend duplication complete`,
+          );
+          console.log('DX Backend duplication complete');
+        })
+        .catch(e => {
+          console.log('DX Backend duplication failed', e.response.data.result);
+          logger.error(
+            `route </dataset/duplicate/{id}> -  DX Backend duplication failed`,
+            e,
+          );
+          return {error: e.response.data.result};
+        });
+      newDatasetId = newDataset.id;
+    }
     return this.chartRepository.create({
       name: `${fChart.name} (Copy)`,
       public: false,
       vizType: fChart.vizType,
-      datasetId: fChart.datasetId,
+      datasetId: newDatasetId ?? fChart.datasetId,
       mapping: fChart.mapping,
       vizOptions: fChart.vizOptions,
       appliedFilters: fChart.appliedFilters,
