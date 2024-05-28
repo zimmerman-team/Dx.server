@@ -1,3 +1,4 @@
+export * from './assets.controller';
 export * from './charts.controller';
 export * from './data-themes/raw-data.controller';
 export * from './dataset.controller';
