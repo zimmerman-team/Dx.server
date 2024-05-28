@@ -60,15 +60,14 @@ export async function getOrganizationMembers(organizationId: string) {
 
    */
   const cachedOrgMembers = JSON.parse(
-    mcache.get(`${organizationId}-org-members`) || '[]',
+    mcache.get(`${organizationId}-org-members`) ?? '[]',
   );
 
-  if (cachedOrgMembers) {
+  if (cachedOrgMembers && cachedOrgMembers.length) {
     return cachedOrgMembers;
 
     // TODO: Setup background job to refresh cache
   }
-
   return AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
     .then((orgUsers: any) => {
       mcache.put(
