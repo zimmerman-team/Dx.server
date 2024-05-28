@@ -68,6 +68,7 @@ export async function getOrganizationMembers(organizationId: string) {
 
     // TODO: Setup background job to refresh cache
   }
+  logger.info(`fn <getOrganizationMembers()> cachedOrgMembers expired`);
   return AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
     .then((orgUsers: any) => {
       mcache.put(
@@ -96,6 +97,9 @@ export async function getUsersOrganizationMembers(userId: string) {
     return getOrganizationMembers(cachedUserOrganisationId);
     // TODO: Setup background job to refresh cache
   }
+  logger.info(
+    `fn <getUsersOrganizationMembers()> cachedUsersOrganisations expired`,
+  );
   return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`)
     .then((orgs: any) => {
       if (isArray(orgs) && orgs.length) {
