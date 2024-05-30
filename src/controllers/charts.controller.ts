@@ -603,7 +603,9 @@ export class ChartsController {
       });
 
       await axios
-        .post(`http://${host}:4004/duplicate-dataset/${id}/${newDataset.id}`)
+        .post(
+          `http://${host}:4004/duplicate-dataset/${fChart.datasetId}/${newDataset.id}`,
+        )
         .then(_ => {
           logger.info(
             `route </dataset/duplicate/{id}> -  DX Backend duplication complete`,
