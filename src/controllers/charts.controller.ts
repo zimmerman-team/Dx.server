@@ -589,44 +589,12 @@ export class ChartsController {
   async duplicate(@param.path.string('id') id: string): Promise<Chart> {
     logger.info(`route </chart/duplicate/{id}> Duplicating chart- ${id}`);
     const fChart = await this.chartRepository.findById(id);
-    let newDatasetId = null;
-    if (fChart.owner !== _.get(this.req, 'user.sub', 'anonymous')) {
-      const dataset = await this.datasetRepository.findById(fChart.datasetId);
-      const newDataset = await this.datasetRepository.create({
-        name: `${dataset.name}`,
-        public: false,
-        category: dataset.category,
-        description: dataset.description,
-        source: dataset.source,
-        sourceUrl: dataset.sourceUrl,
-        owner: _.get(this.req, 'user.sub', 'anonymous'),
-      });
 
-      await axios
-        .post(
-          `http://${host}:4004/duplicate-dataset/${fChart.datasetId}/${newDataset.id}`,
-        )
-        .then(_ => {
-          logger.info(
-            `route </dataset/duplicate/{id}> -  DX Backend duplication complete`,
-          );
-          console.log('DX Backend duplication complete');
-        })
-        .catch(e => {
-          console.log('DX Backend duplication failed', e.response.data.result);
-          logger.error(
-            `route </dataset/duplicate/{id}> -  DX Backend duplication failed`,
-            e,
-          );
-          return {error: e.response.data.result};
-        });
-      newDatasetId = newDataset.id;
-    }
     return this.chartRepository.create({
       name: `${fChart.name} (Copy)`,
       public: false,
       vizType: fChart.vizType,
-      datasetId: newDatasetId ?? fChart.datasetId,
+      datasetId: fChart.datasetId,
       mapping: fChart.mapping,
       vizOptions: fChart.vizOptions,
       appliedFilters: fChart.appliedFilters,

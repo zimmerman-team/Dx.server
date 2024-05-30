@@ -22,7 +22,6 @@ import {
   RestBindings,
 } from '@loopback/rest';
 import axios from 'axios';
-import {ObjectId} from 'bson';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Report} from '../models';
@@ -414,126 +413,20 @@ export class ReportsController {
     logger.info(
       `route </report/duplicate/{id}> duplicating report by id ${id}`,
     );
-    const userId = _.get(this.req, 'user.sub', 'anonymous');
     const fReport = await this.ReportRepository.findById(id);
-    let reportChartIds: string[] = [];
-    if (fReport.rows) {
-      fReport.rows.forEach(row => {
-        if (row.items) {
-          row.items.forEach(item => {
-            if (typeof item === 'string' && ObjectId.isValid(item)) {
-              reportChartIds.push(item);
-            }
-          });
-        }
-      });
-    }
-    const chartsInReport = await this.chartRepository.find({
-      where: {id: {inq: reportChartIds}},
-    });
-
-    const datasetsInReport = await this.datasetRepository.find({
-      where: {id: {inq: chartsInReport.map(c => c.datasetId)}},
-    });
-
-    const datasetsIds: {ds_name: string; new_ds_name: string}[] = [];
-    const chartsIds: {chart_id: string; new_chart_id: string}[] = [];
-
-    // Duplicate Datasets
-    await Promise.all(
-      datasetsInReport.map(async dataset => {
-        if (dataset.owner === userId) {
-          return;
-        }
-        const newDataset = await this.datasetRepository.create({
-          name: `${dataset.name}`,
-          public: false,
-          category: dataset.category,
-          description: dataset.description,
-          source: dataset.source,
-          sourceUrl: dataset.sourceUrl,
-          owner: userId,
-        });
-
-        datasetsIds.push({
-          ds_name: dataset.id ?? '',
-          new_ds_name: newDataset.id ?? '',
-        });
-      }),
-    );
-    await axios
-      .post(`http://${host}:4004/duplicate-datasets`, datasetsIds)
-      .then(_ => {
-        logger.info(
-          `route <users/duplicate-assets> -  DX Backend duplication complete`,
-        );
-        console.log('DX Backend duplication complete');
-      })
-      .catch(e => {
-        console.log('DX Backend duplication failed', e);
-        logger.error(
-          `route <users/duplicate-assets> -  DX Backend duplication failed`,
-          e.response.data.result,
-        );
-        return {error: e.response.data.result};
-      });
-
-    // Duplicate Charts
-    await Promise.all(
-      chartsInReport.map(async chart => {
-        if (chart.owner === userId) {
-          return;
-        }
-        const newChart = await this.chartRepository.create({
-          name: `${chart.name}`,
-          public: false,
-          vizType: chart.vizType,
-          datasetId:
-            datasetsIds.find(d => d.ds_name === chart.datasetId)?.new_ds_name ??
-            chart.datasetId,
-          mapping: chart.mapping,
-          vizOptions: chart.vizOptions,
-          appliedFilters: chart.appliedFilters,
-          enabledFilterOptionGroups: chart.enabledFilterOptionGroups,
-          owner: userId,
-          isMappingValid: chart.isMappingValid ?? true,
-          isAIAssisted: chart.isAIAssisted ?? false,
-        });
-
-        chartsIds.push({
-          chart_id: chart.id ?? '',
-          new_chart_id: newChart.id ?? '',
-        });
-      }),
-    );
-
     // Duplicate Report
     return this.ReportRepository.create({
       name: `${fReport.name} (Copy)`,
       showHeader: fReport.showHeader,
       title: fReport.title,
       subTitle: fReport.subTitle,
-      rows: fReport.rows.map(row => {
-        // Update the old chartIds to the new ones
-        return {
-          ...row,
-          items: row.items.map(item => {
-            if (typeof item === 'string') {
-              return (
-                chartsIds.find(c => c.chart_id === item)?.new_chart_id ?? item
-              );
-            } else {
-              return item;
-            }
-          }),
-        };
-      }),
+      rows: fReport.rows,
       public: false,
       backgroundColor: fReport.backgroundColor,
       titleColor: fReport.titleColor,
       descriptionColor: fReport.descriptionColor,
       dateColor: fReport.dateColor,
-      owner: userId,
+      owner: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
 
