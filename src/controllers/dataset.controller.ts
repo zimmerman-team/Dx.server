@@ -31,7 +31,6 @@ import {
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
-import {UserProfile} from '../authentication-strategies/user-profile';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {getUsersOrganizationMembers} from '../utils/auth';
 
@@ -447,23 +446,6 @@ export class DatasetController {
       });
 
     return newDatasetPromise;
-  }
-
-  @get('/dataset/google-drive/user-token')
-  @response(200, {
-    description: 'User Token',
-  })
-  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async getUserToken(): Promise<string> {
-    logger.info('route </dataset/google-drive/user-token> -  get user Token');
-    const userId = _.get(this.req, 'user.sub', 'anonymous');
-    const profile = await UserProfile.getUserProfile(userId);
-    const token = profile.identities[0].access_token;
-    logger.info(
-      'route </dataset/google-drive/user-token> -  user Token',
-      token,
-    );
-    return token;
   }
 
   //external sources search
