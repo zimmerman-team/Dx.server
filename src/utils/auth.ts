@@ -60,21 +60,20 @@ export async function getOrganizationMembers(organizationId: string) {
 
    */
   const cachedOrgMembers = JSON.parse(
-    mcache.get('organisationMembers') || '{}',
+    mcache.get(`${organizationId}-org-members`) ?? '[]',
   );
 
-  if (cachedOrgMembers[organizationId]) {
-    return cachedOrgMembers[organizationId];
-  }
+  if (cachedOrgMembers && cachedOrgMembers.length) {
+    return cachedOrgMembers;
 
+    // TODO: Setup background job to refresh cache
+  }
+  logger.info(`fn <getOrganizationMembers()> cachedOrgMembers expired`);
   return AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
     .then((orgUsers: any) => {
       mcache.put(
-        'organisationMembers',
-        JSON.stringify({
-          ...cachedOrgMembers,
-          [organizationId]: orgUsers,
-        }),
+        `${organizationId}-org-members`,
+        JSON.stringify(orgUsers),
         1000 * 60 * 5, // 5 minutes
       );
       return orgUsers;
@@ -89,26 +88,24 @@ export async function getUsersOrganizationMembers(userId: string) {
   /*
   cache structure:
 
-  usersOrganisations: {
-    [userId]: organisationId
-  }
+  userId-organization-id: organisationId
 
   */
-  const cachedUsersOrganisations = JSON.parse(
-    mcache.get('usersOrganisations') || '{}',
-  );
-  if (cachedUsersOrganisations[userId]) {
-    return getOrganizationMembers(cachedUsersOrganisations[userId]);
+  const cachedUserOrganisationId =
+    mcache.get(`${userId}-organization-id`) || '';
+  if (cachedUserOrganisationId) {
+    return getOrganizationMembers(cachedUserOrganisationId);
+    // TODO: Setup background job to refresh cache
   }
+  logger.info(
+    `fn <getUsersOrganizationMembers()> cachedUsersOrganisations expired`,
+  );
   return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`)
     .then((orgs: any) => {
       if (isArray(orgs) && orgs.length) {
         mcache.put(
-          'usersOrganisations',
-          JSON.stringify({
-            ...cachedUsersOrganisations,
-            [userId]: orgs[0].id,
-          }),
+          `${userId}-organization-id`,
+          orgs[0].id,
           1000 * 60 * 5, // 5 minutes
         );
         return getOrganizationMembers(orgs[0].id);

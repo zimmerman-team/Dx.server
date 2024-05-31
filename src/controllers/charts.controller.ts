@@ -27,8 +27,12 @@ import fs from 'fs-extra';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Chart} from '../models';
-import {ChartRepository} from '../repositories';
+import {ChartRepository, DatasetRepository} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
+
+let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+if (process.env.ENV_TYPE !== 'prod')
+  host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
 
 async function getChartsCount(
   chartRepository: ChartRepository,
@@ -172,6 +176,9 @@ export class ChartsController {
     @inject(RestBindings.Http.REQUEST) private req: Request,
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
+
+    @repository(DatasetRepository)
+    public datasetRepository: DatasetRepository,
   ) {}
 
   /* create chart */
@@ -582,6 +589,7 @@ export class ChartsController {
   async duplicate(@param.path.string('id') id: string): Promise<Chart> {
     logger.info(`route </chart/duplicate/{id}> Duplicating chart- ${id}`);
     const fChart = await this.chartRepository.findById(id);
+
     return this.chartRepository.create({
       name: `${fChart.name} (Copy)`,
       public: false,

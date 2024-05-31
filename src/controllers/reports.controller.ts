@@ -25,8 +25,16 @@ import axios from 'axios';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Report} from '../models';
-import {ReportRepository} from '../repositories';
+import {
+  ChartRepository,
+  DatasetRepository,
+  ReportRepository,
+} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
+
+let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+if (process.env.ENV_TYPE !== 'prod')
+  host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
 
 async function getReportsCount(
   reportRepository: ReportRepository,
@@ -123,6 +131,12 @@ export class ReportsController {
     @inject(RestBindings.Http.REQUEST) private req: Request,
     @repository(ReportRepository)
     public ReportRepository: ReportRepository,
+
+    @repository(DatasetRepository)
+    public datasetRepository: DatasetRepository,
+
+    @repository(ChartRepository)
+    public chartRepository: ChartRepository,
   ) {}
 
   @post('/report')
@@ -400,6 +414,7 @@ export class ReportsController {
       `route </report/duplicate/{id}> duplicating report by id ${id}`,
     );
     const fReport = await this.ReportRepository.findById(id);
+    // Duplicate Report
     return this.ReportRepository.create({
       name: `${fReport.name} (Copy)`,
       showHeader: fReport.showHeader,
