@@ -23,6 +23,7 @@ import {
   DatasetRepository,
   ReportRepository,
 } from '../repositories';
+import {deleteIntercomUser} from '../utils/intercom';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -189,11 +190,16 @@ export class UserController {
     try {
       const userId = _.get(this.req, 'user.sub');
       if (userId) {
+        const response = await deleteIntercomUser(userId);
+        logger.info(
+          `route <users/delete-account> -  User account deleted: ${response.data}`,
+        );
         await UserProfile.deleteUser(userId);
 
         await this.datasetRepository.deleteAll({owner: userId});
         await this.chartRepository.deleteAll({owner: userId});
         await this.reportRepository.deleteAll({owner: userId});
+
         return {message: 'success'};
       } else {
         return {error: 'User not found'};
