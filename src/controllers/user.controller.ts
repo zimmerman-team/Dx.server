@@ -23,7 +23,7 @@ import {
   DatasetRepository,
   ReportRepository,
 } from '../repositories';
-import {deleteIntercomUser} from '../utils/intercom';
+import {deleteIntercomUser, sendContactForm} from '../utils/intercom';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -191,6 +191,9 @@ export class UserController {
       const userId = _.get(this.req, 'user.sub');
       if (userId) {
         const response = await deleteIntercomUser(userId);
+        if (response.error) {
+          return response;
+        }
         logger.info(
           `route <users/delete-account> -  User account deleted: ${response.data}`,
         );
@@ -408,5 +411,52 @@ export class UserController {
       createdDate: fReport.createdDate,
       owner: userId,
     });
+  }
+
+  @post('/users/send-contact-form-to-intercom')
+  @response(200)
+  async sendContactFormToIntercom(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {},
+        },
+      },
+    })
+    formDetails: {
+      email: string;
+      firstName?: string;
+      lastName?: string;
+      company?: string;
+      message: string;
+    },
+  ): Promise<{message: string} | {error: string}> {
+    try {
+      const userData = {
+        email: formDetails.email,
+        name: formDetails.firstName + ' ' + formDetails.lastName,
+      };
+      const response = await sendContactForm(
+        userData,
+        formDetails.message,
+        formDetails.company,
+      );
+      if (response.error) {
+        return response;
+      }
+      logger.info(
+        `route <users/send-contact-form-to-intercom> -  Contact form sent: ${JSON.stringify(
+          response.data,
+        )}`,
+      );
+      return {
+        message: `Sent! The team will reply as soon as they can You'll get replies here and to ${userData.email}.`,
+      };
+    } catch (error) {
+      logger.error(
+        `route <users/send-contact-form-to-intercom> -  Error sending contact form: ${error}`,
+      );
+      return {error: 'Error sending contact form'};
+    }
   }
 }
