@@ -209,7 +209,61 @@ export class ChartsController {
   /* get chart dataset sample data */
   @get('/chart/sample-data/{datasetId}')
   @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async sampleData(@param.path.string('datasetId') datasetId: string) {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const orgMembers = await getUsersOrganizationMembers(userId);
+    const dataset = await this.datasetRepository.findById(datasetId);
+    if (
+      !dataset.public &&
+      orgMembers
+        .map((o: any) => o.user_id)
+        .indexOf(_.get(dataset, 'owner', '')) === -1 &&
+      _.get(dataset, 'owner', '') !== userId
+    ) {
+      return {error: 'Unauthorized'};
+    }
+
+    let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+    if (process.env.ENV_TYPE !== 'prod')
+      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+    logger.info(
+      `route </chart/sample-data/{datasetId}> Fetching sample data for dataset ${datasetId}`,
+    );
+    return axios
+      .get(`http://${host}:4004/sample-data/${datasetId}`)
+      .then(res => {
+        logger.info(
+          `route </chart/sample-data/{datasetId}> Sample data fetched for dataset ${datasetId}`,
+        );
+        return {
+          count: _.get(res, 'data.result.count', []),
+          sample: _.get(res, 'data.result.sample', []),
+          dataTypes: _.get(res, 'data.result.dataTypes', []),
+          filterOptionGroups: _.get(res, 'data.result.filterOptionGroups', []),
+          stats: _.get(res, 'data.result.stats', []),
+        };
+      })
+      .catch(e => {
+        console.log(e);
+        logger.error(
+          `route </chart/sample-data/{datasetId}> Error fetching sample data for dataset ${datasetId}; ${e.response.data.result}`,
+        );
+        return {
+          data: [],
+          error: e.response.data.result,
+        };
+      });
+  }
+
+  /* get chart dataset sample data */
+  @get('/chart/sample-data/public/{datasetId}')
+  @response(200)
+  async sampleDataPublic(@param.path.string('datasetId') datasetId: string) {
+    const dataset = await this.datasetRepository.findById(datasetId);
+    if (!dataset.public && dataset.owner !== 'anonymous') {
+      return {error: 'Unauthorized'};
+    }
     let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
     if (process.env.ENV_TYPE !== 'prod')
       host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
@@ -420,7 +474,7 @@ export class ChartsController {
       return chart;
     } else {
       logger.error(`route</chart/{id}> Unauthorized access to chart- ${id}`);
-      return {name: '', error: 'Unauthorized'};
+      return {name: chart.name, error: 'Unauthorized'};
     }
   }
 
@@ -446,7 +500,7 @@ export class ChartsController {
       logger.error(
         `route</chart/public/{id}> Unauthorized access to public chart- ${id}`,
       );
-      return {name: '', error: 'Unauthorized'};
+      return {name: chart.name, error: 'Unauthorized'};
     }
   }
 

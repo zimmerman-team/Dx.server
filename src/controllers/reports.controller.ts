@@ -281,7 +281,7 @@ export class ReportsController {
       return report;
     }
     logger.info(`route </report/{id}> unauthorized`);
-    return {error: 'Unauthorized'};
+    return {error: 'Unauthorized', name: report.name};
   }
 
   @get('/report/public/{id}')
@@ -307,7 +307,7 @@ export class ReportsController {
       return report;
     } else {
       logger.info(`route </report/public/{id}> unauthorized`);
-      return {error: 'Unauthorized'};
+      return {error: 'Unauthorized', name: report.name};
     }
   }
 

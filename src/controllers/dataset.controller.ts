@@ -233,9 +233,22 @@ export class DatasetController {
     @param.path.string('id') id: string,
     @param.filter(Dataset, {exclude: 'where'})
     filter?: FilterExcludingWhere<Dataset>,
-  ): Promise<Dataset> {
+  ): Promise<Dataset | {error: string}> {
     logger.info(`route </datasets/{id}> -  get dataset by id: ${id}`);
-    return this.datasetRepository.findById(id, filter);
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const orgMembers = await getUsersOrganizationMembers(userId);
+    const dataset = await this.datasetRepository.findById(id, filter);
+    if (
+      dataset.public ||
+      orgMembers
+        .map((o: any) => o.user_id)
+        .indexOf(_.get(dataset, 'owner', '')) !== -1 ||
+      _.get(dataset, 'owner', '') === userId
+    ) {
+      return dataset;
+    }
+    logger.info(`route </datasets/{id}> unauthorized`);
+    return {name: dataset.name, error: 'Unauthorized'};
   }
 
   @get('/datasets/public/{id}')
@@ -251,9 +264,16 @@ export class DatasetController {
     @param.path.string('id') id: string,
     @param.filter(Dataset, {exclude: 'where'})
     filter?: FilterExcludingWhere<Dataset>,
-  ): Promise<Dataset> {
+  ): Promise<Dataset | {error: string}> {
     logger.info(`route </datasets/{id}> -  get dataset by id: ${id}`);
-    return this.datasetRepository.findById(id, filter);
+    const dataset = await this.datasetRepository.findById(id, filter);
+    if (dataset.public || dataset.owner === 'anonymous') {
+      logger.info(`route </datasets/public/{id}> dataset found`);
+      return dataset;
+    } else {
+      logger.info(`route </datasets/public/{id}> unauthorized`);
+      return {name: dataset.name, error: 'Unauthorized'};
+    }
   }
 
   @get('/datasets/{id}/data')
@@ -265,6 +285,7 @@ export class DatasetController {
       },
     },
   })
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async datasetContent(
     @param.path.string('id') id: string,
     @param.query.string('page') page: string,
@@ -273,6 +294,62 @@ export class DatasetController {
     logger.info(
       `route </datasets/{id}/data> -  get dataset content by id: ${id}`,
     );
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const orgMembers = await getUsersOrganizationMembers(userId);
+    const dataset = await this.datasetRepository.findById(id);
+    if (
+      !dataset.public &&
+      orgMembers
+        .map((o: any) => o.user_id)
+        .indexOf(_.get(dataset, 'owner', '')) === -1 &&
+      _.get(dataset, 'owner', '') !== userId
+    ) {
+      return {error: 'Unauthorized'};
+    }
+
+    return axios
+      .get(
+        `http://${host}:4004/dataset/${id}?page=${page}&page_size=${pageSize}`,
+      )
+      .then(res => {
+        logger.info(
+          `route </datasets/{id}/data> Data fetched for dataset ${id}`,
+        );
+        return res.data;
+      })
+      .catch(error => {
+        console.log(error);
+        logger.error(
+          `route </datasets/{id}/data> Error fetching data for dataset ${id}; ${error}`,
+        );
+        return {
+          data: [],
+          error,
+        };
+      });
+  }
+
+  @get('/datasets/public/{id}/data')
+  @response(200, {
+    description: 'Dataset content',
+    content: {
+      'application/json': {
+        schema: [],
+      },
+    },
+  })
+  async datasetContentPublic(
+    @param.path.string('id') id: string,
+    @param.query.string('page') page: string,
+    @param.query.string('pageSize') pageSize: string,
+  ): Promise<any> {
+    logger.info(
+      `route </datasets/{id}/data> -  get dataset content by id: ${id}`,
+    );
+    const dataset = await this.datasetRepository.findById(id);
+    if (!dataset.public && dataset.owner !== 'anonymous') {
+      return {error: 'Unauthorized'};
+    }
     return axios
       .get(
         `http://${host}:4004/dataset/${id}?page=${page}&page_size=${pageSize}`,
@@ -342,10 +419,23 @@ export class DatasetController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async getChartsReportsCount(
     @param.path.string('id') id: string,
-  ): Promise<{chartsCount: number; reportsCount: number}> {
+  ): Promise<{chartsCount: number; reportsCount: number} | {error: string}> {
     logger.info(
       `route </datasets/{id}/charts-reports/count> -  get charts and reports count by dataset id: ${id}`,
     );
+
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const orgMembers = await getUsersOrganizationMembers(userId);
+    const dataset = await this.datasetRepository.findById(id);
+    if (
+      !dataset.public &&
+      orgMembers
+        .map((o: any) => o.user_id)
+        .indexOf(_.get(dataset, 'owner', '')) === -1 &&
+      _.get(dataset, 'owner', '') !== userId
+    ) {
+      return {error: 'Unauthorized'};
+    }
 
     const chartIds = (
       await this.chartRepository.find({where: {datasetId: id}})
