@@ -50,7 +50,7 @@ async function getChartsCount(
   logger.info(`route </charts/count> Fetching chart count for owner- ${owner}`);
   return chartRepository.count({
     ...where,
-    or: [{owner: owner}, {public: true}],
+    or: [{owner: owner}, {public: true}, {baseline: true}],
   });
 }
 
@@ -85,7 +85,7 @@ async function getCharts(
     ...filter,
     where: {
       ...filter?.where,
-      or: [{owner: owner}, {public: true}],
+      or: [{owner: owner}, {public: true}, {baseline: true}],
     },
     fields: [
       'id',
@@ -114,6 +114,7 @@ async function renderChart(
     if (
       id !== 'new' &&
       !_.get(chartData, 'public') &&
+      !_.get(chartData, 'baseline') &&
       orgMembers
         .map((m: any) => m.user_id)
         .indexOf(_.get(chartData, 'owner', '')) === -1 &&
@@ -216,6 +217,7 @@ export class ChartsController {
     const dataset = await this.datasetRepository.findById(datasetId);
     if (
       !dataset.public &&
+      !dataset.baseline &&
       orgMembers
         .map((o: any) => o.user_id)
         .indexOf(_.get(dataset, 'owner', '')) === -1 &&
@@ -261,7 +263,7 @@ export class ChartsController {
   @response(200)
   async sampleDataPublic(@param.path.string('datasetId') datasetId: string) {
     const dataset = await this.datasetRepository.findById(datasetId);
-    if (!dataset.public && dataset.owner !== 'anonymous') {
+    if (!dataset.public && !dataset.baseline && dataset.owner !== 'anonymous') {
       return {error: 'Unauthorized'};
     }
     let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
@@ -465,6 +467,7 @@ export class ChartsController {
     const chart = await this.chartRepository.findById(id, filter);
     if (
       chart.public ||
+      chart.baseline ||
       orgMembers
         .map((o: any) => o.user_id)
         .indexOf(_.get(chart, 'owner', '')) !== -1 ||
@@ -493,7 +496,7 @@ export class ChartsController {
     filter?: FilterExcludingWhere<Chart>,
   ): Promise<Chart | {name: string; error: string}> {
     const chart = await this.chartRepository.findById(id, filter);
-    if (chart.public || chart.owner === 'anonymous') {
+    if (chart.public || chart.baseline || chart.owner === 'anonymous') {
       logger.info(`route</chart/public/{id}> Fetching public chart- ${id}`);
       return chart;
     } else {
@@ -647,6 +650,7 @@ export class ChartsController {
     return this.chartRepository.create({
       name: `${fChart.name} (Copy)`,
       public: false,
+      baseline: false,
       vizType: fChart.vizType,
       datasetId: fChart.datasetId,
       mapping: fChart.mapping,

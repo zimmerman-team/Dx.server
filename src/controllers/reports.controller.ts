@@ -51,7 +51,7 @@ async function getReportsCount(
   }
   return reportRepository.count({
     ...where,
-    or: [{owner: owner}, {public: true}],
+    or: [{owner: owner}, {public: true}, {baseline: true}],
   });
 }
 
@@ -86,7 +86,7 @@ async function getReports(
     ...filter,
     where: {
       ...filter?.where,
-      or: [{owner: owner}, {public: true}],
+      or: [{owner: owner}, {public: true}, {baseline: true}],
     },
     fields: [
       'id',
@@ -112,6 +112,7 @@ async function renderReport(
   if (
     !report ||
     (!report.public &&
+      !report.baseline &&
       orgMembers
         .map((m: any) => m.user_id)
         .indexOf(_.get(report, 'owner', '')) === -1 &&
@@ -273,6 +274,7 @@ export class ReportsController {
     const report = await this.ReportRepository.findById(id, filter);
     if (
       report.public ||
+      report.baseline ||
       orgMembers
         .map((o: any) => o.user_id)
         .indexOf(_.get(report, 'owner', '')) !== -1 ||
@@ -302,7 +304,7 @@ export class ReportsController {
       `route </report/public/{id}> getting public report by id ${id}`,
     );
     const report = await this.ReportRepository.findById(id, filter);
-    if (report.public || report.owner === 'anonymous') {
+    if (report.public || report.baseline || report.owner === 'anonymous') {
       logger.info(`route </report/public/{id}> report found`);
       return report;
     } else {
@@ -422,6 +424,7 @@ export class ReportsController {
       subTitle: fReport.subTitle,
       rows: fReport.rows,
       public: false,
+      baseline: false,
       backgroundColor: fReport.backgroundColor,
       titleColor: fReport.titleColor,
       descriptionColor: fReport.descriptionColor,

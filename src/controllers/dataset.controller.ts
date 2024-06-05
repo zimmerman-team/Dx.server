@@ -109,7 +109,7 @@ export class DatasetController {
     }
     return this.datasetRepository.count({
       ...where,
-      or: [{owner: userId}, {public: true}],
+      or: [{owner: userId}, {public: true}, {baseline: true}],
     });
   }
 
@@ -124,7 +124,7 @@ export class DatasetController {
     logger.info(`route </datasets/count/public> -  get public datasets count`);
     return this.datasetRepository.count({
       ...where,
-      or: [{public: true}, {owner: 'anonymous'}],
+      or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
     });
   }
 
@@ -168,7 +168,7 @@ export class DatasetController {
       ...filter,
       where: {
         ...filter?.where,
-        or: [{owner: userId}, {public: true}],
+        or: [{owner: userId}, {public: true}, {baseline: true}],
       },
     });
   }
@@ -193,7 +193,7 @@ export class DatasetController {
       ...filter,
       where: {
         ...filter?.where,
-        or: [{public: true}, {owner: 'anonymous'}],
+        or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
       },
     });
   }
@@ -240,6 +240,7 @@ export class DatasetController {
     const dataset = await this.datasetRepository.findById(id, filter);
     if (
       dataset.public ||
+      dataset.baseline ||
       orgMembers
         .map((o: any) => o.user_id)
         .indexOf(_.get(dataset, 'owner', '')) !== -1 ||
@@ -267,7 +268,7 @@ export class DatasetController {
   ): Promise<Dataset | {error: string}> {
     logger.info(`route </datasets/{id}> -  get dataset by id: ${id}`);
     const dataset = await this.datasetRepository.findById(id, filter);
-    if (dataset.public || dataset.owner === 'anonymous') {
+    if (dataset.public || dataset.baseline || dataset.owner === 'anonymous') {
       logger.info(`route </datasets/public/{id}> dataset found`);
       return dataset;
     } else {
@@ -299,6 +300,7 @@ export class DatasetController {
     const dataset = await this.datasetRepository.findById(id);
     if (
       !dataset.public &&
+      !dataset.baseline &&
       orgMembers
         .map((o: any) => o.user_id)
         .indexOf(_.get(dataset, 'owner', '')) === -1 &&
@@ -347,7 +349,7 @@ export class DatasetController {
       `route </datasets/{id}/data> -  get dataset content by id: ${id}`,
     );
     const dataset = await this.datasetRepository.findById(id);
-    if (!dataset.public && dataset.owner !== 'anonymous') {
+    if (!dataset.public && !dataset.baseline && dataset.owner !== 'anonymous') {
       return {error: 'Unauthorized'};
     }
     return axios
@@ -429,6 +431,7 @@ export class DatasetController {
     const dataset = await this.datasetRepository.findById(id);
     if (
       !dataset.public &&
+      !dataset.baseline &&
       orgMembers
         .map((o: any) => o.user_id)
         .indexOf(_.get(dataset, 'owner', '')) === -1 &&
@@ -507,6 +510,7 @@ export class DatasetController {
     const newDatasetPromise = this.datasetRepository.create({
       name: `${fDataset.name} (Copy)`,
       public: false,
+      baseline: false,
       category: fDataset.category,
       description: fDataset.description,
       source: fDataset.source,
