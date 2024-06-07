@@ -388,8 +388,13 @@ export class DatasetController {
       },
     })
     dataset: Dataset,
-  ): Promise<void> {
+  ): Promise<void | {error: string}> {
     logger.info(`route </datasets/{id}> -  update dataset by id: ${id}`);
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbDataset = await this.datasetRepository.findById(id);
+    if (dbDataset.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
     await this.datasetRepository.updateById(id, {
       ...dataset,
       updatedDate: new Date().toISOString(),
@@ -404,7 +409,12 @@ export class DatasetController {
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() dataset: Dataset,
-  ): Promise<void> {
+  ): Promise<void | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbDataset = await this.datasetRepository.findById(id);
+    if (dbDataset.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
     await this.datasetRepository.replaceById(id, dataset);
     logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }
@@ -457,7 +467,14 @@ export class DatasetController {
     description: 'Dataset DELETE success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
+  async deleteById(
+    @param.path.string('id') id: string,
+  ): Promise<void | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbDataset = await this.datasetRepository.findById(id);
+    if (dbDataset.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
     this.datasetRepository.findById(id).then(() => {
       // Trigger the dataset removal through the backend, cleaning up SSR and the backend
       let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';

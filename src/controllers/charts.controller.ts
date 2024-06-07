@@ -598,7 +598,13 @@ export class ChartsController {
       },
     })
     chart: Chart,
-  ): Promise<Chart> {
+  ): Promise<Chart | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbChart = await this.chartRepository.findById(id);
+    if (dbChart.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
+
     await this.chartRepository.updateById(id, {
       ...chart,
       updatedDate: new Date().toISOString(),
@@ -616,7 +622,12 @@ export class ChartsController {
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() chart: Chart,
-  ): Promise<void> {
+  ): Promise<void | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbChart = await this.chartRepository.findById(id);
+    if (dbChart.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
     logger.info(`route</chart/{id}> Replacing chart- ${id}`);
     await this.chartRepository.replaceById(id, chart);
   }
@@ -627,7 +638,14 @@ export class ChartsController {
     description: 'Chart DELETE success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
+  async deleteById(
+    @param.path.string('id') id: string,
+  ): Promise<void | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbChart = await this.chartRepository.findById(id);
+    if (dbChart.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
     logger.info(`route</chart/{id}> Deleting chart- ${id}`);
     await this.chartRepository.deleteById(id);
   }

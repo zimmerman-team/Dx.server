@@ -370,8 +370,12 @@ export class ReportsController {
       },
     })
     report: Report,
-  ): Promise<void> {
+  ): Promise<void | {error: string}> {
     logger.info(`route </report/{id}> updating report by id ${id}`);
+    const dBreport = await this.ReportRepository.findById(id);
+    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+      return {error: 'Unauthorized'};
+    }
     await this.ReportRepository.updateById(id, {
       ...report,
       updatedDate: new Date().toISOString(),
@@ -386,7 +390,12 @@ export class ReportsController {
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() Report: Report,
-  ): Promise<void> {
+  ): Promise<void | {error: string}> {
+    logger.info(`route </report/{id}> updating report by id ${id}`);
+    const dBreport = await this.ReportRepository.findById(id);
+    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+      return {error: 'Unauthorized'};
+    }
     logger.info(`route </report/{id}> replacing report by id ${id}`);
     await this.ReportRepository.replaceById(id, Report);
   }
@@ -396,8 +405,15 @@ export class ReportsController {
     description: 'Report DELETE success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
+  async deleteById(
+    @param.path.string('id') id: string,
+  ): Promise<void | {error: string}> {
     logger.info(`route </report/{id}> deleting report by id ${id}`);
+    logger.info(`route </report/{id}> updating report by id ${id}`);
+    const dBreport = await this.ReportRepository.findById(id);
+    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+      return {error: 'Unauthorized'};
+    }
     await this.ReportRepository.deleteById(id);
   }
 
