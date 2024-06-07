@@ -6,3 +6,13 @@
 import {RequestHandler} from 'express-serve-static-core';
 
 export type FileUploadHandler = RequestHandler;
+
+export interface IntercomUser {
+  email: string;
+  external_id?: string;
+  name?: string;
+  role?: 'lead' | 'user';
+  custom_attributes?: {
+    [key: string]: any;
+  };
+}
