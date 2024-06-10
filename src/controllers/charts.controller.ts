@@ -50,7 +50,7 @@ async function getChartsCount(
   logger.info(`route </charts/count> Fetching chart count for owner- ${owner}`);
   return chartRepository.count({
     ...where,
-    or: [{owner: owner}, {public: true}],
+    or: [{owner: owner}, {public: true}, {baseline: true}],
   });
 }
 
@@ -85,7 +85,7 @@ async function getCharts(
     ...filter,
     where: {
       ...filter?.where,
-      or: [{owner: owner}, {public: true}],
+      or: [{owner: owner}, {public: true}, {baseline: true}],
     },
     fields: [
       'id',
@@ -114,6 +114,7 @@ async function renderChart(
     if (
       id !== 'new' &&
       !_.get(chartData, 'public') &&
+      !_.get(chartData, 'baseline') &&
       orgMembers
         .map((m: any) => m.user_id)
         .indexOf(_.get(chartData, 'owner', '')) === -1 &&
@@ -209,7 +210,62 @@ export class ChartsController {
   /* get chart dataset sample data */
   @get('/chart/sample-data/{datasetId}')
   @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async sampleData(@param.path.string('datasetId') datasetId: string) {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const orgMembers = await getUsersOrganizationMembers(userId);
+    const dataset = await this.datasetRepository.findById(datasetId);
+    if (
+      !dataset.public &&
+      !dataset.baseline &&
+      orgMembers
+        .map((o: any) => o.user_id)
+        .indexOf(_.get(dataset, 'owner', '')) === -1 &&
+      _.get(dataset, 'owner', '') !== userId
+    ) {
+      return {error: 'Unauthorized'};
+    }
+
+    let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+    if (process.env.ENV_TYPE !== 'prod')
+      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+    logger.info(
+      `route </chart/sample-data/{datasetId}> Fetching sample data for dataset ${datasetId}`,
+    );
+    return axios
+      .get(`http://${host}:4004/sample-data/${datasetId}`)
+      .then(res => {
+        logger.info(
+          `route </chart/sample-data/{datasetId}> Sample data fetched for dataset ${datasetId}`,
+        );
+        return {
+          count: _.get(res, 'data.result.count', []),
+          sample: _.get(res, 'data.result.sample', []),
+          dataTypes: _.get(res, 'data.result.dataTypes', []),
+          filterOptionGroups: _.get(res, 'data.result.filterOptionGroups', []),
+          stats: _.get(res, 'data.result.stats', []),
+        };
+      })
+      .catch(e => {
+        console.log(e);
+        logger.error(
+          `route </chart/sample-data/{datasetId}> Error fetching sample data for dataset ${datasetId}; ${e.response.data.result}`,
+        );
+        return {
+          data: [],
+          error: e.response.data.result,
+        };
+      });
+  }
+
+  /* get chart dataset sample data */
+  @get('/chart/sample-data/public/{datasetId}')
+  @response(200)
+  async sampleDataPublic(@param.path.string('datasetId') datasetId: string) {
+    const dataset = await this.datasetRepository.findById(datasetId);
+    if (!dataset.public && !dataset.baseline && dataset.owner !== 'anonymous') {
+      return {error: 'Unauthorized'};
+    }
     let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
     if (process.env.ENV_TYPE !== 'prod')
       host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
@@ -411,6 +467,7 @@ export class ChartsController {
     const chart = await this.chartRepository.findById(id, filter);
     if (
       chart.public ||
+      chart.baseline ||
       orgMembers
         .map((o: any) => o.user_id)
         .indexOf(_.get(chart, 'owner', '')) !== -1 ||
@@ -420,7 +477,7 @@ export class ChartsController {
       return chart;
     } else {
       logger.error(`route</chart/{id}> Unauthorized access to chart- ${id}`);
-      return {name: '', error: 'Unauthorized'};
+      return {name: chart.name, error: 'Unauthorized'};
     }
   }
 
@@ -439,14 +496,14 @@ export class ChartsController {
     filter?: FilterExcludingWhere<Chart>,
   ): Promise<Chart | {name: string; error: string}> {
     const chart = await this.chartRepository.findById(id, filter);
-    if (chart.public || chart.owner === 'anonymous') {
+    if (chart.public || chart.baseline || chart.owner === 'anonymous') {
       logger.info(`route</chart/public/{id}> Fetching public chart- ${id}`);
       return chart;
     } else {
       logger.error(
         `route</chart/public/{id}> Unauthorized access to public chart- ${id}`,
       );
-      return {name: '', error: 'Unauthorized'};
+      return {name: chart.name, error: 'Unauthorized'};
     }
   }
 
@@ -541,7 +598,13 @@ export class ChartsController {
       },
     })
     chart: Chart,
-  ): Promise<Chart> {
+  ): Promise<Chart | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbChart = await this.chartRepository.findById(id);
+    if (dbChart.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
+
     await this.chartRepository.updateById(id, {
       ...chart,
       updatedDate: new Date().toISOString(),
@@ -559,7 +622,12 @@ export class ChartsController {
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() chart: Chart,
-  ): Promise<void> {
+  ): Promise<void | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbChart = await this.chartRepository.findById(id);
+    if (dbChart.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
     logger.info(`route</chart/{id}> Replacing chart- ${id}`);
     await this.chartRepository.replaceById(id, chart);
   }
@@ -570,7 +638,14 @@ export class ChartsController {
     description: 'Chart DELETE success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
+  async deleteById(
+    @param.path.string('id') id: string,
+  ): Promise<void | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const dbChart = await this.chartRepository.findById(id);
+    if (dbChart.owner !== userId) {
+      return {error: 'Unauthorized'};
+    }
     logger.info(`route</chart/{id}> Deleting chart- ${id}`);
     await this.chartRepository.deleteById(id);
   }
@@ -593,6 +668,7 @@ export class ChartsController {
     return this.chartRepository.create({
       name: `${fChart.name} (Copy)`,
       public: false,
+      baseline: false,
       vizType: fChart.vizType,
       datasetId: fChart.datasetId,
       mapping: fChart.mapping,

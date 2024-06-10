@@ -55,13 +55,13 @@ export class UserController {
       const chartsIds: {chart_id: string; new_chart_id: string}[] = [];
 
       const datasets = await this.datasetRepository.find({
-        where: {public: true},
+        where: {baseline: true},
       });
       const reports = await this.reportRepository.find({
-        where: {public: true},
+        where: {baseline: true},
       });
       const charts = await this.chartRepository.find({
-        where: {public: true},
+        where: {baseline: true},
       });
 
       const userChartCount = await this.chartRepository.count({
@@ -86,6 +86,7 @@ export class UserController {
             const newDataset = await this.datasetRepository.create({
               name: `${dataset.name} (Copy)`,
               public: false,
+              baseline: false,
               category: dataset.category,
               description: dataset.description,
               source: dataset.source,
@@ -123,6 +124,7 @@ export class UserController {
             const newChart = await this.chartRepository.create({
               name: `${chart.name} (Copy)`,
               public: false,
+              baseline: false,
               vizType: chart.vizType,
               datasetId:
                 datasetsIds.find(d => d.ds_name === chart.datasetId)
@@ -167,6 +169,7 @@ export class UserController {
               };
             }),
             public: false,
+            baseline: false,
             backgroundColor: report.backgroundColor,
             titleColor: report.titleColor,
             descriptionColor: report.descriptionColor,
@@ -347,6 +350,7 @@ export class UserController {
         const newDataset = await this.datasetRepository.create({
           name: `${dataset.name}`,
           public: false,
+          baseline: false,
           category: dataset.category,
           description: dataset.description,
           source: dataset.source,
@@ -386,6 +390,7 @@ export class UserController {
         const newChart = await this.chartRepository.create({
           name: `${chart.name}`,
           public: false,
+          baseline: false,
           vizType: chart.vizType,
           datasetId:
             datasetsIds.find(d => d.ds_name === chart.datasetId)?.new_ds_name ??
@@ -428,6 +433,7 @@ export class UserController {
         };
       }),
       public: false,
+      baseline: false,
       backgroundColor: fReport.backgroundColor,
       titleColor: fReport.titleColor,
       descriptionColor: fReport.descriptionColor,

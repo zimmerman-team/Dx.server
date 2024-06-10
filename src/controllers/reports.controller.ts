@@ -51,7 +51,7 @@ async function getReportsCount(
   }
   return reportRepository.count({
     ...where,
-    or: [{owner: owner}, {public: true}],
+    or: [{owner: owner}, {public: true}, {baseline: true}],
   });
 }
 
@@ -86,7 +86,7 @@ async function getReports(
     ...filter,
     where: {
       ...filter?.where,
-      or: [{owner: owner}, {public: true}],
+      or: [{owner: owner}, {public: true}, {baseline: true}],
     },
     fields: [
       'id',
@@ -112,6 +112,7 @@ async function renderReport(
   if (
     !report ||
     (!report.public &&
+      !report.baseline &&
       orgMembers
         .map((m: any) => m.user_id)
         .indexOf(_.get(report, 'owner', '')) === -1 &&
@@ -273,6 +274,7 @@ export class ReportsController {
     const report = await this.ReportRepository.findById(id, filter);
     if (
       report.public ||
+      report.baseline ||
       orgMembers
         .map((o: any) => o.user_id)
         .indexOf(_.get(report, 'owner', '')) !== -1 ||
@@ -281,7 +283,7 @@ export class ReportsController {
       return report;
     }
     logger.info(`route </report/{id}> unauthorized`);
-    return {error: 'Unauthorized'};
+    return {error: 'Unauthorized', name: report.name};
   }
 
   @get('/report/public/{id}')
@@ -302,12 +304,12 @@ export class ReportsController {
       `route </report/public/{id}> getting public report by id ${id}`,
     );
     const report = await this.ReportRepository.findById(id, filter);
-    if (report.public || report.owner === 'anonymous') {
+    if (report.public || report.baseline || report.owner === 'anonymous') {
       logger.info(`route </report/public/{id}> report found`);
       return report;
     } else {
       logger.info(`route </report/public/{id}> unauthorized`);
-      return {error: 'Unauthorized'};
+      return {error: 'Unauthorized', name: report.name};
     }
   }
 
@@ -368,8 +370,12 @@ export class ReportsController {
       },
     })
     report: Report,
-  ): Promise<void> {
+  ): Promise<void | {error: string}> {
     logger.info(`route </report/{id}> updating report by id ${id}`);
+    const dBreport = await this.ReportRepository.findById(id);
+    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+      return {error: 'Unauthorized'};
+    }
     await this.ReportRepository.updateById(id, {
       ...report,
       updatedDate: new Date().toISOString(),
@@ -384,7 +390,12 @@ export class ReportsController {
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() Report: Report,
-  ): Promise<void> {
+  ): Promise<void | {error: string}> {
+    logger.info(`route </report/{id}> updating report by id ${id}`);
+    const dBreport = await this.ReportRepository.findById(id);
+    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+      return {error: 'Unauthorized'};
+    }
     logger.info(`route </report/{id}> replacing report by id ${id}`);
     await this.ReportRepository.replaceById(id, Report);
   }
@@ -394,8 +405,15 @@ export class ReportsController {
     description: 'Report DELETE success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
+  async deleteById(
+    @param.path.string('id') id: string,
+  ): Promise<void | {error: string}> {
     logger.info(`route </report/{id}> deleting report by id ${id}`);
+    logger.info(`route </report/{id}> updating report by id ${id}`);
+    const dBreport = await this.ReportRepository.findById(id);
+    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+      return {error: 'Unauthorized'};
+    }
     await this.ReportRepository.deleteById(id);
   }
 
@@ -422,6 +440,7 @@ export class ReportsController {
       subTitle: fReport.subTitle,
       rows: fReport.rows,
       public: false,
+      baseline: false,
       backgroundColor: fReport.backgroundColor,
       titleColor: fReport.titleColor,
       descriptionColor: fReport.descriptionColor,

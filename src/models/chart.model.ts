@@ -25,6 +25,12 @@ export class Chart extends Entity {
     type: 'boolean',
     default: false,
   })
+  baseline: boolean;
+
+  @property({
+    type: 'boolean',
+    default: false,
+  })
   isMappingValid: boolean;
 
   @property({

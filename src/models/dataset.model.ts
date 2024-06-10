@@ -28,6 +28,12 @@ export class Dataset extends Entity {
   public: boolean;
 
   @property({
+    type: 'boolean',
+    default: false,
+  })
+  baseline: boolean;
+
+  @property({
     type: 'string',
     required: true,
   })
