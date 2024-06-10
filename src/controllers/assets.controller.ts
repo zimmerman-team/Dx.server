@@ -167,7 +167,7 @@ export class AssetController {
       offset,
       where: {
         ...filter?.where,
-        or: [{public: true}, {owner: 'anonymous'}],
+        or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
       },
       fields: [
         'id',
@@ -187,7 +187,7 @@ export class AssetController {
       offset,
       where: {
         ...filter?.where,
-        or: [{public: true}, {owner: 'anonymous'}],
+        or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
       },
     });
     const reports = await this.reportRepository.find({
@@ -196,7 +196,7 @@ export class AssetController {
       offset,
       where: {
         ...filter?.where,
-        or: [{public: true}, {owner: 'anonymous'}],
+        or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
       },
       fields: [
         'id',
@@ -285,15 +285,15 @@ export class AssetController {
     logger.info(`route </assets/count/public> -  get datasets count`);
     const datasetsCount = await this.datasetRepository.count({
       ...where,
-      or: [{public: true}, {owner: 'anonymous'}],
+      or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
     });
     const chartsCount = await this.chartRepository.count({
       ...where,
-      or: [{public: true}, {owner: 'anonymous'}],
+      or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
     });
     const reportsCount = await this.reportRepository.count({
       ...where,
-      or: [{public: true}, {owner: 'anonymous'}],
+      or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
     });
 
     return {
