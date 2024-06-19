@@ -16,6 +16,7 @@ import {
   AuthenticationComponent,
   registerAuthenticationStrategy,
 } from '@loopback/authentication';
+import {createClient} from 'redis';
 import {
   JWTAuthenticationStrategy,
   JWTServiceProvider,
@@ -24,6 +25,18 @@ import {
 import {FILE_UPLOAD_SERVICE, STORAGE_DIRECTORY} from './keys';
 import {MySequence} from './sequence';
 import {mimeTypeToFileExtension} from './utils/mimeTypeToFileExtension';
+
+export let redisClient: ReturnType<typeof createClient>;
+
+(async () => {
+  redisClient = createClient({
+    url: process.env.REDIS_URL,
+  });
+
+  redisClient.on('error', error => console.error(`RedisError : ${error}`));
+
+  await redisClient.connect();
+})();
 
 export {ApplicationConfig};
 
