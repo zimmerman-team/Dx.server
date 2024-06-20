@@ -30,7 +30,7 @@ export let redisClient: ReturnType<typeof createClient>;
 
 (async () => {
   redisClient = createClient({
-    url: process.env.REDIS_URL,
+    url: `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:6379`,
   });
 
   redisClient.on('error', error => console.error(`RedisError : ${error}`));
