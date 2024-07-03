@@ -1,0 +1,7 @@
+{
+  "rows": "$top=",
+  "withcount": "$count=true",
+  "countField": "@odata.count",
+  "dataPath": "value",
+  "select": ""
+}
