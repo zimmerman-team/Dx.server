@@ -151,8 +151,7 @@ export class UserController {
             name: `${report.name} (Copy)`,
             showHeader: report.showHeader,
             title: report.title,
-            description: report.description,
-            heading: report.heading,
+            subTitle: report.subTitle,
             rows: report.rows.map(row => {
               // Update the old chartIds to the new ones
               return {
@@ -417,8 +416,7 @@ export class UserController {
       name: `${fReport.name} (Copy)`,
       showHeader: fReport.showHeader,
       title: fReport.title,
-      description: fReport.description,
-      heading: fReport.heading,
+      subTitle: fReport.subTitle,
       rows: fReport.rows.map(row => {
         // Update the old chartIds to the new ones
         return {
