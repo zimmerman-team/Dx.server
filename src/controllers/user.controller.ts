@@ -193,13 +193,17 @@ export class UserController {
     try {
       const userId = _.get(this.req, 'user.sub');
       if (userId) {
-        const response = await deleteIntercomUser(userId);
-        if (response.error) {
-          return response;
+        if (process.env.ENV_TYPE === 'prod') {
+          // Intercom is only available in production
+          const response = await deleteIntercomUser(userId);
+          if (response.error) {
+            return response;
+          }
+          logger.info(
+            `route <users/delete-account> - Intercom User account deleted: ${response.data}`,
+          );
         }
-        logger.info(
-          `route <users/delete-account> -  User account deleted: ${response.data}`,
-        );
+
         await UserProfile.deleteUser(userId);
 
         await this.datasetRepository.deleteAll({owner: userId});
@@ -462,25 +466,28 @@ export class UserController {
     },
   ): Promise<{message: string} | {error: string}> {
     try {
-      const userData = {
-        email: formDetails.email,
-        name: formDetails.firstName + ' ' + formDetails.lastName,
-      };
-      const response = await sendContactForm(
-        userData,
-        formDetails.message,
-        formDetails.company,
-      );
-      if (response.error) {
-        return response;
+      if (process.env.ENV_TYPE === 'prod') {
+        // Intercom is only available in production
+        const userData = {
+          email: formDetails.email,
+          name: formDetails.firstName + ' ' + formDetails.lastName,
+        };
+        const response = await sendContactForm(
+          userData,
+          formDetails.message,
+          formDetails.company,
+        );
+        if (response.error) {
+          return response;
+        }
+        logger.info(
+          `route <users/send-contact-form-to-intercom> -  Contact form sent: ${JSON.stringify(
+            response.data,
+          )}`,
+        );
       }
-      logger.info(
-        `route <users/send-contact-form-to-intercom> -  Contact form sent: ${JSON.stringify(
-          response.data,
-        )}`,
-      );
       return {
-        message: `Sent! The team will reply as soon as they can You'll get replies here and to ${userData.email}.`,
+        message: `Sent! The team will reply as soon as they can You'll get replies here and to ${formDetails.email}.`,
       };
     } catch (error) {
       logger.error(
