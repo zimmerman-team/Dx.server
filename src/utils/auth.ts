@@ -6,59 +6,6 @@ import queryString from 'querystring';
 import {redisClient} from '../application';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 
-const orgMembersQueue = new Queue(
-  'orgMembers',
-  `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:6379`,
-);
-const userOrgQueue = new Queue(
-  'userOrg',
-  `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:6379`,
-);
-
-orgMembersQueue.process(async (job, done) => {
-  const {organizationId} = job.data;
-  AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
-    .then(async (orgUsers: any) => {
-      await redisClient.set(
-        `${organizationId}-org-members`,
-        JSON.stringify(orgUsers),
-        {
-          EX: 60 * 60 * 24,
-        }, // 24 hours
-      );
-      logger.info(`queue <orgMembersQueue> org members cached`);
-      done();
-    })
-    .catch((e: any) => {
-      logger.error(`queue <orgMembersQueue> ${JSON.stringify(e)}`);
-      done(e);
-    });
-});
-
-userOrgQueue.process(async (job, done) => {
-  const {userId} = job.data;
-  AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`)
-    .then(async (orgs: any) => {
-      let orgId = 'none';
-      if (isArray(orgs) && orgs.length) {
-        orgId = orgs[0].id;
-      }
-      await redisClient.set(
-        `${userId}-organization-id`,
-        orgId,
-        {
-          EX: 60 * 60 * 24,
-        }, // 24 hours
-      );
-      logger.info(`queue <userOrgQueue> user orgid cached`);
-      done();
-    })
-    .catch((e: any) => {
-      logger.error(`queue <userOrgQueue> ${JSON.stringify(e)}`);
-      done(e);
-    });
-});
-
 async function getAccessToken(): Promise<string> {
   const cachedToken = mcache.get('auth0_token');
   if (cachedToken) {
@@ -105,6 +52,73 @@ export async function AUTH0_MGMT_API_CALL(
   });
 }
 
+const getUserOrganisation = async (userId: string) => {
+  try {
+    const orgs = await AUTH0_MGMT_API_CALL(
+      'GET',
+      `users/${userId}/organizations`,
+    );
+    let orgId = 'none';
+    if (isArray(orgs) && orgs.length) {
+      orgId = orgs[0].id;
+    }
+    await redisClient.set(
+      `${userId}-organization-id`,
+      orgId,
+      {
+        EX: 60 * 60 * 24,
+      }, // 5 minutes
+    );
+    return orgId;
+  } catch (e: any) {
+    logger.error(`fn <getUserOrganisation()> ${String(e)}`);
+    return 'none';
+  }
+};
+
+const getAuth0OrganizationMembers = async (organizationId: string) => {
+  try {
+    const orgUsers = await AUTH0_MGMT_API_CALL(
+      'GET',
+      `organizations/${organizationId}/members`,
+    );
+    await redisClient.set(
+      `${organizationId}-org-members`,
+      JSON.stringify(orgUsers),
+      {
+        EX: 60 * 60 * 24,
+      }, // 24 hours
+    );
+    return orgUsers;
+  } catch (e: any) {
+    logger.error(`fn <getAuth0OrganizationMembers()> ${String(e)}`);
+    return [];
+  }
+};
+
+const orgMembersQueue = new Queue(
+  'orgMembers',
+  `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:6379`,
+);
+const userOrgQueue = new Queue(
+  'userOrg',
+  `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:6379`,
+);
+
+orgMembersQueue.process(async (job, done) => {
+  const {organizationId} = job.data;
+  getAuth0OrganizationMembers(organizationId);
+  logger.info(`queue <orgMembersQueue> org members cached`);
+  done();
+});
+
+userOrgQueue.process(async (job, done) => {
+  const {userId} = job.data;
+  await getUserOrganisation(userId);
+  logger.info(`queue <userOrgQueue> user orgid cached`);
+  done();
+});
+
 export async function getOrganizationMembers(organizationId: string) {
   /*
    cache structure:
@@ -134,25 +148,10 @@ export async function getOrganizationMembers(organizationId: string) {
         }, // 5 minutes
       );
     }
-
     return cachedOrgMembers;
   }
   logger.info(`fn <getOrganizationMembers()> cachedOrgMembers expired`);
-  return AUTH0_MGMT_API_CALL('GET', `organizations/${organizationId}/members`)
-    .then(async (orgUsers: any) => {
-      await redisClient.set(
-        `${organizationId}-org-members`,
-        JSON.stringify(orgUsers),
-        {
-          EX: 60 * 60 * 24,
-        }, // 24 hours
-      );
-      return orgUsers;
-    })
-    .catch((e: any) => {
-      logger.error(`fn <getOrganizationMembers()> ${String(e)}`);
-      return [];
-    });
+  return getAuth0OrganizationMembers(organizationId);
 }
 
 export async function getUsersOrganizationMembers(userId: string) {
@@ -175,35 +174,15 @@ export async function getUsersOrganizationMembers(userId: string) {
         }, // 5 minutes
       );
     }
-
     return getOrganizationMembers(cachedUserOrganisationId);
     // TODO: Setup background job to refresh cache
   }
   logger.info(
     `fn <getUsersOrganizationMembers()> cachedUsersOrganisations expired`,
   );
-  return AUTH0_MGMT_API_CALL('GET', `users/${userId}/organizations`)
-    .then(async (orgs: any) => {
-      let orgId = 'none';
-      if (isArray(orgs) && orgs.length) {
-        orgId = orgs[0].id;
-      }
-      await redisClient.set(
-        `${userId}-organization-id`,
-        orgId,
-        {
-          EX: 60 * 60 * 24,
-        }, // 5 minutes
-      );
-
-      if (orgId === 'none') {
-        return [];
-      }
-
-      return getOrganizationMembers(orgId);
-    })
-    .catch((e: any) => {
-      logger.error(`fn <getUsersOrganizationMembers()> ${String(e)}`);
-      return [];
-    });
+  const orgId = await getUserOrganisation(userId);
+  if (orgId === 'none') {
+    return [];
+  }
+  return getOrganizationMembers(orgId);
 }
