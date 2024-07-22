@@ -10,6 +10,7 @@ import {
   barchartmultiset,
   barchartstacked,
   beeswarm,
+  bigNumber,
   boxplot,
   bubblechart,
   bumpchart,
@@ -18,6 +19,25 @@ import {
   contourPlot,
   convexHull,
   dendrogram,
+  echartsAreastack,
+  echartsAreatimeaxis,
+  echartsBarchart,
+  echartsBubblechart,
+  echartsCirclepacking,
+  echartsCirculargraph,
+  echartsForcegraph,
+  echartsGeomap,
+  echartsGraphgl,
+  echartsHeatmap,
+  echartsLinechart,
+  echartsMultisetBarchart,
+  echartsPiechart,
+  echartsRadarchart,
+  echartsSankey,
+  echartsScatterchart,
+  echartsStackedBarchart,
+  echartsSunburst,
+  echartsTreemap,
   ganttChart,
   hexagonalBinning,
   horizongraph,
@@ -34,26 +54,6 @@ import {
   violinplot,
   voronoidiagram,
   voronoitreemap,
-  echartsSankey,
-  echartsGeomap,
-  echartsTreemap,
-  echartsBarchart,
-  echartsLinechart,
-  echartsSunburst,
-  echartsPiechart,
-  echartsCirclepacking,
-  echartsForcegraph,
-  echartsCirculargraph,
-  echartsBubblechart,
-  echartsAreastack,
-  echartsHeatmap,
-  echartsRadarchart,
-  bigNumber,
-  echartsGraphgl,
-  echartsAreatimeaxis,
-  echartsScatterchart,
-  // @ts-ignore
-  // } from "@rawgraphs/rawgraphs-charts";
 } from './rawgraphs-charts/lib/index.cjs.js';
 
 import {winstonLogger} from './winston-logger.js';
@@ -108,11 +108,13 @@ const charts = {
   echartsGraphgl,
   echartsAreatimeaxis,
   echartsScatterchart,
+  echartsMultisetBarchart,
+  echartsStackedBarchart,
   bigNumber,
 };
 
 // utils
-function getDatasetFilterOptions(dataset, dataTypes,onlyKeys) {
+function getDatasetFilterOptions(dataset, dataTypes, onlyKeys) {
   const filterOptions = [];
   if (!dataset || dataset.length === 0) {
     return filterOptions;
@@ -138,15 +140,16 @@ function getDatasetFilterOptions(dataset, dataTypes,onlyKeys) {
     const name = key;
 
     if (options.length > 0) {
-    
       filterOptions.push({
         name,
         enabled: true,
         options: _.orderBy(
-          _.uniq(options).map((o)=>dataTypes[key] === 'number' ? Number(o): o).map(o => ({
-            label: o,
-            value: o,
-          })),
+          _.uniq(options)
+            .map(o => (dataTypes[key] === 'number' ? Number(o) : o))
+            .map(o => ({
+              label: o,
+              value: o,
+            })),
           'label',
           dataTypes[key] === 'number' ? 'desc' : 'asc',
         ),
@@ -194,12 +197,12 @@ function renderChart(
       subheader = item.mapping.subheader;
       unitofmeasurement = item.mapping.unitofmeasurement;
       mainKPImetric = item.mapping.mainKPImetric;
-
     }
 
     const viz = rawChart(chart, {
       data: parsed.dataset,
-      mapping: vizType === 'bigNumber' ? {metric: item.mapping.metric }: item.mapping,
+      mapping:
+        vizType === 'bigNumber' ? {metric: item.mapping.metric} : item.mapping,
       visualOptions: item.vizOptions,
       dataTypes: parsed.dataTypes,
     });
@@ -220,7 +223,10 @@ function renderChart(
     let tabItem = {
       renderedContent: '',
       appliedFilters: itemAppliedFilters || item.appliedFilters,
-      filterOptionGroups: getDatasetFilterOptions(initialParsedDataset, parsed.dataTypes),
+      filterOptionGroups: getDatasetFilterOptions(
+        initialParsedDataset,
+        parsed.dataTypes,
+      ),
       enabledFilterOptionGroups: item.enabledFilterOptionGroups,
       dataTypes: parsed.dataTypes,
       mappedData: vizData,
@@ -274,7 +280,7 @@ export async function renderChartData(id, body, chartData) {
       process.env.PARSED_DATA_FILES_PATH || `../dx.backend/parsed-data-files/`;
     const parsedData = fs.readFileSync(`${filePath}${item?.datasetId}.json`);
     parsed = JSON.parse(parsedData.toString());
-      } catch (error) {
+  } catch (error) {
     winstonLogger.error(
       `route <utils/renderchart/index.js>;fn <renderChartData()>: Error reading parsed data file: ${error}`,
     );
@@ -317,7 +323,7 @@ export async function renderChartData(id, body, chartData) {
     winstonLogger.error(
       `route <utils/renderchart/index.js>;fn <renderChartData()>: Error rendering chart: ${e}`,
     );
-      }
+  }
 }
 
 try {
