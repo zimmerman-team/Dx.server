@@ -47,7 +47,7 @@ export class Dataset extends Entity {
 
   @property({
     type: 'string',
-    required: true,
+    required: false,
   })
   sourceUrl: string;
 
