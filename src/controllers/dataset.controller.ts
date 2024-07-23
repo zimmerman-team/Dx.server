@@ -88,10 +88,19 @@ export class DatasetController {
     content: {'application/json': {schema: CountSchema}},
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async count(@param.where(Dataset) where?: Where<Dataset>): Promise<Count> {
+  async count(
+    @param.where(Dataset) where?: Where<Dataset>,
+    @param.query.boolean('userOnly') userOnly?: boolean,
+  ): Promise<Count> {
     logger.info(`route </datasets/count> -  get datasets count`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     if (userId && userId !== 'anonymous') {
+      if (userOnly) {
+        return this.datasetRepository.count({
+          ...where,
+          owner: userId,
+        });
+      }
       const orgMembers = await getUsersOrganizationMembers(userId);
       const orgMemberIds = orgMembers.map((m: any) => m.user_id);
       return this.datasetRepository.count({
@@ -142,10 +151,20 @@ export class DatasetController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
+    @param.query.boolean('userOnly') userOnly?: boolean,
   ): Promise<Dataset[]> {
     logger.info(`route </datasets> -  get datasets`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     if (userId && userId !== 'anonymous') {
+      if (userOnly) {
+        return this.datasetRepository.find({
+          ...filter,
+          where: {
+            ...filter?.where,
+            owner: userId,
+          },
+        });
+      }
       const orgMembers = await getUsersOrganizationMembers(userId);
       const orgMemberIds = orgMembers.map((m: any) => m.user_id);
       return this.datasetRepository.find({
