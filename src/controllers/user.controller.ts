@@ -24,6 +24,7 @@ import {
   ReportRepository,
 } from '../repositories';
 import {deleteIntercomUser, sendContactForm} from '../utils/intercom';
+import {getUserPlanData} from '../utils/planAccess';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -495,5 +496,21 @@ export class UserController {
       );
       return {error: 'Error sending contact form'};
     }
+  }
+
+  @get('/users/plan-data')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async fetchUserPlanData() {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const assetsCount = {
+      datasets: (await this.datasetRepository.count({owner: userId})).count,
+      charts: (await this.chartRepository.count({owner: userId})).count,
+      reports: (await this.reportRepository.count({owner: userId})).count,
+    };
+    return {
+      planData: await getUserPlanData(userId),
+      assetsCount: assetsCount,
+    };
   }
 }
