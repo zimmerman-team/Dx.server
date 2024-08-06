@@ -589,6 +589,7 @@ export class DatasetController {
     @param.query.string('source') source: string,
     @param.query.string('limit') limit: string,
     @param.query.string('offset') offset: string,
+    @param.query.string('sortBy') sortBy: string,
   ): Promise<any> {
     try {
       logger.info(
@@ -600,6 +601,7 @@ export class DatasetController {
           owner: _.get(this.req, 'user.sub', 'anonymous'),
           query: q,
           source,
+          sort_by: sortBy,
           limit: Number(limit),
           offset: Number(offset),
         },
