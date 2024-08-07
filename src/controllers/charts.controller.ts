@@ -222,7 +222,7 @@ export class ChartsController {
     return {
       data: await this.chartRepository.create(chart),
       planWarning:
-        userPlan.name === 'Enterprise'
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
           ? null
           : `(<b>${userChartsCount.count + 1}</b>/${
               userPlan.charts.noOfCharts
@@ -722,7 +722,7 @@ export class ChartsController {
     return {
       data: newChart,
       planWarning:
-        userPlan.name === 'Enterprise'
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
           ? null
           : `(<b>${userChartsCount.count + 1}</b>/${
               userPlan.charts.noOfCharts

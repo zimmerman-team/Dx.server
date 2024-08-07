@@ -98,7 +98,7 @@ export class DatasetController {
     return {
       data: await this.datasetRepository.create(dataset),
       planWarning:
-        userPlan.name === 'Enterprise'
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
           ? null
           : `(<b>${userDatasetsCount.count + 1}</b>/${
               userPlan.datasets.noOfDatasets
@@ -620,7 +620,7 @@ export class DatasetController {
     return {
       data: newDataset,
       planWarning:
-        userPlan.name === 'Enterprise'
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
           ? null
           : `(<b>${userDatasetsCount.count + 1}</b>/${
               userPlan.datasets.noOfDatasets

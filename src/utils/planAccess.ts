@@ -121,7 +121,7 @@ export const planAccessData = {
     },
   },
   beta: {
-    name: 'Enterprise',
+    name: 'Beta',
     datasets: {
       noOfDatasets: 99999999999,
       datasetsSize: 99999999999,

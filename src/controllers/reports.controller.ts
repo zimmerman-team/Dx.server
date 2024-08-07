@@ -179,7 +179,7 @@ export class ReportsController {
     return {
       data: await this.ReportRepository.create(Report),
       planWarning:
-        userPlan.name === 'Enterprise'
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
           ? null
           : `(<b>${userReportsCount.count + 1}</b>/${
               userPlan.reports.noOfReports
@@ -490,7 +490,7 @@ export class ReportsController {
     return {
       data: newReport,
       planWarning:
-        userPlan.name === 'Enterprise'
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
           ? null
           : `(<b>${userReportsCount.count + 1}</b>/${
               userPlan.reports.noOfReports
