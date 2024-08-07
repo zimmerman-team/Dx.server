@@ -205,6 +205,26 @@ export class UserController {
         }
 
         await UserProfile.deleteUser(userId);
+        const datasetIds = (
+          await this.datasetRepository.find({where: {owner: userId}})
+        ).map(d => d.id);
+
+        await axios
+          .post(`http://${host}:4004/delete-datasets`, datasetIds)
+          .then(_ => {
+            logger.info(
+              `route <users/delete-account> -  DX Backend deletion complete`,
+            );
+            console.log('DX Backend deletion complete');
+          })
+          .catch(e => {
+            console.log('DX Backend deletion failed', e);
+            logger.error(
+              `route <users/delete-account> -  DX Backend deletion failed`,
+              e.response.data.result,
+            );
+            return {error: e.response.data.result};
+          });
 
         await this.datasetRepository.deleteAll({owner: userId});
         await this.chartRepository.deleteAll({owner: userId});
