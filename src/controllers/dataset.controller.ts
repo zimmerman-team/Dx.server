@@ -641,6 +641,7 @@ export class DatasetController {
     @param.query.string('source') source: string,
     @param.query.string('limit') limit: string,
     @param.query.string('offset') offset: string,
+    @param.query.string('sortBy') sortBy: string,
   ): Promise<any> {
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const userPlan = await getUserPlanData(userId);
@@ -660,6 +661,7 @@ export class DatasetController {
           owner: _.get(this.req, 'user.sub', 'anonymous'),
           query: q,
           source,
+          sort_by: sortBy,
           limit: Number(_limit),
           offset: Number(_offset),
         },
