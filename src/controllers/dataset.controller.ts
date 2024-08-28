@@ -33,6 +33,7 @@ import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {getUsersOrganizationMembers} from '../utils/auth';
+import {getUserPlanData} from '../utils/planAccess';
 
 type FileUploadHandler = RequestHandler;
 
@@ -76,10 +77,35 @@ export class DatasetController {
       },
     })
     dataset: Dataset,
-  ): Promise<Dataset> {
-    dataset.owner = _.get(this.req, 'user.sub', 'anonymous');
+  ): Promise<
+    | {data: Dataset; planWarning: string | null}
+    | {error: string; errorType: string}
+  > {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const userPlan = await getUserPlanData(userId);
+    const userDatasetsCount = await this.datasetRepository.count({
+      owner: userId,
+    });
+    if (userDatasetsCount.count >= userPlan.datasets.noOfDatasets) {
+      return {
+        error: `You have reached the ${userPlan.datasets.noOfDatasets} dataset limit for your ${userPlan.name} Plan. Upgrade to increase.`,
+        errorType: 'planError',
+      };
+    }
+
+    dataset.owner = userId;
     logger.info(`route </datasets> -  Dataset created`);
-    return this.datasetRepository.create(dataset);
+    return {
+      data: await this.datasetRepository.create(dataset),
+      planWarning:
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
+          ? null
+          : `(<b>${userDatasetsCount.count + 1}</b>/${
+              userPlan.datasets.noOfDatasets
+            }) datasets left on the ${
+              userPlan.name
+            } plan. Upgrade to increase.`,
+    };
   }
 
   @get('/datasets/count')
@@ -537,10 +563,26 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async duplicate(@param.path.string('id') id: string): Promise<Dataset> {
+  async duplicate(
+    @param.path.string('id') id: string,
+  ): Promise<
+    | {data: Dataset; planWarning: string | null}
+    | {error: string; errorType: string}
+  > {
     logger.info(
       `route </dataset/duplicate/{id}> -  finding dataset by id: ${id}`,
     );
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const userPlan = await getUserPlanData(userId);
+    const userDatasetsCount = await this.datasetRepository.count({
+      owner: userId,
+    });
+    if (userDatasetsCount.count >= userPlan.datasets.noOfDatasets) {
+      return {
+        error: `You have reached the <b>${userPlan.datasets.noOfDatasets}</b> dataset limit for your ${userPlan.name} Plan. Upgrade to increase.`,
+        errorType: 'planError',
+      };
+    }
     const fDataset = await this.datasetRepository.findById(id);
     const newDatasetPromise = this.datasetRepository.create({
       name: `${fDataset.name} (Copy)`,
@@ -550,7 +592,7 @@ export class DatasetController {
       description: fDataset.description,
       source: fDataset.source,
       sourceUrl: fDataset.sourceUrl,
-      owner: _.get(this.req, 'user.sub', 'anonymous'),
+      owner: userId,
     });
 
     const newDataset = await newDatasetPromise;
@@ -575,7 +617,17 @@ export class DatasetController {
         return {error: e.response.data.result};
       });
 
-    return newDatasetPromise;
+    return {
+      data: newDataset,
+      planWarning:
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
+          ? null
+          : `(<b>${userDatasetsCount.count + 1}</b>/${
+              userPlan.datasets.noOfDatasets
+            }) datasets left on the ${
+              userPlan.name
+            } plan. Upgrade to increase.`,
+    };
   }
 
   //external sources search
@@ -591,6 +643,14 @@ export class DatasetController {
     @param.query.string('offset') offset: string,
     @param.query.string('sortBy') sortBy: string,
   ): Promise<any> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const userPlan = await getUserPlanData(userId);
+    let _limit = limit;
+    let _offset = offset;
+    if (userPlan.name === 'Free') {
+      _limit = '12';
+      _offset = '0';
+    }
     try {
       logger.info(
         'route </external-sources/search> -  Search external sources',
@@ -602,14 +662,20 @@ export class DatasetController {
           query: q,
           source,
           sort_by: sortBy,
-          limit: Number(limit),
-          offset: Number(offset),
+          limit: Number(_limit),
+          offset: Number(_offset),
         },
       );
       logger.info(
         'route </external-sources/search> -  Searched external sources',
       );
-      return response.data.result;
+      if (userPlan.name === 'Free') {
+        return {
+          result: response.data.result.slice(0, 12),
+          planWarning: `The free plan displays only the first <b>12</b> results. Upgrade to increase.`,
+        };
+      }
+      return {result: response.data.result};
     } catch (e) {
       console.log(e.response.data.result);
       logger.error(
