@@ -5,4 +5,5 @@ export * from './dataset.controller';
 export * from './file-upload.controller';
 export * from './ping.controller';
 export * from './reports.controller';
+export * from './stripe.controller';
 export * from './user.controller';

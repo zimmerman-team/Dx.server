@@ -24,6 +24,7 @@ import {
   ReportRepository,
 } from '../repositories';
 import {deleteIntercomUser, sendContactForm} from '../utils/intercom';
+import {getUserPlanData} from '../utils/planAccess';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -193,14 +194,38 @@ export class UserController {
     try {
       const userId = _.get(this.req, 'user.sub');
       if (userId) {
-        const response = await deleteIntercomUser(userId);
-        if (response.error) {
-          return response;
+        if (process.env.ENV_TYPE === 'prod') {
+          // Intercom is only available in production
+          const response = await deleteIntercomUser(userId);
+          if (response.error) {
+            return response;
+          }
+          logger.info(
+            `route <users/delete-account> - Intercom User account deleted: ${response.data}`,
+          );
         }
-        logger.info(
-          `route <users/delete-account> -  User account deleted: ${response.data}`,
-        );
+
         await UserProfile.deleteUser(userId);
+        const datasetIds = (
+          await this.datasetRepository.find({where: {owner: userId}})
+        ).map(d => d.id);
+
+        await axios
+          .post(`http://${host}:4004/delete-datasets`, datasetIds)
+          .then(_ => {
+            logger.info(
+              `route <users/delete-account> -  DX Backend deletion complete`,
+            );
+            console.log('DX Backend deletion complete');
+          })
+          .catch(e => {
+            console.log('DX Backend deletion failed', e);
+            logger.error(
+              `route <users/delete-account> -  DX Backend deletion failed`,
+              e.response.data.result,
+            );
+            return {error: e.response.data.result};
+          });
 
         await this.datasetRepository.deleteAll({owner: userId});
         await this.chartRepository.deleteAll({owner: userId});
@@ -462,25 +487,28 @@ export class UserController {
     },
   ): Promise<{message: string} | {error: string}> {
     try {
-      const userData = {
-        email: formDetails.email,
-        name: formDetails.firstName + ' ' + formDetails.lastName,
-      };
-      const response = await sendContactForm(
-        userData,
-        formDetails.message,
-        formDetails.company,
-      );
-      if (response.error) {
-        return response;
+      if (process.env.ENV_TYPE === 'prod') {
+        // Intercom is only available in production
+        const userData = {
+          email: formDetails.email,
+          name: formDetails.firstName + ' ' + formDetails.lastName,
+        };
+        const response = await sendContactForm(
+          userData,
+          formDetails.message,
+          formDetails.company,
+        );
+        if (response.error) {
+          return response;
+        }
+        logger.info(
+          `route <users/send-contact-form-to-intercom> -  Contact form sent: ${JSON.stringify(
+            response.data,
+          )}`,
+        );
       }
-      logger.info(
-        `route <users/send-contact-form-to-intercom> -  Contact form sent: ${JSON.stringify(
-          response.data,
-        )}`,
-      );
       return {
-        message: `Sent! The team will reply as soon as they can You'll get replies here and to ${userData.email}.`,
+        message: `Sent! The team will reply as soon as they can You'll get replies here and to ${formDetails.email}.`,
       };
     } catch (error) {
       logger.error(
@@ -488,5 +516,21 @@ export class UserController {
       );
       return {error: 'Error sending contact form'};
     }
+  }
+
+  @get('/users/plan-data')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async fetchUserPlanData() {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const assetsCount = {
+      datasets: (await this.datasetRepository.count({owner: userId})).count,
+      charts: (await this.chartRepository.count({owner: userId})).count,
+      reports: (await this.reportRepository.count({owner: userId})).count,
+    };
+    return {
+      planData: await getUserPlanData(userId),
+      assetsCount: assetsCount,
+    };
   }
 }
