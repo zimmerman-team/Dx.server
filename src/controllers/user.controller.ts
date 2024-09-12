@@ -272,6 +272,22 @@ export class UserController {
     }
   }
 
+  @get('/users/profile/{id}')
+  @response(200)
+  async getUserDetails(
+    @param.path.string('id') id: string,
+  ): Promise<{username: any} | {error: string}> {
+    try {
+      const response = await UserProfile.getUserProfile(id);
+      return {username: response.given_name};
+    } catch (error) {
+      logger.error(
+        `route <users/profile/{id}> -  Error getting user profile: ${error}`,
+      );
+      return {error: 'Error getting user profile'};
+    }
+  }
+
   @get('/users/intercom-hash')
   @response(200)
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
