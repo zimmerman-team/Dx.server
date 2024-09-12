@@ -31,7 +31,12 @@ export class Report extends Entity {
     type: 'object',
     required: false,
   })
-  subTitle: object;
+  heading: object;
+  @property({
+    type: 'object',
+    required: false,
+  })
+  description: object;
 
   @property({
     type: 'array',
