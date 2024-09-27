@@ -31,6 +31,7 @@ import {
   ReportRepository,
 } from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
+import {getUserPlanData} from '../utils/planAccess';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -54,7 +55,7 @@ async function getReportsCount(
     or: [{owner: owner}, {public: true}, {baseline: true}],
   });
 }
-
+//get reports
 async function getReports(
   reportRepository: ReportRepository,
   owner?: string,
@@ -76,7 +77,8 @@ async function getReports(
         'showHeader',
         'backgroundColor',
         'title',
-        'subTitle',
+        'heading',
+        'description',
         'public',
         'owner',
       ],
@@ -93,9 +95,10 @@ async function getReports(
       'name',
       'createdDate',
       'showHeader',
+      'heading',
+      'description',
       'backgroundColor',
       'title',
-      'subTitle',
       'public',
     ],
   });
@@ -158,10 +161,32 @@ export class ReportsController {
       },
     })
     Report: Omit<Report, 'id'>,
-  ): Promise<Report> {
+  ): Promise<
+    | {data: Report; planWarning: string | null}
+    | {error: string; errorType: string}
+  > {
     logger.info(`route </report> creating a new report`);
-    Report.owner = _.get(this.req, 'user.sub', 'anonymous');
-    return this.ReportRepository.create(Report);
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const userPlan = await getUserPlanData(userId);
+    const userReportsCount = await this.ReportRepository.count({
+      owner: userId,
+    });
+    if (userReportsCount.count >= userPlan.reports.noOfReports) {
+      return {
+        error: `You have reached the <b>${userPlan.reports.noOfReports}</b> report limit for your ${userPlan.name} Plan. Upgrade to increase.`,
+        errorType: 'planError',
+      };
+    }
+    Report.owner = userId;
+    return {
+      data: await this.ReportRepository.create(Report),
+      planWarning:
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
+          ? null
+          : `(<b>${userReportsCount.count + 1}</b>/${
+              userPlan.reports.noOfReports
+            }) reports left on the ${userPlan.name} plan. Upgrade to increase.`,
+    };
   }
 
   @get('/reports/count')
@@ -427,17 +452,34 @@ export class ReportsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async duplicate(@param.path.string('id') id: string): Promise<Report> {
+  async duplicate(
+    @param.path.string('id') id: string,
+  ): Promise<
+    | {data: Report; planWarning: string | null}
+    | {error: string; errorType: string}
+  > {
     logger.info(
       `route </report/duplicate/{id}> duplicating report by id ${id}`,
     );
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
+    const userPlan = await getUserPlanData(userId);
+    const userReportsCount = await this.ReportRepository.count({
+      owner: userId,
+    });
+    if (userReportsCount.count >= userPlan.reports.noOfReports) {
+      return {
+        error: `You have reached the <b>${userPlan.reports.noOfReports}</b> report limit for your ${userPlan.name} Plan. Upgrade to increase.`,
+        errorType: 'planError',
+      };
+    }
     const fReport = await this.ReportRepository.findById(id);
     // Duplicate Report
-    return this.ReportRepository.create({
+    const newReport = await this.ReportRepository.create({
       name: `${fReport.name} (Copy)`,
       showHeader: fReport.showHeader,
       title: fReport.title,
-      subTitle: fReport.subTitle,
+      description: fReport.description,
+      heading: fReport.heading,
       rows: fReport.rows,
       public: false,
       baseline: false,
@@ -445,8 +487,18 @@ export class ReportsController {
       titleColor: fReport.titleColor,
       descriptionColor: fReport.descriptionColor,
       dateColor: fReport.dateColor,
-      owner: _.get(this.req, 'user.sub', 'anonymous'),
+      owner: userId,
     });
+
+    return {
+      data: newReport,
+      planWarning:
+        userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
+          ? null
+          : `(<b>${userReportsCount.count + 1}</b>/${
+              userPlan.reports.noOfReports
+            }) reports left on the ${userPlan.name} plan. Upgrade to increase.`,
+    };
   }
 
   @get('/youtube/search')

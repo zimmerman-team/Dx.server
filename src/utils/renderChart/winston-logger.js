@@ -15,7 +15,7 @@ export const winstonLogger = winston.createLogger({
   ),
   transports: [
     new winston.transports.File({
-      filename: './src/logging/dx_server.log',
+      filename: './logging/dx_server.log',
       level: 'debug',
       maxsize: 1000000, // 1MB
     }),
