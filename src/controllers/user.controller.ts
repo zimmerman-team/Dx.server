@@ -23,7 +23,11 @@ import {
   DatasetRepository,
   ReportRepository,
 } from '../repositories';
-import {deleteIntercomUser, sendContactForm} from '../utils/intercom';
+import {
+  deleteIntercomUser,
+  get10DayOldLeadsWithoutEmails,
+  sendContactForm,
+} from '../utils/intercom';
 import {getUserPlanData} from '../utils/planAccess';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
@@ -550,5 +554,12 @@ export class UserController {
       planData: await getUserPlanData(userId),
       assetsCount: assetsCount,
     };
+  }
+
+  @get('/users/search-intercom-user')
+  @response(200)
+  // @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  async searchUser(@param.query.string('email') email: string) {
+    return get10DayOldLeadsWithoutEmails();
   }
 }
