@@ -114,7 +114,7 @@ const charts = {
 };
 
 // utils
-function getDatasetFilterOptions(dataset, dataTypes, onlyKeys) {
+function getDatasetFilterOptions(dataset, dataTypes, onlyKeys, appliedFilters) {
   const filterOptions = [];
   if (!dataset || dataset.length === 0) {
     return filterOptions;
@@ -139,12 +139,39 @@ function getDatasetFilterOptions(dataset, dataTypes, onlyKeys) {
     );
     const name = key;
 
-    if (options.length > 0) {
+    const optionsWithContent = [];
+
+    if (Object.keys(appliedFilters || {}).length) {
+      options.forEach(o => {
+        const option = dataTypes[key] === 'number' ? Number(o) : o;
+        if (Object.keys(appliedFilters).includes(key)) {
+          const content = filterData(dataset, {
+            ...appliedFilters,
+            [key]: _.uniq([...appliedFilters[key], option]),
+          });
+          if (content.length > 0) {
+            optionsWithContent.push(option);
+          }
+        } else {
+          const content = filterData(dataset, {
+            ...appliedFilters,
+            [key]: [option],
+          });
+          if (content.length > 0) {
+            optionsWithContent.push(option);
+          }
+        }
+      });
+    } else {
+      optionsWithContent.push(...options);
+    }
+
+    if (optionsWithContent.length > 0) {
       filterOptions.push({
         name,
         enabled: true,
         options: _.orderBy(
-          _.uniq(options)
+          _.uniq(optionsWithContent)
             .map(o => (dataTypes[key] === 'number' ? Number(o) : o))
             .map(o => ({
               label: o,
@@ -226,6 +253,8 @@ function renderChart(
       filterOptionGroups: getDatasetFilterOptions(
         initialParsedDataset,
         parsed.dataTypes,
+        null,
+        itemAppliedFilters || item.appliedFilters,
       ),
       enabledFilterOptionGroups: item.enabledFilterOptionGroups,
       dataTypes: parsed.dataTypes,
