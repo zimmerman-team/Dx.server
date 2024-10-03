@@ -141,42 +141,37 @@ function getDatasetFilterOptions(dataset, dataTypes, onlyKeys, appliedFilters) {
 
     const optionsWithContent = [];
 
-    if (Object.keys(appliedFilters || {}).length) {
-      options.forEach(o => {
-        const option = dataTypes[key] === 'number' ? Number(o) : o;
-        if (Object.keys(appliedFilters).includes(key)) {
-          const content = filterData(dataset, {
-            ...appliedFilters,
-            [key]: _.uniq([...appliedFilters[key], option]),
-          });
-          if (content.length > 0) {
-            optionsWithContent.push(option);
-          }
-        } else {
-          const content = filterData(dataset, {
-            ...appliedFilters,
-            [key]: [option],
-          });
-          if (content.length > 0) {
-            optionsWithContent.push(option);
-          }
+    options.forEach(o => {
+      const option = dataTypes[key] === 'number' ? Number(o) : o;
+      if (Object.keys(appliedFilters).includes(key)) {
+        const content = filterData(dataset, {
+          ...appliedFilters,
+          [key]: _.uniq([...appliedFilters[key], option]),
+        });
+        if (content.length > 0) {
+          optionsWithContent.push({name: option, count: content.length});
         }
-      });
-    } else {
-      optionsWithContent.push(...options);
-    }
+      } else {
+        const content = filterData(dataset, {
+          ...appliedFilters,
+          [key]: [option],
+        });
+        if (content.length > 0) {
+          optionsWithContent.push({name: option, count: content.length});
+        }
+      }
+    });
 
     if (optionsWithContent.length > 0) {
       filterOptions.push({
         name,
         enabled: true,
         options: _.orderBy(
-          _.uniq(optionsWithContent)
-            .map(o => (dataTypes[key] === 'number' ? Number(o) : o))
-            .map(o => ({
-              label: o,
-              value: o,
-            })),
+          _.uniqBy(optionsWithContent, 'name').map(o => ({
+            label: o.name,
+            value: o.name,
+            count: o.count,
+          })),
           'label',
           dataTypes[key] === 'number' ? 'desc' : 'asc',
         ),
