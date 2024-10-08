@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {BindingKey, inject} from '@loopback/core';
+import {BindingKey, inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -31,9 +31,12 @@ import {
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
+import {redisClient} from '../application';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
+import {deleteKeysWithPattern} from '../utils/redis';
 
 type FileUploadHandler = RequestHandler;
 
@@ -95,6 +98,8 @@ export class DatasetController {
 
     dataset.owner = userId;
     logger.info(`route </datasets> -  Dataset created`);
+    await deleteKeysWithPattern(`*datasets-${userId}`);
+    await deleteKeysWithPattern(`*assets-${userId}`);
     return {
       data: await this.datasetRepository.create(dataset),
       planWarning:
@@ -175,6 +180,7 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({extraKey: 'datasets', useUserId: true})) // caching per user
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
     @param.query.boolean('userOnly') userOnly?: boolean,
@@ -229,6 +235,7 @@ export class DatasetController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
@@ -273,6 +280,9 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(
+    cacheInterceptor({cacheId: 'dataset-detail', useFirstPathParam: true}),
+  )
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Dataset, {exclude: 'where'})
@@ -305,6 +315,12 @@ export class DatasetController {
       },
     },
   })
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'public-dataset-detail',
+      useFirstPathParam: true,
+    }),
+  )
   async findByIdPublic(
     @param.path.string('id') id: string,
     @param.filter(Dataset, {exclude: 'where'})
@@ -331,6 +347,7 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor())
   async datasetContent(
     @param.path.string('id') id: string,
     @param.query.string('page') page: string,
@@ -384,6 +401,7 @@ export class DatasetController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async datasetContentPublic(
     @param.path.string('id') id: string,
     @param.query.string('page') page: string,
@@ -444,6 +462,8 @@ export class DatasetController {
       ...dataset,
       updatedDate: new Date().toISOString(),
     });
+    redisClient.del(`dataset-detail-${id}`);
+    redisClient.del(`public-dataset-detail-${id}`);
   }
 
   @put('/datasets/{id}')
@@ -461,6 +481,8 @@ export class DatasetController {
       return {error: 'Unauthorized'};
     }
     await this.datasetRepository.replaceById(id, dataset);
+    redisClient.del(`dataset-detail-${id}`);
+    redisClient.del(`public-dataset-detail-${id}`);
     logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }
   @get('/datasets/{id}/charts-reports/count')
@@ -551,6 +573,10 @@ export class DatasetController {
     );
     await this.chartRepository.deleteAll({datasetId: id});
     logger.info(`route </datasets/{id}> -  Dataset ${id} removed from db`);
+    redisClient.del(`dataset-detail-${id}`);
+    redisClient.del(`public-dataset-detail-${id}`);
+    await deleteKeysWithPattern(`*datasets-${userId}`);
+    await deleteKeysWithPattern(`*assets-${userId}`);
   }
 
   @get('/dataset/duplicate/{id}')
@@ -616,7 +642,8 @@ export class DatasetController {
         );
         return {error: e.response.data.result};
       });
-
+    await deleteKeysWithPattern(`*datasets-${userId}`);
+    await deleteKeysWithPattern(`*assets-${userId}`);
     return {
       data: newDataset,
       planWarning:
