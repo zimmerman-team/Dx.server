@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -23,7 +23,9 @@ import {
 } from '@loopback/rest';
 import axios from 'axios';
 import _ from 'lodash';
+import {redisClient} from '../application';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {Report} from '../models';
 import {
   ChartRepository,
@@ -32,6 +34,7 @@ import {
 } from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
+import {deleteKeysWithPattern} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -178,6 +181,8 @@ export class ReportsController {
       };
     }
     Report.owner = userId;
+    await deleteKeysWithPattern(`*reports-${userId}`);
+    await deleteKeysWithPattern(`*assets-${userId}`);
     return {
       data: await this.ReportRepository.create(Report),
       planWarning:
@@ -229,6 +234,7 @@ export class ReportsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({extraKey: 'reports', useUserId: true})) // caching per user
   async find(@param.filter(Report) filter?: Filter<Report>): Promise<Report[]> {
     logger.info(`route </reports> getting reports`);
     return getReports(
@@ -250,6 +256,7 @@ export class ReportsController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
     @param.filter(Report) filter?: Filter<Report>,
   ): Promise<Report[]> {
@@ -288,6 +295,9 @@ export class ReportsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(
+    cacheInterceptor({useFirstPathParam: true, cacheId: 'report-detail'}),
+  )
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Report, {exclude: 'where'})
@@ -320,6 +330,12 @@ export class ReportsController {
       },
     },
   })
+  @intercept(
+    cacheInterceptor({
+      useFirstPathParam: true,
+      cacheId: 'public-report-detail',
+    }),
+  )
   async findPublicById(
     @param.path.string('id') id: string,
     @param.filter(Report, {exclude: 'where'})
@@ -405,6 +421,8 @@ export class ReportsController {
       ...report,
       updatedDate: new Date().toISOString(),
     });
+    redisClient.del(`report-detail-${id}`);
+    redisClient.del(`public-report-detail-${id}`);
   }
 
   @put('/report/{id}')
@@ -423,6 +441,8 @@ export class ReportsController {
     }
     logger.info(`route </report/{id}> replacing report by id ${id}`);
     await this.ReportRepository.replaceById(id, Report);
+    redisClient.del(`report-detail-${id}`);
+    redisClient.del(`public-report-detail-${id}`);
   }
 
   @del('/report/{id}')
@@ -440,6 +460,10 @@ export class ReportsController {
       return {error: 'Unauthorized'};
     }
     await this.ReportRepository.deleteById(id);
+    redisClient.del(`report-detail-${id}`);
+    redisClient.del(`public-report-detail-${id}`);
+    await deleteKeysWithPattern(`*reports-${dBreport.owner}`);
+    await deleteKeysWithPattern(`*assets-${dBreport.owner}`);
   }
 
   @get('/report/duplicate/{id}')
@@ -489,7 +513,8 @@ export class ReportsController {
       dateColor: fReport.dateColor,
       owner: userId,
     });
-
+    await deleteKeysWithPattern(`*reports-${userId}`);
+    await deleteKeysWithPattern(`*assets-${userId}`);
     return {
       data: newReport,
       planWarning:

@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -25,11 +25,14 @@ import axios from 'axios';
 import {execSync} from 'child_process';
 import fs from 'fs-extra';
 import _ from 'lodash';
+import {redisClient} from '../application';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {Chart} from '../models';
 import {ChartRepository, DatasetRepository} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
+import {deleteKeysWithPattern} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -219,6 +222,8 @@ export class ChartsController {
     }
     chart.owner = userId;
     logger.info(`route </chart> Creating chart: ${chart.name}`);
+    await deleteKeysWithPattern(`*charts-${userId}`);
+    await deleteKeysWithPattern(`*assets-${userId}`);
     return {
       data: await this.chartRepository.create(chart),
       planWarning:
@@ -234,6 +239,7 @@ export class ChartsController {
   @get('/chart/sample-data/{datasetId}')
   @response(200)
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor())
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const orgMembers = await getUsersOrganizationMembers(userId);
@@ -284,6 +290,7 @@ export class ChartsController {
   /* get chart dataset sample data */
   @get('/chart/sample-data/public/{datasetId}')
   @response(200)
+  @intercept(cacheInterceptor())
   async sampleDataPublic(@param.path.string('datasetId') datasetId: string) {
     const dataset = await this.datasetRepository.findById(datasetId);
     if (!dataset.public && !dataset.baseline && dataset.owner !== 'anonymous') {
@@ -360,6 +367,7 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({extraKey: 'charts', useUserId: true})) // caching per user
   async find(@param.filter(Chart) filter?: Filter<Chart>): Promise<Chart[]> {
     logger.info(`route</charts> Fetching charts`);
     return getCharts(
@@ -381,6 +389,7 @@ export class ChartsController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
     @param.filter(Chart) filter?: Filter<Chart>,
   ): Promise<Chart[]> {
@@ -402,6 +411,7 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor())
   async getChartTypes(@param.query.string('id') id: string) {
     let host = process.env.AIAPI_SUBDOMAIN ? 'ai-api' : 'localhost';
     if (process.env.ENV_TYPE !== 'prod')
@@ -478,6 +488,9 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(
+    cacheInterceptor({cacheId: 'chart-detail', useFirstPathParam: true}),
+  )
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Chart, {exclude: 'where'})
@@ -513,6 +526,9 @@ export class ChartsController {
       },
     },
   })
+  @intercept(
+    cacheInterceptor({cacheId: 'public-chart-detail', useFirstPathParam: true}),
+  )
   async findPublicById(
     @param.path.string('id') id: string,
     @param.filter(Chart, {exclude: 'where'})
@@ -541,6 +557,7 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({expiry: 10 * 60}))
   async renderById(
     @param.path.string('id') id: string,
     @requestBody() body: any,
@@ -594,6 +611,7 @@ export class ChartsController {
       },
     },
   })
+  @intercept(cacheInterceptor({expiry: 10 * 60}))
   async renderByIdPublic(
     @param.path.string('id') id: string,
     @requestBody() body: any,
@@ -633,6 +651,8 @@ export class ChartsController {
       updatedDate: new Date().toISOString(),
     });
     logger.info(`route</chart/{id}> Updating chart- ${id}`);
+    redisClient.del(`chart-detail-${id}`);
+    redisClient.del(`public-chart-detail-${id}`);
     return this.chartRepository.findById(id);
   }
 
@@ -653,6 +673,8 @@ export class ChartsController {
     }
     logger.info(`route</chart/{id}> Replacing chart- ${id}`);
     await this.chartRepository.replaceById(id, chart);
+    redisClient.del(`chart-detail-${id}`);
+    redisClient.del(`public-chart-detail-${id}`);
   }
 
   /* delete chart */
@@ -671,6 +693,10 @@ export class ChartsController {
     }
     logger.info(`route</chart/{id}> Deleting chart- ${id}`);
     await this.chartRepository.deleteById(id);
+    redisClient.del(`chart-detail-${id}`);
+    redisClient.del(`public-chart-detail-${id}`);
+    await deleteKeysWithPattern(`*charts-${userId}`);
+    await deleteKeysWithPattern(`*assets-${userId}`);
   }
 
   /* duplicate chart */
@@ -718,6 +744,8 @@ export class ChartsController {
       isMappingValid: fChart.isMappingValid ?? true,
       isAIAssisted: fChart.isAIAssisted ?? false,
     });
+    await deleteKeysWithPattern(`*charts-${userId}`);
+    await deleteKeysWithPattern(`*assets-${userId}`);
 
     return {
       data: newChart,
