@@ -116,58 +116,55 @@ const charts = {
 // utils
 function getDatasetFilterOptions(dataset, dataTypes, onlyKeys, appliedFilters) {
   const filterOptions = [];
-  if (!dataset || dataset.length === 0) {
-    return filterOptions;
-  }
-  const itemKeys = _.filter(Object.keys(dataset[0]), key => {
-    return (
+  if (!dataset || dataset.length === 0) return filterOptions;
+
+  // Extract the keys from dataset, excluding certain ones
+  const itemKeys = Object.keys(dataset[0]).filter(
+    key =>
       key !== 'id' &&
       !key.toLowerCase().includes('amount') &&
       !key.toLowerCase().includes('date') &&
       !key.toLowerCase().includes('number') &&
-      !key.toLowerCase().includes('title')
-    );
-  });
+      !key.toLowerCase().includes('title'),
+  );
 
   if (onlyKeys) return itemKeys;
 
+  // First, filter the dataset based on the applied filters **once**
+
+  // Now, calculate filter options for each key based on the filtered dataset
   itemKeys.forEach(key => {
-    const options = _.filter(
-      Object.keys(_.groupBy(dataset, key)),
-      optionKey =>
-        optionKey !== 'undefined' && optionKey !== 'null' && optionKey !== '',
-    );
-    const name = key;
+    // Get potential options: if this key wasn't selected, how many are available?
+    const potentialGroupedMap = new Map();
+    const relaxedFilters = {...appliedFilters};
+    delete relaxedFilters[key]; // Temporarily remove the current key from filters
 
-    const optionsWithContent = [];
-
-    options.forEach(o => {
-      const option = dataTypes[key] === 'number' ? Number(o) : o;
-      if (Object.keys(appliedFilters).includes(key)) {
-        const content = filterData(dataset, {
-          ...appliedFilters,
-          [key]: _.uniq([...appliedFilters[key], option]),
-        });
-        if (content.length > 0) {
-          optionsWithContent.push({name: option, count: content.length});
+    const relaxedDataset = filterData(dataset, relaxedFilters);
+    relaxedDataset.forEach(item => {
+      const value = item[key];
+      if (value !== undefined && value !== null && value !== '') {
+        if (!potentialGroupedMap.has(value)) {
+          potentialGroupedMap.set(value, 0);
         }
-      } else {
-        const content = filterData(dataset, {
-          ...appliedFilters,
-          [key]: [option],
-        });
-        if (content.length > 0) {
-          optionsWithContent.push({name: option, count: content.length});
-        }
+        potentialGroupedMap.set(value, potentialGroupedMap.get(value) + 1);
       }
     });
 
-    if (optionsWithContent.length > 0) {
+    const potentialOptionsWithContent = [];
+    for (const [optionKey, count] of potentialGroupedMap.entries()) {
+      const option =
+        dataTypes[key] === 'number' ? Number(optionKey) : optionKey;
+      if (count > 0) {
+        potentialOptionsWithContent.push({name: option, count: count});
+      }
+    }
+
+    if (potentialOptionsWithContent.length > 0) {
       filterOptions.push({
-        name,
+        name: key,
         enabled: true,
         options: _.orderBy(
-          _.uniqBy(optionsWithContent, 'name').map(o => ({
+          _.uniqBy(potentialOptionsWithContent, 'name').map(o => ({
             label: o.name,
             value: o.name,
             count: o.count,
