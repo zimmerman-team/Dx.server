@@ -17,6 +17,11 @@ export class Dataset extends Entity {
 
   @property({
     type: 'string',
+  })
+  nameLower: string;
+
+  @property({
+    type: 'string',
     required: true,
   })
   description: string;

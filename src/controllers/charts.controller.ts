@@ -361,6 +361,11 @@ export class ChartsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async find(@param.filter(Chart) filter?: Filter<Chart>): Promise<Chart[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`route</charts> Fetching charts`);
     return getCharts(
       this.chartRepository,
@@ -384,6 +389,11 @@ export class ChartsController {
   async findPublic(
     @param.filter(Chart) filter?: Filter<Chart>,
   ): Promise<Chart[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`Fetching public charts`);
     return getCharts(this.chartRepository, 'anonymous', filter);
   }

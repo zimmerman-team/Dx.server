@@ -16,6 +16,11 @@ export class Chart extends Entity {
   name: string;
 
   @property({
+    type: 'string',
+  })
+  nameLower: string;
+
+  @property({
     type: 'boolean',
     default: false,
   })
