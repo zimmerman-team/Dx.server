@@ -9,5 +9,19 @@ export class ChartRepository extends DefaultCrudRepository<
 > {
   constructor(@inject('datasources.db') dataSource: DbDataSource) {
     super(Chart, dataSource);
+
+    this.modelClass.observe('before save', this.beforeSave);
+  }
+
+  async beforeSave(ctx: any) {
+    const {instance, data} = ctx;
+
+    if (instance && instance.name) {
+      instance.nameLower = instance.name.toLowerCase();
+    }
+
+    if (data && data.name) {
+      data.nameLower = data.name.toLowerCase();
+    }
   }
 }
