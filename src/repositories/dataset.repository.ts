@@ -17,11 +17,11 @@ export class DatasetRepository extends DefaultCrudRepository<
     const {instance, data} = ctx;
 
     if (instance && instance.name) {
-      instance.nameLower = instance.name.toLowerCase();
+      instance.nameLower = instance.name.toLowerCase().trim();
     }
 
     if (data && data.name) {
-      data.nameLower = data.name.toLowerCase();
+      data.nameLower = data.name.toLowerCase().trim();
     }
   }
 }
