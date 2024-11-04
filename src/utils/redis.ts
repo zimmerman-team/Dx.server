@@ -1,4 +1,6 @@
+import {uniq} from 'lodash';
 import {redisClient} from '../application';
+import {getUsersOrganizationMembers} from './auth';
 
 export async function deleteKeysWithPattern(pattern: string) {
   // Find all keys matching the pattern (e.g., 'user:*')
@@ -12,3 +14,25 @@ export async function deleteKeysWithPattern(pattern: string) {
     console.log('No matching keys found.');
   }
 }
+
+export const handleDeleteCache = async (options: {
+  userId?: string;
+  asset: string;
+  assetId?: string;
+}) => {
+  if (options.assetId) {
+    await redisClient.del(`${options.asset}-detail-${options.assetId}`);
+    await redisClient.del(`public-${options.asset}-detail-${options.assetId}`);
+  }
+  if (options.userId) {
+    const orgMembers = await getUsersOrganizationMembers(options.userId);
+
+    const orgMemberIds = uniq(
+      orgMembers.map((m: any) => m.user_id).concat(options.userId),
+    );
+    for (const memberId of orgMemberIds) {
+      await deleteKeysWithPattern(`*${options.asset}s-${memberId}`);
+      await deleteKeysWithPattern(`*assets-${memberId}`);
+    }
+  }
+};

@@ -31,12 +31,11 @@ import {
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
-import {redisClient} from '../application';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
-import {deleteKeysWithPattern} from '../utils/redis';
+import {handleDeleteCache} from '../utils/redis';
 
 type FileUploadHandler = RequestHandler;
 
@@ -98,8 +97,10 @@ export class DatasetController {
 
     dataset.owner = userId;
     logger.info(`route </datasets> -  Dataset created`);
-    await deleteKeysWithPattern(`*datasets-${userId}`);
-    await deleteKeysWithPattern(`*assets-${userId}`);
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+    });
     return {
       data: await this.datasetRepository.create(dataset),
       planWarning:
@@ -472,8 +473,10 @@ export class DatasetController {
       ...dataset,
       updatedDate: new Date().toISOString(),
     });
-    redisClient.del(`dataset-detail-${id}`);
-    redisClient.del(`public-dataset-detail-${id}`);
+    await handleDeleteCache({
+      asset: 'dataset',
+      assetId: id,
+    });
   }
 
   @put('/datasets/{id}')
@@ -491,8 +494,10 @@ export class DatasetController {
       return {error: 'Unauthorized'};
     }
     await this.datasetRepository.replaceById(id, dataset);
-    redisClient.del(`dataset-detail-${id}`);
-    redisClient.del(`public-dataset-detail-${id}`);
+    await handleDeleteCache({
+      asset: 'dataset',
+      assetId: id,
+    });
     logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }
   @get('/datasets/{id}/charts-reports/count')
@@ -583,10 +588,11 @@ export class DatasetController {
     );
     await this.chartRepository.deleteAll({datasetId: id});
     logger.info(`route </datasets/{id}> -  Dataset ${id} removed from db`);
-    redisClient.del(`dataset-detail-${id}`);
-    redisClient.del(`public-dataset-detail-${id}`);
-    await deleteKeysWithPattern(`*datasets-${userId}`);
-    await deleteKeysWithPattern(`*assets-${userId}`);
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+      assetId: id,
+    });
   }
 
   @get('/dataset/duplicate/{id}')
@@ -652,8 +658,10 @@ export class DatasetController {
         );
         return {error: e.response.data.result};
       });
-    await deleteKeysWithPattern(`*datasets-${userId}`);
-    await deleteKeysWithPattern(`*assets-${userId}`);
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+    });
     return {
       data: newDataset,
       planWarning:

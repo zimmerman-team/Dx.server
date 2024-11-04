@@ -23,7 +23,6 @@ import {
 } from '@loopback/rest';
 import axios from 'axios';
 import _ from 'lodash';
-import {redisClient} from '../application';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {Report} from '../models';
@@ -34,7 +33,7 @@ import {
 } from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
-import {deleteKeysWithPattern} from '../utils/redis';
+import {handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -183,8 +182,10 @@ export class ReportsController {
       };
     }
     Report.owner = userId;
-    await deleteKeysWithPattern(`*reports-${userId}`);
-    await deleteKeysWithPattern(`*assets-${userId}`);
+    await handleDeleteCache({
+      asset: 'report',
+      userId,
+    });
     return {
       data: await this.ReportRepository.create(Report),
       planWarning:
@@ -432,8 +433,10 @@ export class ReportsController {
       ...report,
       updatedDate: new Date().toISOString(),
     });
-    redisClient.del(`report-detail-${id}`);
-    redisClient.del(`public-report-detail-${id}`);
+    await handleDeleteCache({
+      asset: 'report',
+      assetId: id,
+    });
   }
 
   @put('/report/{id}')
@@ -452,8 +455,10 @@ export class ReportsController {
     }
     logger.info(`route </report/{id}> replacing report by id ${id}`);
     await this.ReportRepository.replaceById(id, Report);
-    redisClient.del(`report-detail-${id}`);
-    redisClient.del(`public-report-detail-${id}`);
+    await handleDeleteCache({
+      asset: 'report',
+      assetId: id,
+    });
   }
 
   @del('/report/{id}')
@@ -471,10 +476,11 @@ export class ReportsController {
       return {error: 'Unauthorized'};
     }
     await this.ReportRepository.deleteById(id);
-    redisClient.del(`report-detail-${id}`);
-    redisClient.del(`public-report-detail-${id}`);
-    await deleteKeysWithPattern(`*reports-${dBreport.owner}`);
-    await deleteKeysWithPattern(`*assets-${dBreport.owner}`);
+    await handleDeleteCache({
+      asset: 'report',
+      assetId: id,
+      userId: _.get(this.req, 'user.sub', 'anonymous'),
+    });
   }
 
   @get('/report/duplicate/{id}')
@@ -524,8 +530,10 @@ export class ReportsController {
       dateColor: fReport.dateColor,
       owner: userId,
     });
-    await deleteKeysWithPattern(`*reports-${userId}`);
-    await deleteKeysWithPattern(`*assets-${userId}`);
+    await handleDeleteCache({
+      asset: 'report',
+      userId,
+    });
     return {
       data: newReport,
       planWarning:

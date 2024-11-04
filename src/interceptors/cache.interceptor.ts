@@ -16,15 +16,14 @@ export const cacheInterceptor = (options?: {
       options?.cacheId ??
       `${request.originalUrl}-${JSON.stringify(request.body)}`;
 
-    cacheName = `${cacheName}-${options?.extraKey ?? ''}-${
-      options?.useUserId ? (request?.user as any).sub : ''
-    }`;
+    cacheName = `${cacheName}${
+      options?.extraKey ? `-${options?.extraKey}` : ''
+    }${options?.useUserId ? `-${(request?.user as any).sub}` : ''}`;
 
     if (options?.useFirstPathParam) {
       const pathValue = invocationCtx.args[0];
       cacheName = `${cacheName}-${pathValue}`;
     }
-
     try {
       const cachedResult = await redisClient.get(cacheName);
       if (cachedResult) {

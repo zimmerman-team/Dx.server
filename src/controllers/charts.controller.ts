@@ -25,14 +25,13 @@ import axios from 'axios';
 import {execSync} from 'child_process';
 import fs from 'fs-extra';
 import _ from 'lodash';
-import {redisClient} from '../application';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {Chart} from '../models';
 import {ChartRepository, DatasetRepository} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
-import {deleteKeysWithPattern} from '../utils/redis';
+import {handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -224,8 +223,10 @@ export class ChartsController {
     }
     chart.owner = userId;
     logger.info(`route </chart> Creating chart: ${chart.name}`);
-    await deleteKeysWithPattern(`*charts-${userId}`);
-    await deleteKeysWithPattern(`*assets-${userId}`);
+    await handleDeleteCache({
+      asset: 'chart',
+      userId,
+    });
     return {
       data: await this.chartRepository.create(chart),
       planWarning:
@@ -663,8 +664,10 @@ export class ChartsController {
       updatedDate: new Date().toISOString(),
     });
     logger.info(`route</chart/{id}> Updating chart- ${id}`);
-    redisClient.del(`chart-detail-${id}`);
-    redisClient.del(`public-chart-detail-${id}`);
+    await handleDeleteCache({
+      asset: 'chart',
+      assetId: id,
+    });
     return this.chartRepository.findById(id);
   }
 
@@ -685,8 +688,10 @@ export class ChartsController {
     }
     logger.info(`route</chart/{id}> Replacing chart- ${id}`);
     await this.chartRepository.replaceById(id, chart);
-    redisClient.del(`chart-detail-${id}`);
-    redisClient.del(`public-chart-detail-${id}`);
+    await handleDeleteCache({
+      asset: 'chart',
+      assetId: id,
+    });
   }
 
   /* delete chart */
@@ -705,10 +710,11 @@ export class ChartsController {
     }
     logger.info(`route</chart/{id}> Deleting chart- ${id}`);
     await this.chartRepository.deleteById(id);
-    redisClient.del(`chart-detail-${id}`);
-    redisClient.del(`public-chart-detail-${id}`);
-    await deleteKeysWithPattern(`*charts-${userId}`);
-    await deleteKeysWithPattern(`*assets-${userId}`);
+    await handleDeleteCache({
+      asset: 'chart',
+      assetId: id,
+      userId,
+    });
   }
 
   /* duplicate chart */
@@ -756,8 +762,10 @@ export class ChartsController {
       isMappingValid: fChart.isMappingValid ?? true,
       isAIAssisted: fChart.isAIAssisted ?? false,
     });
-    await deleteKeysWithPattern(`*charts-${userId}`);
-    await deleteKeysWithPattern(`*assets-${userId}`);
+    await handleDeleteCache({
+      asset: 'chart',
+      userId,
+    });
 
     return {
       data: newChart,
