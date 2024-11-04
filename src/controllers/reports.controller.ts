@@ -77,6 +77,7 @@ async function getReports(
         'id',
         'name',
         'createdDate',
+        'updatedDate',
         'showHeader',
         'backgroundColor',
         'title',
@@ -97,6 +98,7 @@ async function getReports(
       'id',
       'name',
       'createdDate',
+      'updatedDate',
       'showHeader',
       'heading',
       'description',
@@ -236,6 +238,10 @@ export class ReportsController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(cacheInterceptor({extraKey: 'reports', useUserId: true})) // caching per user
   async find(@param.filter(Report) filter?: Filter<Report>): Promise<Report[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
     logger.info(`route </reports> getting reports`);
     return getReports(
       this.ReportRepository,
@@ -260,6 +266,11 @@ export class ReportsController {
   async findPublic(
     @param.filter(Report) filter?: Filter<Report>,
   ): Promise<Report[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`route </reports/public> getting public reports`);
     return getReports(this.ReportRepository, 'anonymous', filter);
   }

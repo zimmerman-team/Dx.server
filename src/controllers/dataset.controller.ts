@@ -185,6 +185,11 @@ export class DatasetController {
     @param.filter(Dataset) filter?: Filter<Dataset>,
     @param.query.boolean('userOnly') userOnly?: boolean,
   ): Promise<Dataset[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`route </datasets> -  get datasets`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     if (userId && userId !== 'anonymous') {
@@ -239,6 +244,11 @@ export class DatasetController {
   async findPublic(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`route </datasets/public> -  get public datasets`);
     return this.datasetRepository.find({
       ...filter,
