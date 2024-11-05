@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -24,6 +24,7 @@ import {
 import axios from 'axios';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {Report} from '../models';
 import {
   ChartRepository,
@@ -32,6 +33,7 @@ import {
 } from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
+import {handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -180,6 +182,10 @@ export class ReportsController {
       };
     }
     Report.owner = userId;
+    await handleDeleteCache({
+      asset: 'report',
+      userId,
+    });
     return {
       data: await this.ReportRepository.create(Report),
       planWarning:
@@ -231,6 +237,7 @@ export class ReportsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({extraKey: 'reports', useUserId: true})) // caching per user
   async find(@param.filter(Report) filter?: Filter<Report>): Promise<Report[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
@@ -256,6 +263,7 @@ export class ReportsController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
     @param.filter(Report) filter?: Filter<Report>,
   ): Promise<Report[]> {
@@ -299,6 +307,9 @@ export class ReportsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(
+    cacheInterceptor({useFirstPathParam: true, cacheId: 'report-detail'}),
+  )
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Report, {exclude: 'where'})
@@ -331,6 +342,12 @@ export class ReportsController {
       },
     },
   })
+  @intercept(
+    cacheInterceptor({
+      useFirstPathParam: true,
+      cacheId: 'public-report-detail',
+    }),
+  )
   async findPublicById(
     @param.path.string('id') id: string,
     @param.filter(Report, {exclude: 'where'})
@@ -416,6 +433,10 @@ export class ReportsController {
       ...report,
       updatedDate: new Date().toISOString(),
     });
+    await handleDeleteCache({
+      asset: 'report',
+      assetId: id,
+    });
   }
 
   @put('/report/{id}')
@@ -434,6 +455,10 @@ export class ReportsController {
     }
     logger.info(`route </report/{id}> replacing report by id ${id}`);
     await this.ReportRepository.replaceById(id, Report);
+    await handleDeleteCache({
+      asset: 'report',
+      assetId: id,
+    });
   }
 
   @del('/report/{id}')
@@ -451,6 +476,11 @@ export class ReportsController {
       return {error: 'Unauthorized'};
     }
     await this.ReportRepository.deleteById(id);
+    await handleDeleteCache({
+      asset: 'report',
+      assetId: id,
+      userId: _.get(this.req, 'user.sub', 'anonymous'),
+    });
   }
 
   @get('/report/duplicate/{id}')
@@ -500,7 +530,10 @@ export class ReportsController {
       dateColor: fReport.dateColor,
       owner: userId,
     });
-
+    await handleDeleteCache({
+      asset: 'report',
+      userId,
+    });
     return {
       data: newReport,
       planWarning:

@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {BindingKey, inject} from '@loopback/core';
+import {BindingKey, inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -32,8 +32,10 @@ import {
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
+import {handleDeleteCache} from '../utils/redis';
 
 type FileUploadHandler = RequestHandler;
 
@@ -95,6 +97,10 @@ export class DatasetController {
 
     dataset.owner = userId;
     logger.info(`route </datasets> -  Dataset created`);
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+    });
     return {
       data: await this.datasetRepository.create(dataset),
       planWarning:
@@ -175,6 +181,7 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({extraKey: 'datasets', useUserId: true})) // caching per user
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
     @param.query.boolean('userOnly') userOnly?: boolean,
@@ -234,6 +241,7 @@ export class DatasetController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
@@ -283,6 +291,9 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(
+    cacheInterceptor({cacheId: 'dataset-detail', useFirstPathParam: true}),
+  )
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Dataset, {exclude: 'where'})
@@ -315,6 +326,12 @@ export class DatasetController {
       },
     },
   })
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'public-dataset-detail',
+      useFirstPathParam: true,
+    }),
+  )
   async findByIdPublic(
     @param.path.string('id') id: string,
     @param.filter(Dataset, {exclude: 'where'})
@@ -341,6 +358,7 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor())
   async datasetContent(
     @param.path.string('id') id: string,
     @param.query.string('page') page: string,
@@ -394,6 +412,7 @@ export class DatasetController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async datasetContentPublic(
     @param.path.string('id') id: string,
     @param.query.string('page') page: string,
@@ -454,6 +473,10 @@ export class DatasetController {
       ...dataset,
       updatedDate: new Date().toISOString(),
     });
+    await handleDeleteCache({
+      asset: 'dataset',
+      assetId: id,
+    });
   }
 
   @put('/datasets/{id}')
@@ -471,6 +494,10 @@ export class DatasetController {
       return {error: 'Unauthorized'};
     }
     await this.datasetRepository.replaceById(id, dataset);
+    await handleDeleteCache({
+      asset: 'dataset',
+      assetId: id,
+    });
     logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }
   @get('/datasets/{id}/charts-reports/count')
@@ -561,6 +588,11 @@ export class DatasetController {
     );
     await this.chartRepository.deleteAll({datasetId: id});
     logger.info(`route </datasets/{id}> -  Dataset ${id} removed from db`);
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+      assetId: id,
+    });
   }
 
   @get('/dataset/duplicate/{id}')
@@ -626,7 +658,10 @@ export class DatasetController {
         );
         return {error: e.response.data.result};
       });
-
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+    });
     return {
       data: newDataset,
       planWarning:

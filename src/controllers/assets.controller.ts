@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -17,6 +17,7 @@ import {
 } from '@loopback/rest';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {Chart, Dataset, Report} from '../models';
 import {
   ChartRepository,
@@ -54,6 +55,7 @@ export class AssetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({useUserId: true, extraKey: 'assets'}))
   async find(
     @param.filter(Chart || Dataset || Report)
     filter?: Filter<Chart | Dataset | Report>,
@@ -152,6 +154,7 @@ export class AssetController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
     @param.filter(Chart || Dataset || Report)
     filter?: Filter<Chart | Dataset | Report>,
