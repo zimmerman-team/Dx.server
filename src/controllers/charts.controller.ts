@@ -667,6 +667,7 @@ export class ChartsController {
     await handleDeleteCache({
       asset: 'chart',
       assetId: id,
+      userId,
     });
     return this.chartRepository.findById(id);
   }
@@ -691,6 +692,7 @@ export class ChartsController {
     await handleDeleteCache({
       asset: 'chart',
       assetId: id,
+      userId,
     });
   }
 
