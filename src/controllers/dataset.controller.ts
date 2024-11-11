@@ -476,6 +476,7 @@ export class DatasetController {
     await handleDeleteCache({
       asset: 'dataset',
       assetId: id,
+      userId,
     });
   }
 
@@ -497,6 +498,7 @@ export class DatasetController {
     await handleDeleteCache({
       asset: 'dataset',
       assetId: id,
+      userId,
     });
     logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }

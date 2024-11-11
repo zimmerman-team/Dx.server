@@ -436,6 +436,7 @@ export class ReportsController {
     await handleDeleteCache({
       asset: 'report',
       assetId: id,
+      userId: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
 
@@ -458,6 +459,7 @@ export class ReportsController {
     await handleDeleteCache({
       asset: 'report',
       assetId: id,
+      userId: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
 
