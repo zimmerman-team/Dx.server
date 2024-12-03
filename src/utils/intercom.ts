@@ -230,3 +230,58 @@ export const sendContactForm = async (
     return {error: err?.message};
   }
 };
+
+export const updateIntercomUserWithContactId = async (
+  userData: any,
+  contactId: string,
+) => {
+  try {
+    const response = await axios.put(
+      `${baseUrl}/contacts/${contactId}`,
+      userData,
+      {
+        headers,
+      },
+    );
+    return response.data;
+  } catch (err: any) {
+    console.error(
+      `fn <updateIntercomUser()>: ${err?.message} - ${JSON.stringify(
+        err?.response?.data,
+      )}`,
+    );
+    return {error: err?.message};
+  }
+};
+
+export const addUserToNewsletter = async (email: string) => {
+  const userSearch = await searchIntercomUser(email);
+  if (userSearch.error) {
+    return userSearch;
+  }
+  let user;
+  if (userSearch.data.length !== 0) {
+    user = userSearch.data[0];
+  } else {
+    const createUser = await createIntercomUser({
+      email,
+      role: 'lead',
+    });
+    if (createUser.error) {
+      return createUser;
+    }
+    user = createUser;
+  }
+  const updateUser = await updateIntercomUserWithContactId(
+    {
+      custom_attributes: {
+        'Subscribed to Newsletter': true,
+      },
+    },
+    user.id,
+  );
+  if (updateUser.error) {
+    return updateUser;
+  }
+  return {message: 'Thank you for subscribing!'};
+};
