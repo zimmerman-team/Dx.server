@@ -25,6 +25,7 @@ import {
 } from '../repositories';
 import {deleteIntercomUser, sendContactForm} from '../utils/intercom';
 import {getUserPlanData} from '../utils/planAccess';
+import {handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -231,6 +232,18 @@ export class UserController {
         await this.datasetRepository.deleteAll({owner: userId});
         await this.chartRepository.deleteAll({owner: userId});
         await this.reportRepository.deleteAll({owner: userId});
+        await handleDeleteCache({
+          asset: 'chart',
+          userId,
+        });
+        await handleDeleteCache({
+          asset: 'dataset',
+          userId,
+        });
+        await handleDeleteCache({
+          asset: 'report',
+          userId,
+        });
 
         return {message: 'success'};
       } else {
