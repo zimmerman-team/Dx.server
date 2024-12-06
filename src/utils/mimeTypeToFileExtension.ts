@@ -1,4 +1,3 @@
-
 interface MimeToExtensionMap {
   [key: string]: string;
 }
@@ -19,7 +18,8 @@ const mimeToExtension: MimeToExtensionMap = {
   'text/css': '.css',
   'text/csv': '.csv',
   'application/msword': '.doc',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+    '.docx',
   'application/vnd.ms-fontobject': '.eot',
   'application/epub+zip': '.epub',
   'application/gzip': '.gz',
@@ -40,6 +40,7 @@ const mimeToExtension: MimeToExtensionMap = {
   'application/vnd.oasis.opendocument.presentation': '.odp',
   'application/vnd.oasis.opendocument.spreadsheet': '.ods',
   'application/vnd.oasis.opendocument.text': '.odt',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
   'audio/ogg': '.oga',
   'video/ogg': '.ogv',
   'application/ogg': '.ogx',
@@ -49,7 +50,8 @@ const mimeToExtension: MimeToExtensionMap = {
   'application/pdf': '.pdf',
   'application/x-httpd-php': '.php',
   'application/vnd.ms-powerpoint': '.ppt',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+    '.pptx',
   'application/vnd.rar': '.rar',
   'application/rtf': '.rtf',
   'application/x-sh': '.sh',
@@ -75,7 +77,7 @@ const mimeToExtension: MimeToExtensionMap = {
   'audio/3gpp2': '.3g2',
   'application/x-7z-compressed': '.7z',
   // Add more mappings here
-};  
+};
 
 export function mimeTypeToFileExtension(mimetype: string): string {
   return mimeToExtension[mimetype] ?? '';
