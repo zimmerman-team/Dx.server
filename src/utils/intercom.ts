@@ -275,7 +275,7 @@ export const addUserToNewsletter = async (email: string) => {
   const updateUser = await updateIntercomUserWithContactId(
     {
       custom_attributes: {
-        'Subscribed to Newsletter': true,
+        subscribed_to_newsletter: true,
       },
     },
     user.id,
