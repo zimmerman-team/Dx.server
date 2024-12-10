@@ -23,7 +23,11 @@ import {
   DatasetRepository,
   ReportRepository,
 } from '../repositories';
-import {deleteIntercomUser, sendContactForm} from '../utils/intercom';
+import {
+  addUserToNewsletter,
+  deleteIntercomUser,
+  sendContactForm,
+} from '../utils/intercom';
 import {getUserPlanData} from '../utils/planAccess';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
@@ -533,6 +537,29 @@ export class UserController {
         `route <users/send-contact-form-to-intercom> -  Error sending contact form: ${error}`,
       );
       return {error: 'Error sending contact form'};
+    }
+  }
+
+  @post('/users/subscribe-to-newsletter')
+  @response(200)
+  async subscribeToNewsletter(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {},
+        },
+      },
+    })
+    {email}: {email: string},
+  ) {
+    try {
+      const response = await addUserToNewsletter(email);
+      return response;
+    } catch (error) {
+      logger.error(
+        `route <users/subscribe-to-newsletter> -  Error subscribing to newsletter: ${error}`,
+      );
+      return {error: 'Error subscribing to newsletter'};
     }
   }
 
