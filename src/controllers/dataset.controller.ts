@@ -26,7 +26,7 @@ import {Dataset} from '../models';
 import {
   ChartRepository,
   DatasetRepository,
-  ReportRepository,
+  StoryRepository,
 } from '../repositories';
 
 import {RequestHandler} from 'express-serve-static-core';
@@ -55,8 +55,8 @@ export class DatasetController {
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
 
-    @repository(ReportRepository)
-    public reportRepository: ReportRepository,
+    @repository(StoryRepository)
+    public storyRepository: StoryRepository,
 
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
   ) {}
@@ -502,21 +502,21 @@ export class DatasetController {
     });
     logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }
-  @get('/datasets/{id}/charts-reports/count')
+  @get('/datasets/{id}/charts-stories/count')
   @response(200, {
     description: 'Dataset model instance',
     content: {
       'application/json': {
-        schema: {chartsCount: Number, reportsCount: Number},
+        schema: {chartsCount: Number, storiesCount: Number},
       },
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async getChartsReportsCount(
+  async getChartsStoriesCount(
     @param.path.string('id') id: string,
-  ): Promise<{chartsCount: number; reportsCount: number} | {error: string}> {
+  ): Promise<{chartsCount: number; storiesCount: number} | {error: string}> {
     logger.info(
-      `route </datasets/{id}/charts-reports/count> -  get charts and reports count by dataset id: ${id}`,
+      `route </datasets/{id}/charts-stories/count> -  get charts and stories count by dataset id: ${id}`,
     );
 
     const userId = _.get(this.req, 'user.sub', 'anonymous');
@@ -538,8 +538,8 @@ export class DatasetController {
     ).map(c => c.id);
     return {
       chartsCount: (await this.chartRepository.count({datasetId: id})).count,
-      reportsCount: (await this.reportRepository.execute?.(
-        'Report',
+      storiesCount: (await this.storyRepository.execute?.(
+        'Story',
         'countDocuments',
         {'rows.items': {$in: chartIds}},
       )) as unknown as number,

@@ -1,7 +1,7 @@
 import {Entity, model, property} from '@loopback/repository';
 
 @model({settings: {strict: false, forceId: true}})
-export class Report extends Entity {
+export class Story extends Entity {
   @property({
     type: 'string',
     id: true,
@@ -117,7 +117,7 @@ export class Report extends Entity {
   })
   updatedDate: string;
 
-  constructor(data?: Partial<Report>) {
+  constructor(data?: Partial<Story>) {
     super(data);
   }
 }
