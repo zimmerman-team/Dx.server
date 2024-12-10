@@ -25,11 +25,11 @@ import axios from 'axios';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {cacheInterceptor} from '../interceptors/cache.interceptor';
-import {Report} from '../models';
+import {Story} from '../models';
 import {
   ChartRepository,
   DatasetRepository,
-  ReportRepository,
+  StoryRepository,
 } from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {getUserPlanData} from '../utils/planAccess';
@@ -39,34 +39,34 @@ let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
   host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
 
-async function getReportsCount(
-  reportRepository: ReportRepository,
+async function getStoriesCount(
+  storyRepository: StoryRepository,
   owner?: string,
-  where?: Where<Report>,
+  where?: Where<Story>,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-    return reportRepository.count({
+    return storyRepository.count({
       ...where,
       or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
     });
   }
-  return reportRepository.count({
+  return storyRepository.count({
     ...where,
     or: [{owner: owner}, {public: true}, {baseline: true}],
   });
 }
-//get reports
-async function getReports(
-  reportRepository: ReportRepository,
+//get stories
+async function getStories(
+  storyRepository: StoryRepository,
   owner?: string,
-  filter?: Filter<Report>,
+  filter?: Filter<Story>,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-    return reportRepository.find({
+    return storyRepository.find({
       ...filter,
       where: {
         ...filter?.where,
@@ -87,7 +87,7 @@ async function getReports(
       ],
     });
   }
-  return reportRepository.find({
+  return storyRepository.find({
     ...filter,
     where: {
       ...filter?.where,
@@ -108,37 +108,37 @@ async function getReports(
   });
 }
 
-async function renderReport(
-  chartRepository: ReportRepository,
+async function renderStory(
+  chartRepository: StoryRepository,
   id: string,
   body: any,
   owner: string,
 ) {
-  const report = await chartRepository.findById(id);
+  const story = await chartRepository.findById(id);
   const orgMembers = await getUsersOrganizationMembers(owner);
   if (
-    !report ||
-    (!report.public &&
-      !report.baseline &&
+    !story ||
+    (!story.public &&
+      !story.baseline &&
       orgMembers
         .map((m: any) => m.user_id)
-        .indexOf(_.get(report, 'owner', '')) === -1 &&
-      _.get(report, 'owner', '') !== owner)
+        .indexOf(_.get(story, 'owner', '')) === -1 &&
+      _.get(story, 'owner', '') !== owner)
   ) {
     return;
   }
   const host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
   const result = await (
-    await axios.post(`http://${host}:4400/render/report/${id}`, {...body})
+    await axios.post(`http://${host}:4400/render/story/${id}`, {...body})
   ).data;
   return result;
 }
 
-export class ReportsController {
+export class StoriesController {
   constructor(
     @inject(RestBindings.Http.REQUEST) private req: Request,
-    @repository(ReportRepository)
-    public ReportRepository: ReportRepository,
+    @repository(StoryRepository)
+    public StoryRepository: StoryRepository,
 
     @repository(DatasetRepository)
     public datasetRepository: DatasetRepository,
@@ -147,138 +147,136 @@ export class ReportsController {
     public chartRepository: ChartRepository,
   ) {}
 
-  @post('/report')
+  @post('/story')
   @response(200, {
-    description: 'Report model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Report)}},
+    description: 'Story model instance',
+    content: {'application/json': {schema: getModelSchemaRef(Story)}},
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async create(
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Report, {
-            title: 'NewReport',
+          schema: getModelSchemaRef(Story, {
+            title: 'NewStory',
             exclude: ['id'],
           }),
         },
       },
     })
-    Report: Omit<Report, 'id'>,
+    Story: Omit<Story, 'id'>,
   ): Promise<
-    | {data: Report; planWarning: string | null}
+    | {data: Story; planWarning: string | null}
     | {error: string; errorType: string}
   > {
-    logger.info(`route </report> creating a new report`);
+    logger.info(`route </story> creating a new story`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const userPlan = await getUserPlanData(userId);
-    const userReportsCount = await this.ReportRepository.count({
+    const userStoriesCount = await this.StoryRepository.count({
       owner: userId,
     });
-    if (userReportsCount.count >= userPlan.reports.noOfReports) {
+    if (userStoriesCount.count >= userPlan.stories.noOfStories) {
       return {
-        error: `You have reached the <b>${userPlan.reports.noOfReports}</b> report limit for your ${userPlan.name} Plan. Upgrade to increase.`,
+        error: `You have reached the <b>${userPlan.stories.noOfStories}</b> story limit for your ${userPlan.name} Plan. Upgrade to increase.`,
         errorType: 'planError',
       };
     }
-    Report.owner = userId;
+    Story.owner = userId;
     await handleDeleteCache({
-      asset: 'report',
+      asset: 'story',
       userId,
     });
     return {
-      data: await this.ReportRepository.create(Report),
+      data: await this.StoryRepository.create(Story),
       planWarning:
         userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
           ? null
-          : `(<b>${userReportsCount.count + 1}</b>/${
-              userPlan.reports.noOfReports
-            }) reports left on the ${userPlan.name} plan. Upgrade to increase.`,
+          : `(<b>${userStoriesCount.count + 1}</b>/${
+              userPlan.stories.noOfStories
+            }) stories left on the ${userPlan.name} plan. Upgrade to increase.`,
     };
   }
 
-  @get('/reports/count')
+  @get('/stories/count')
   @response(200, {
-    description: 'Report model count',
+    description: 'Story model count',
     content: {'application/json': {schema: CountSchema}},
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async count(@param.where(Report) where?: Where<Report>): Promise<Count> {
-    logger.info(`route </reports/count> getting reports count`);
-    return getReportsCount(
-      this.ReportRepository,
+  async count(@param.where(Story) where?: Where<Story>): Promise<Count> {
+    logger.info(`route </stories/count> getting stories count`);
+    return getStoriesCount(
+      this.StoryRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       where,
     );
   }
 
-  @get('/reports/count/public')
+  @get('/stories/count/public')
   @response(200, {
-    description: 'Report model count',
+    description: 'Story model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async countPublic(
-    @param.where(Report) where?: Where<Report>,
-  ): Promise<Count> {
-    logger.info(`route </reports/count/public> getting public reports count`);
-    return getReportsCount(this.ReportRepository, 'anonymous', where);
+  async countPublic(@param.where(Story) where?: Where<Story>): Promise<Count> {
+    logger.info(`route </stories/count/public> getting public stories count`);
+    return getStoriesCount(this.StoryRepository, 'anonymous', where);
   }
 
-  @get('/reports')
+  @get('/stories')
   @response(200, {
-    description: 'Array of Report model instances',
+    description: 'Array of Story model instances',
     content: {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Report, {includeRelations: true}),
+          items: getModelSchemaRef(Story, {includeRelations: true}),
         },
       },
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  @intercept(cacheInterceptor({extraKey: 'reports', useUserId: true})) // caching per user
-  async find(@param.filter(Report) filter?: Filter<Report>): Promise<Report[]> {
+  @intercept(cacheInterceptor({extraKey: 'stories', useUserId: true})) // caching per user
+  async find(@param.filter(Story) filter?: Filter<Story>): Promise<Story[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
       filter.order = filter.order.replace('name', 'nameLower');
     }
-    logger.info(`route </reports> getting reports`);
-    return getReports(
-      this.ReportRepository,
+    logger.info(`route </stories> getting stories`);
+    return getStories(
+      this.StoryRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       filter,
     );
   }
 
-  @get('/reports/public')
+  @get('/stories/public')
   @response(200, {
-    description: 'Array of Report model instances',
+    description: 'Array of Story model instances',
     content: {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Report, {includeRelations: true}),
+          items: getModelSchemaRef(Story, {includeRelations: true}),
         },
       },
     },
   })
   @intercept(cacheInterceptor())
   async findPublic(
-    @param.filter(Report) filter?: Filter<Report>,
-  ): Promise<Report[]> {
+    @param.filter(Story) filter?: Filter<Story>,
+  ): Promise<Story[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
       filter.order = filter.order.replace('name', 'nameLower');
     }
 
-    logger.info(`route </reports/public> getting public reports`);
-    return getReports(this.ReportRepository, 'anonymous', filter);
+    logger.info(`route </stories/public> getting public stories`);
+    return getStories(this.StoryRepository, 'anonymous', filter);
   }
 
-  @patch('/report')
+  @patch('/story')
   @response(200, {
-    description: 'Report PATCH success count',
+    description: 'Story PATCH success count',
     content: {'application/json': {schema: CountSchema}},
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
@@ -286,92 +284,90 @@ export class ReportsController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Report, {partial: true}),
+          schema: getModelSchemaRef(Story, {partial: true}),
         },
       },
     })
-    Report: Report,
-    @param.where(Report) where?: Where<Report>,
+    Story: Story,
+    @param.where(Story) where?: Where<Story>,
   ): Promise<Count> {
-    logger.info(`route </report> updating all reports`);
-    return this.ReportRepository.updateAll(Report, where);
+    logger.info(`route </story> updating all stories`);
+    return this.StoryRepository.updateAll(Story, where);
   }
 
-  @get('/report/{id}')
+  @get('/story/{id}')
   @response(200, {
-    description: 'Report model instance',
+    description: 'Story model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Report, {includeRelations: true}),
+        schema: getModelSchemaRef(Story, {includeRelations: true}),
       },
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(
-    cacheInterceptor({useFirstPathParam: true, cacheId: 'report-detail'}),
+    cacheInterceptor({useFirstPathParam: true, cacheId: 'story-detail'}),
   )
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Report, {exclude: 'where'})
-    filter?: FilterExcludingWhere<Report>,
-  ): Promise<Report | {error: string}> {
-    logger.info(`route </report/{id}> getting report by id ${id}`);
+    @param.filter(Story, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Story>,
+  ): Promise<Story | {error: string}> {
+    logger.info(`route </story/{id}> getting story by id ${id}`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const orgMembers = await getUsersOrganizationMembers(userId);
-    const report = await this.ReportRepository.findById(id, filter);
+    const story = await this.StoryRepository.findById(id, filter);
     if (
-      report.public ||
-      report.baseline ||
+      story.public ||
+      story.baseline ||
       orgMembers
         .map((o: any) => o.user_id)
-        .indexOf(_.get(report, 'owner', '')) !== -1 ||
-      _.get(report, 'owner', '') === userId
+        .indexOf(_.get(story, 'owner', '')) !== -1 ||
+      _.get(story, 'owner', '') === userId
     ) {
-      return report;
+      return story;
     }
-    logger.info(`route </report/{id}> unauthorized`);
-    return {error: 'Unauthorized', name: report.name};
+    logger.info(`route </story/{id}> unauthorized`);
+    return {error: 'Unauthorized', name: story.name};
   }
 
-  @get('/report/public/{id}')
+  @get('/story/public/{id}')
   @response(200, {
-    description: 'Report model instance',
+    description: 'Story model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Report, {includeRelations: true}),
+        schema: getModelSchemaRef(Story, {includeRelations: true}),
       },
     },
   })
   @intercept(
     cacheInterceptor({
       useFirstPathParam: true,
-      cacheId: 'public-report-detail',
+      cacheId: 'public-story-detail',
     }),
   )
   async findPublicById(
     @param.path.string('id') id: string,
-    @param.filter(Report, {exclude: 'where'})
-    filter?: FilterExcludingWhere<Report>,
-  ): Promise<Report | {error: string}> {
-    logger.info(
-      `route </report/public/{id}> getting public report by id ${id}`,
-    );
-    const report = await this.ReportRepository.findById(id, filter);
-    if (report.public || report.baseline || report.owner === 'anonymous') {
-      logger.info(`route </report/public/{id}> report found`);
-      return report;
+    @param.filter(Story, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Story>,
+  ): Promise<Story | {error: string}> {
+    logger.info(`route </story/public/{id}> getting public story by id ${id}`);
+    const story = await this.StoryRepository.findById(id, filter);
+    if (story.public || story.baseline || story.owner === 'anonymous') {
+      logger.info(`route </story/public/{id}> story found`);
+      return story;
     } else {
-      logger.info(`route </report/public/{id}> unauthorized`);
-      return {error: 'Unauthorized', name: report.name};
+      logger.info(`route </story/public/{id}> unauthorized`);
+      return {error: 'Unauthorized', name: story.name};
     }
   }
 
-  @post('/report/{id}/render')
+  @post('/story/{id}/render')
   @response(200, {
-    description: 'Report model instance',
+    description: 'Story model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Report, {includeRelations: true}),
+        schema: getModelSchemaRef(Story, {includeRelations: true}),
       },
     },
   })
@@ -380,21 +376,21 @@ export class ReportsController {
     @param.path.string('id') id: string,
     @requestBody() body: any,
   ) {
-    logger.info(`route </report/{id}/render> rendering report by id ${id}`);
-    return renderReport(
-      this.ReportRepository,
+    logger.info(`route </story/{id}/render> rendering story by id ${id}`);
+    return renderStory(
+      this.StoryRepository,
       id,
       body,
       _.get(this.req, 'user.sub', 'anonymous'),
     );
   }
 
-  @post('/report/{id}/render/public')
+  @post('/story/{id}/render/public')
   @response(200, {
-    description: 'Report model instance',
+    description: 'Story model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Report, {includeRelations: true}),
+        schema: getModelSchemaRef(Story, {includeRelations: true}),
       },
     },
   })
@@ -403,14 +399,14 @@ export class ReportsController {
     @requestBody() body: any,
   ) {
     logger.info(
-      `route </report/{id}/render/public> rendering public report by id ${id}`,
+      `route </story/{id}/render/public> rendering public story by id ${id}`,
     );
-    return renderReport(this.ReportRepository, id, body, 'anonymous');
+    return renderStory(this.StoryRepository, id, body, 'anonymous');
   }
 
-  @patch('/report/{id}')
+  @patch('/story/{id}')
   @response(204, {
-    description: 'Report PATCH success',
+    description: 'Story PATCH success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async updateById(
@@ -418,79 +414,79 @@ export class ReportsController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Report, {partial: true}),
+          schema: getModelSchemaRef(Story, {partial: true}),
         },
       },
     })
-    report: Report,
+    story: Story,
   ): Promise<void | {error: string}> {
-    logger.info(`route </report/{id}> updating report by id ${id}`);
-    const dBreport = await this.ReportRepository.findById(id);
-    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+    logger.info(`route </story/{id}> updating story by id ${id}`);
+    const dBstory = await this.StoryRepository.findById(id);
+    if (dBstory.owner !== _.get(this.req, 'user.sub')) {
       return {error: 'Unauthorized'};
     }
-    await this.ReportRepository.updateById(id, {
-      ...report,
+    await this.StoryRepository.updateById(id, {
+      ...story,
       updatedDate: new Date().toISOString(),
     });
     await handleDeleteCache({
-      asset: 'report',
+      asset: 'story',
       assetId: id,
       userId: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
 
-  @put('/report/{id}')
+  @put('/story/{id}')
   @response(204, {
-    description: 'Report PUT success',
+    description: 'Story PUT success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async replaceById(
     @param.path.string('id') id: string,
-    @requestBody() Report: Report,
+    @requestBody() Story: Story,
   ): Promise<void | {error: string}> {
-    logger.info(`route </report/{id}> updating report by id ${id}`);
-    const dBreport = await this.ReportRepository.findById(id);
-    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+    logger.info(`route </story/{id}> updating story by id ${id}`);
+    const dBstory = await this.StoryRepository.findById(id);
+    if (dBstory.owner !== _.get(this.req, 'user.sub')) {
       return {error: 'Unauthorized'};
     }
-    logger.info(`route </report/{id}> replacing report by id ${id}`);
-    await this.ReportRepository.replaceById(id, Report);
+    logger.info(`route </story/{id}> replacing story by id ${id}`);
+    await this.StoryRepository.replaceById(id, Story);
     await handleDeleteCache({
-      asset: 'report',
+      asset: 'story',
       assetId: id,
       userId: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
 
-  @del('/report/{id}')
+  @del('/story/{id}')
   @response(204, {
-    description: 'Report DELETE success',
+    description: 'Story DELETE success',
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async deleteById(
     @param.path.string('id') id: string,
   ): Promise<void | {error: string}> {
-    logger.info(`route </report/{id}> deleting report by id ${id}`);
-    logger.info(`route </report/{id}> updating report by id ${id}`);
-    const dBreport = await this.ReportRepository.findById(id);
-    if (dBreport.owner !== _.get(this.req, 'user.sub')) {
+    logger.info(`route </story/{id}> deleting story by id ${id}`);
+    logger.info(`route </story/{id}> updating story by id ${id}`);
+    const dBstory = await this.StoryRepository.findById(id);
+    if (dBstory.owner !== _.get(this.req, 'user.sub')) {
       return {error: 'Unauthorized'};
     }
-    await this.ReportRepository.deleteById(id);
+    await this.StoryRepository.deleteById(id);
     await handleDeleteCache({
-      asset: 'report',
+      asset: 'story',
       assetId: id,
       userId: _.get(this.req, 'user.sub', 'anonymous'),
     });
   }
 
-  @get('/report/duplicate/{id}')
+  @get('/story/duplicate/{id}')
   @response(200, {
-    description: 'Report model instance',
+    description: 'Story model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Report, {includeRelations: true}),
+        schema: getModelSchemaRef(Story, {includeRelations: true}),
       },
     },
   })
@@ -498,52 +494,50 @@ export class ReportsController {
   async duplicate(
     @param.path.string('id') id: string,
   ): Promise<
-    | {data: Report; planWarning: string | null}
+    | {data: Story; planWarning: string | null}
     | {error: string; errorType: string}
   > {
-    logger.info(
-      `route </report/duplicate/{id}> duplicating report by id ${id}`,
-    );
+    logger.info(`route </story/duplicate/{id}> duplicating story by id ${id}`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const userPlan = await getUserPlanData(userId);
-    const userReportsCount = await this.ReportRepository.count({
+    const userStoriesCount = await this.StoryRepository.count({
       owner: userId,
     });
-    if (userReportsCount.count >= userPlan.reports.noOfReports) {
+    if (userStoriesCount.count >= userPlan.stories.noOfStories) {
       return {
-        error: `You have reached the <b>${userPlan.reports.noOfReports}</b> report limit for your ${userPlan.name} Plan. Upgrade to increase.`,
+        error: `You have reached the <b>${userPlan.stories.noOfStories}</b> story limit for your ${userPlan.name} Plan. Upgrade to increase.`,
         errorType: 'planError',
       };
     }
-    const fReport = await this.ReportRepository.findById(id);
-    // Duplicate Report
-    const newReport = await this.ReportRepository.create({
-      name: `${fReport.name} (Copy)`,
-      showHeader: fReport.showHeader,
-      title: fReport.title,
-      description: fReport.description,
-      heading: fReport.heading,
-      rows: fReport.rows,
+    const fStory = await this.StoryRepository.findById(id);
+    // Duplicate Story
+    const newStory = await this.StoryRepository.create({
+      name: `${fStory.name} (Copy)`,
+      showHeader: fStory.showHeader,
+      title: fStory.title,
+      description: fStory.description,
+      heading: fStory.heading,
+      rows: fStory.rows,
       public: false,
       baseline: false,
-      backgroundColor: fReport.backgroundColor,
-      titleColor: fReport.titleColor,
-      descriptionColor: fReport.descriptionColor,
-      dateColor: fReport.dateColor,
+      backgroundColor: fStory.backgroundColor,
+      titleColor: fStory.titleColor,
+      descriptionColor: fStory.descriptionColor,
+      dateColor: fStory.dateColor,
       owner: userId,
     });
     await handleDeleteCache({
-      asset: 'report',
+      asset: 'story',
       userId,
     });
     return {
-      data: newReport,
+      data: newStory,
       planWarning:
         userPlan.name === 'Enterprise' || userPlan.name === 'Beta'
           ? null
-          : `(<b>${userReportsCount.count + 1}</b>/${
-              userPlan.reports.noOfReports
-            }) reports left on the ${userPlan.name} plan. Upgrade to increase.`,
+          : `(<b>${userStoriesCount.count + 1}</b>/${
+              userPlan.stories.noOfStories
+            }) stories left on the ${userPlan.name} plan. Upgrade to increase.`,
     };
   }
 

@@ -17,11 +17,11 @@ import {ObjectId} from 'bson';
 import _ from 'lodash';
 import {UserProfile} from '../authentication-strategies/user-profile';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
-import {Report} from '../models';
+import {Story} from '../models';
 import {
   ChartRepository,
   DatasetRepository,
-  ReportRepository,
+  StoryRepository,
 } from '../repositories';
 import {deleteIntercomUser, sendContactForm} from '../utils/intercom';
 import {getUserPlanData} from '../utils/planAccess';
@@ -39,8 +39,8 @@ export class UserController {
   @repository(ChartRepository)
   public chartRepository: ChartRepository;
 
-  @repository(ReportRepository)
-  public reportRepository: ReportRepository;
+  @repository(StoryRepository)
+  public storyRepository: StoryRepository;
 
   @post('/users/duplicate-assets')
   @response(200)
@@ -58,7 +58,7 @@ export class UserController {
       const datasets = await this.datasetRepository.find({
         where: {baseline: true},
       });
-      const reports = await this.reportRepository.find({
+      const stories = await this.storyRepository.find({
         where: {baseline: true},
       });
       const charts = await this.chartRepository.find({
@@ -68,7 +68,7 @@ export class UserController {
       const userChartCount = await this.chartRepository.count({
         or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
       });
-      const userReportCount = await this.reportRepository.count({
+      const userStoryCount = await this.storyRepository.count({
         or: [{owner: _.get(this.req, 'user.sub', 'anonymous')}],
       });
       const userDatasetCount = await this.datasetRepository.count({
@@ -78,7 +78,7 @@ export class UserController {
       if (
         // Ensuring that assets have not been duplicated for the user before
         userChartCount.count === 0 &&
-        userReportCount.count === 0 &&
+        userStoryCount.count === 0 &&
         userDatasetCount.count === 0
       ) {
         // Duplicate Datasets
@@ -146,15 +146,15 @@ export class UserController {
           }),
         );
 
-        // Duplicate Reports
-        reports.forEach(report => {
-          this.reportRepository.create({
-            name: `${report.name} (Copy)`,
-            showHeader: report.showHeader,
-            title: report.title,
-            heading: report.heading,
-            description: report.description,
-            rows: report.rows.map(row => {
+        // Duplicate stories
+        stories.forEach(story => {
+          this.storyRepository.create({
+            name: `${story.name} (Copy)`,
+            showHeader: story.showHeader,
+            title: story.title,
+            heading: story.heading,
+            description: story.description,
+            rows: story.rows.map(row => {
               // Update the old chartIds to the new ones
               return {
                 ...row,
@@ -172,10 +172,10 @@ export class UserController {
             }),
             public: false,
             baseline: false,
-            backgroundColor: report.backgroundColor,
-            titleColor: report.titleColor,
-            descriptionColor: report.descriptionColor,
-            dateColor: report.dateColor,
+            backgroundColor: story.backgroundColor,
+            titleColor: story.titleColor,
+            descriptionColor: story.descriptionColor,
+            dateColor: story.dateColor,
             owner: _.get(this.req, 'user.sub', 'anonymous'),
           });
         });
@@ -230,7 +230,7 @@ export class UserController {
 
         await this.datasetRepository.deleteAll({owner: userId});
         await this.chartRepository.deleteAll({owner: userId});
-        await this.reportRepository.deleteAll({owner: userId});
+        await this.storyRepository.deleteAll({owner: userId});
 
         return {message: 'success'};
       } else {
@@ -333,51 +333,49 @@ export class UserController {
     };
   }
 
-  @get('/users/duplicate-landing-report/{id}')
+  @get('/users/duplicate-landing-story/{id}')
   @response(200, {
-    description: 'Report model instance',
+    description: 'Story model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Report, {includeRelations: true}),
+        schema: getModelSchemaRef(Story, {includeRelations: true}),
       },
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async duplicate(@param.path.string('id') id: string): Promise<Report> {
-    logger.info(
-      `route </report/duplicate/{id}> duplicating report by id ${id}`,
-    );
+  async duplicate(@param.path.string('id') id: string): Promise<Story> {
+    logger.info(`route </story/duplicate/{id}> duplicating story by id ${id}`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
-    const fReport = await this.reportRepository.findById(id);
+    const fStory = await this.storyRepository.findById(id);
 
-    const userFReport = await this.reportRepository.findOne({
+    const userFStory = await this.storyRepository.findOne({
       where: {
-        title: fReport.title,
+        title: fStory.title,
         owner: userId,
-        backgroundColor: fReport.backgroundColor,
+        backgroundColor: fStory.backgroundColor,
       },
     });
-    if (userFReport && fReport.owner !== userId) {
-      return userFReport;
+    if (userFStory && fStory.owner !== userId) {
+      return userFStory;
     }
-    let reportChartIds: string[] = [];
-    if (fReport.rows) {
-      fReport.rows.forEach(row => {
+    let storyChartIds: string[] = [];
+    if (fStory.rows) {
+      fStory.rows.forEach(row => {
         if (row.items) {
           row.items.forEach(item => {
             if (typeof item === 'string' && ObjectId.isValid(item)) {
-              reportChartIds.push(item);
+              storyChartIds.push(item);
             }
           });
         }
       });
     }
-    const chartsInReport = await this.chartRepository.find({
-      where: {id: {inq: reportChartIds}},
+    const chartsInStory = await this.chartRepository.find({
+      where: {id: {inq: storyChartIds}},
     });
 
-    const datasetsInReport = await this.datasetRepository.find({
-      where: {id: {inq: chartsInReport.map(c => c.datasetId)}},
+    const datasetsInStory = await this.datasetRepository.find({
+      where: {id: {inq: chartsInStory.map(c => c.datasetId)}},
     });
 
     const datasetsIds: {ds_name: string; new_ds_name: string}[] = [];
@@ -385,7 +383,7 @@ export class UserController {
 
     // Duplicate Datasets
     await Promise.all(
-      datasetsInReport.map(async dataset => {
+      datasetsInStory.map(async dataset => {
         if (dataset.owner === userId) {
           return;
         }
@@ -425,7 +423,7 @@ export class UserController {
 
     // Duplicate Charts
     await Promise.all(
-      chartsInReport.map(async chart => {
+      chartsInStory.map(async chart => {
         if (chart.owner === userId) {
           return;
         }
@@ -453,14 +451,14 @@ export class UserController {
       }),
     );
 
-    // Duplicate Report
-    return this.reportRepository.create({
-      name: `${fReport.name} (Copy)`,
-      showHeader: fReport.showHeader,
-      title: fReport.title,
-      heading: fReport.heading,
-      description: fReport.description,
-      rows: fReport.rows.map(row => {
+    // Duplicate Story
+    return this.storyRepository.create({
+      name: `${fStory.name} (Copy)`,
+      showHeader: fStory.showHeader,
+      title: fStory.title,
+      heading: fStory.heading,
+      description: fStory.description,
+      rows: fStory.rows.map(row => {
         // Update the old chartIds to the new ones
         return {
           ...row,
@@ -477,11 +475,11 @@ export class UserController {
       }),
       public: false,
       baseline: false,
-      backgroundColor: fReport.backgroundColor,
-      titleColor: fReport.titleColor,
-      descriptionColor: fReport.descriptionColor,
-      dateColor: fReport.dateColor,
-      createdDate: fReport.createdDate,
+      backgroundColor: fStory.backgroundColor,
+      titleColor: fStory.titleColor,
+      descriptionColor: fStory.descriptionColor,
+      dateColor: fStory.dateColor,
+      createdDate: fStory.createdDate,
       owner: userId,
     });
   }
@@ -544,7 +542,7 @@ export class UserController {
     const assetsCount = {
       datasets: (await this.datasetRepository.count({owner: userId})).count,
       charts: (await this.chartRepository.count({owner: userId})).count,
-      reports: (await this.reportRepository.count({owner: userId})).count,
+      stories: (await this.storyRepository.count({owner: userId})).count,
     };
     return {
       planData: await getUserPlanData(userId),

@@ -1,8 +1,0 @@
-{
-  "dataPath": "value",
-  "year": "replenishmentPeriod.replenishmentPeriodName",
-  "amount": "amount",
-  "indicator": "indicator",
-  "defaultDonorCategoryFilter": "'25188dfc-7567-4e08-b8d0-088a6b83f238','cc30fc59-b2fa-49e3-aa5a-762727daa68c','641c05fa-129d-4b57-a213-b5f6852ddc5f','c06eaea9-c81b-442b-b403-dc348f3734eb'",
-  "pledgescontributionsTimeCycleAggregation": "$apply=filter(transactionType eq 'USD Equivalent'<filterString>)/groupby((replenishmentPeriod/replenishmentPeriodName,indicator),aggregate(amount with sum as amount))"
-}

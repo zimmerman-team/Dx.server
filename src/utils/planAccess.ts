@@ -24,8 +24,8 @@ export const planAccessData = {
       aiAgent: false,
       customCharting: false,
     },
-    reports: {
-      noOfReports: 5,
+    stories: {
+      noOfStories: 5,
       basicTemplates: true,
       advancedTemplates: true,
       mediaSupport: false,
@@ -53,8 +53,8 @@ export const planAccessData = {
       aiAgent: true,
       customCharting: true,
     },
-    reports: {
-      noOfReports: 100,
+    stories: {
+      noOfStories: 100,
       basicTemplates: true,
       advancedTemplates: true,
       mediaSupport: true,
@@ -82,8 +82,8 @@ export const planAccessData = {
       aiAgent: true,
       customCharting: true,
     },
-    reports: {
-      noOfReports: 1000,
+    stories: {
+      noOfStories: 1000,
       basicTemplates: true,
       advancedTemplates: true,
       mediaSupport: true,
@@ -111,8 +111,8 @@ export const planAccessData = {
       aiAgent: true,
       customCharting: true,
     },
-    reports: {
-      noOfReports: 10000,
+    stories: {
+      noOfStories: 10000,
       basicTemplates: true,
       advancedTemplates: true,
       mediaSupport: true,
@@ -140,8 +140,8 @@ export const planAccessData = {
       aiAgent: true,
       customCharting: true,
     },
-    reports: {
-      noOfReports: 99999999999,
+    stories: {
+      noOfStories: 99999999999,
       basicTemplates: true,
       advancedTemplates: true,
       mediaSupport: true,
