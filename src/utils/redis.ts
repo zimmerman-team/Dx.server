@@ -30,9 +30,13 @@ export const handleDeleteCache = async (options: {
     const orgMemberIds = uniq(
       orgMembers.map((m: any) => m.user_id).concat(options.userId),
     );
+    const promisesToAwait = [];
     for (const memberId of orgMemberIds) {
-      await deleteKeysWithPattern(`*${options.asset}s-${memberId}`);
-      await deleteKeysWithPattern(`*assets-${memberId}`);
+      promisesToAwait.push(
+        deleteKeysWithPattern(`*${options.asset}s-${memberId}`),
+        deleteKeysWithPattern(`*assets-${memberId}`),
+      );
     }
+    await Promise.all(promisesToAwait);
   }
 };

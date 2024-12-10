@@ -23,8 +23,13 @@ import {
   DatasetRepository,
   StoryRepository,
 } from '../repositories';
-import {deleteIntercomUser, sendContactForm} from '../utils/intercom';
+import {
+  addUserToNewsletter,
+  deleteIntercomUser,
+  sendContactForm,
+} from '../utils/intercom';
 import {getUserPlanData} from '../utils/planAccess';
+import {handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -231,6 +236,18 @@ export class UserController {
         await this.datasetRepository.deleteAll({owner: userId});
         await this.chartRepository.deleteAll({owner: userId});
         await this.storyRepository.deleteAll({owner: userId});
+        await handleDeleteCache({
+          asset: 'chart',
+          userId,
+        });
+        await handleDeleteCache({
+          asset: 'dataset',
+          userId,
+        });
+        await handleDeleteCache({
+          asset: 'report',
+          userId,
+        });
 
         return {message: 'success'};
       } else {
@@ -531,6 +548,29 @@ export class UserController {
         `route <users/send-contact-form-to-intercom> -  Error sending contact form: ${error}`,
       );
       return {error: 'Error sending contact form'};
+    }
+  }
+
+  @post('/users/subscribe-to-newsletter')
+  @response(200)
+  async subscribeToNewsletter(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {},
+        },
+      },
+    })
+    {email}: {email: string},
+  ) {
+    try {
+      const response = await addUserToNewsletter(email);
+      return response;
+    } catch (error) {
+      logger.error(
+        `route <users/subscribe-to-newsletter> -  Error subscribing to newsletter: ${error}`,
+      );
+      return {error: 'Error subscribing to newsletter'};
     }
   }
 
