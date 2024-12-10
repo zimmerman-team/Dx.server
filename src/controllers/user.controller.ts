@@ -553,6 +553,9 @@ export class UserController {
     {email}: {email: string},
   ) {
     try {
+      logger.info(
+        `route <users/subscribe-to-newsletter> -  subscribing to newsletter`,
+      );
       const response = await addUserToNewsletter(email);
       return response;
     } catch (error) {
