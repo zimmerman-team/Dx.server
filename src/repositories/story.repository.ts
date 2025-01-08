@@ -1,18 +1,17 @@
 import {inject} from '@loopback/core';
 import {DefaultCrudRepository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {Dataset} from '../models';
+import {Story} from '../models';
 
-export class DatasetRepository extends DefaultCrudRepository<
-  Dataset,
-  typeof Dataset.prototype.id
+export class StoryRepository extends DefaultCrudRepository<
+  Story,
+  typeof Story.prototype.id
 > {
   constructor(@inject('datasources.db') dataSource: DbDataSource) {
-    super(Dataset, dataSource);
+    super(Story, dataSource);
 
     this.modelClass.observe('before save', this.beforeSave);
   }
-
   async beforeSave(ctx: any) {
     const {instance, data} = ctx;
 

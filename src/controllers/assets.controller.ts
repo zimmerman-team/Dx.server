@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -17,11 +17,12 @@ import {
 } from '@loopback/rest';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
-import {Chart, Dataset, Report} from '../models';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
+import {Chart, Dataset, Story} from '../models';
 import {
   ChartRepository,
   DatasetRepository,
-  ReportRepository,
+  StoryRepository,
 } from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 
@@ -34,8 +35,8 @@ export class AssetController {
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
 
-    @repository(ReportRepository)
-    public reportRepository: ReportRepository,
+    @repository(StoryRepository)
+    public storyRepository: StoryRepository,
   ) {}
 
   /* get assets */
@@ -46,7 +47,7 @@ export class AssetController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Chart || Dataset || Report, {
+          items: getModelSchemaRef(Chart || Dataset || Story, {
             includeRelations: true,
           }),
         },
@@ -54,9 +55,10 @@ export class AssetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({useUserId: true, extraKey: 'assets'}))
   async find(
-    @param.filter(Chart || Dataset || Report)
-    filter?: Filter<Chart | Dataset | Report>,
+    @param.filter(Chart || Dataset || Story)
+    filter?: Filter<Chart | Dataset | Story>,
   ): Promise<any[]> {
     const owner = _.get(this.req, 'user.sub', 'anonymous');
     const orgMembers = await getUsersOrganizationMembers(owner);
@@ -107,7 +109,7 @@ export class AssetController {
         ],
       },
     });
-    const reports = await this.reportRepository.find({
+    const stories = await this.storyRepository.find({
       ...filter,
       limit,
       offset,
@@ -133,7 +135,7 @@ export class AssetController {
       [
         ...charts.map(chart => ({...chart, assetType: 'chart'})),
         ...datasets.map(dataset => ({...dataset, assetType: 'dataset'})),
-        ...reports.map(report => ({...report, assetType: 'report'})),
+        ...stories.map(story => ({...story, assetType: 'story'})),
       ],
       orderField,
       orderDirection,
@@ -152,9 +154,10 @@ export class AssetController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
-    @param.filter(Chart || Dataset || Report)
-    filter?: Filter<Chart | Dataset | Report>,
+    @param.filter(Chart || Dataset || Story)
+    filter?: Filter<Chart | Dataset | Story>,
   ): Promise<any[]> {
     logger.info(`Fetching public assets`);
     const limit = Math.floor((filter?.limit || 0) / 3);
@@ -194,7 +197,7 @@ export class AssetController {
         or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
       },
     });
-    const reports = await this.reportRepository.find({
+    const stories = await this.storyRepository.find({
       ...filter,
       limit,
       offset,
@@ -220,7 +223,7 @@ export class AssetController {
       [
         ...charts.map(chart => ({...chart, assetType: 'chart'})),
         ...datasets.map(dataset => ({...dataset, assetType: 'dataset'})),
-        ...reports.map(report => ({...report, assetType: 'report'})),
+        ...stories.map(story => ({...story, assetType: 'story'})),
       ],
       orderField,
       orderDirection,
@@ -234,7 +237,7 @@ export class AssetController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(
-    @param.where(Dataset || Report || Chart) where?: Where<Dataset>,
+    @param.where(Dataset || Story || Chart) where?: Where<Dataset>,
   ): Promise<Count> {
     logger.info(`route </assets/count> -  get datasets count`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
@@ -263,7 +266,7 @@ export class AssetController {
         },
       ],
     });
-    const reportsCount = await this.reportRepository.count({
+    const storiesCount = await this.storyRepository.count({
       ...where,
       or: [
         {owner: userId},
@@ -276,7 +279,7 @@ export class AssetController {
     });
 
     return {
-      count: datasetsCount.count + chartsCount.count + reportsCount.count,
+      count: datasetsCount.count + chartsCount.count + storiesCount.count,
     };
   }
 
@@ -286,7 +289,7 @@ export class AssetController {
     content: {'application/json': {schema: CountSchema}},
   })
   async countPublic(
-    @param.where(Dataset || Report || Chart) where?: Where<Dataset>,
+    @param.where(Dataset || Story || Chart) where?: Where<Dataset>,
   ): Promise<Count> {
     logger.info(`route </assets/count/public> -  get datasets count`);
     const datasetsCount = await this.datasetRepository.count({
@@ -297,13 +300,13 @@ export class AssetController {
       ...where,
       or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
     });
-    const reportsCount = await this.reportRepository.count({
+    const storiesCount = await this.storyRepository.count({
       ...where,
       or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
     });
 
     return {
-      count: datasetsCount.count + chartsCount.count + reportsCount.count,
+      count: datasetsCount.count + chartsCount.count + storiesCount.count,
     };
   }
 }
