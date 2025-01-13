@@ -16,14 +16,17 @@ import {
   AuthenticationComponent,
   registerAuthenticationStrategy,
 } from '@loopback/authentication';
+import cron from 'node-cron';
 import {createClient} from 'redis';
 import {
   JWTAuthenticationStrategy,
   JWTServiceProvider,
   KEY,
 } from './authentication-strategies';
+import {winstonLogger as logger} from './config/logger/winston-logger';
 import {FILE_UPLOAD_SERVICE, STORAGE_DIRECTORY} from './keys';
 import {MySequence} from './sequence';
+import {delete10DayOldLeadsWithoutEmails} from './utils/intercom';
 import {mimeTypeToFileExtension} from './utils/mimeTypeToFileExtension';
 
 export let redisClient: ReturnType<typeof createClient>;
@@ -81,6 +84,12 @@ export class ApiApplication extends BootMixin(
       useNewUrlParser: true,
     });
     this.bind('datasources.db').toClass(DbDataSource);
+
+    // Schedule the cron job to run at 3am every day
+    cron.schedule('0 3 * * *', function () {
+      logger.info(`cron <delete10DayOldLeadsWithoutEmails> running`);
+      delete10DayOldLeadsWithoutEmails();
+    });
 
     // Set up the custom sequence
     this.sequence(MySequence);
