@@ -1,7 +1,13 @@
 import _ from 'lodash';
+import Stripe from 'stripe';
 import {UserProfile} from '../authentication-strategies/user-profile';
 
 type Plan = 'free' | 'pro' | 'team' | 'enterprise';
+
+const StripeClient = new Stripe(process.env.STRIPE_API_KEY as string, {
+  // @ts-ignore
+  apiVersion: null,
+});
 
 export const planAccessData = {
   free: {
@@ -160,11 +166,24 @@ export const getUserPlanData = async (userId: string) => {
     return planAccessData.free;
   }
   // Also to an organization check to check if user belongs to a team
-  const planName: Plan = _.get(
-    userProfile,
-    'app_metadata.planName',
-    'free',
-  ).toLowerCase();
+  // const planName: Plan = _.get(
+  //   userProfile,
+  //   'app_metadata.planName',
+  //   'free',
+  // ).toLowerCase();
 
-  return _.get(planAccessData, planName);
+  const subscriptionId = _.get(userProfile, 'app_metadata.subscriptionId', '');
+  if (!subscriptionId) {
+    return planAccessData.free;
+  }
+  const subscription = await StripeClient.subscriptions.retrieve(
+    subscriptionId,
+  );
+  const planName = _.get(
+    subscription,
+    'plan.metadata.name',
+    'free',
+  ).toLowerCase() as Plan;
+
+  return _.get(planAccessData, planName, planAccessData.free);
 };
