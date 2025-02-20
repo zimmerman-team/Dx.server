@@ -570,7 +570,13 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  @intercept(cacheInterceptor({expiry: 10 * 60}))
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'chart-render-detail',
+      useFirstPathParam: true,
+      expiry: 10 * 60,
+    }),
+  )
   async renderById(
     @param.path.string('id') id: string,
     @requestBody() body: any,
@@ -624,7 +630,13 @@ export class ChartsController {
       },
     },
   })
-  @intercept(cacheInterceptor({expiry: 10 * 60}))
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'public-chart-render-detail',
+      useFirstPathParam: true,
+      expiry: 10 * 60,
+    }),
+  )
   async renderByIdPublic(
     @param.path.string('id') id: string,
     @requestBody() body: any,
