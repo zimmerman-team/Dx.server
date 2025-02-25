@@ -30,6 +30,7 @@ import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {Chart} from '../models';
 import {ChartRepository, DatasetRepository} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
+import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
 import {handleDeleteCache} from '../utils/redis';
 
@@ -763,7 +764,7 @@ export class ChartsController {
     const fChart = await this.chartRepository.findById(id);
 
     const newChart = await this.chartRepository.create({
-      name: `${fChart.name} (Copy)`,
+      name: duplicateName(fChart.name, fChart.owner === userId),
       public: false,
       baseline: false,
       vizType: fChart.vizType,

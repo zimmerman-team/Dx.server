@@ -32,6 +32,7 @@ import {
   StoryRepository,
 } from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
+import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
 import {handleDeleteCache} from '../utils/redis';
 
@@ -512,7 +513,7 @@ export class StoriesController {
     const fStory = await this.StoryRepository.findById(id);
     // Duplicate Story
     const newStory = await this.StoryRepository.create({
-      name: `${fStory.name} (Copy)`,
+      name: duplicateName(fStory.name, fStory.owner === userId),
       showHeader: fStory.showHeader,
       title: fStory.title,
       description: fStory.description,

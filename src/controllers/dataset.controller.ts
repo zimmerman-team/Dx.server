@@ -34,6 +34,7 @@ import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {getUsersOrganizationMembers} from '../utils/auth';
+import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
 import {handleDeleteCache} from '../utils/redis';
 
@@ -629,7 +630,7 @@ export class DatasetController {
     }
     const fDataset = await this.datasetRepository.findById(id);
     const newDatasetPromise = this.datasetRepository.create({
-      name: `${fDataset.name} (Copy)`,
+      name: duplicateName(fDataset.name, fDataset.owner === userId),
       public: false,
       baseline: false,
       category: fDataset.category,

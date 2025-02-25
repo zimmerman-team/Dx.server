@@ -91,7 +91,7 @@ export class UserController {
         await Promise.all(
           datasets.map(async dataset => {
             const newDataset = await this.datasetRepository.create({
-              name: `${dataset.name} (Copy)`,
+              name: `${dataset.name}`,
               public: false,
               baseline: false,
               category: dataset.category,
@@ -129,7 +129,7 @@ export class UserController {
         await Promise.all(
           charts.map(async chart => {
             const newChart = await this.chartRepository.create({
-              name: `${chart.name} (Copy)`,
+              name: `${chart.name}`,
               public: false,
               baseline: false,
               vizType: chart.vizType,
@@ -155,7 +155,7 @@ export class UserController {
         // Duplicate stories
         stories.forEach(story => {
           this.storyRepository.create({
-            name: `${story.name} (Copy)`,
+            name: `${story.name}`,
             showHeader: story.showHeader,
             title: story.title,
             heading: story.heading,
@@ -376,7 +376,7 @@ export class UserController {
     if (userFStory && fStory.owner !== userId) {
       return userFStory;
     }
-    let storyChartIds: string[] = [];
+    const storyChartIds: string[] = [];
     if (fStory.rows) {
       fStory.rows.forEach(row => {
         if (row.items) {
@@ -471,7 +471,7 @@ export class UserController {
 
     // Duplicate Story
     return this.storyRepository.create({
-      name: `${fStory.name} (Copy)`,
+      name: `${fStory.name}`,
       showHeader: fStory.showHeader,
       title: fStory.title,
       heading: fStory.heading,
