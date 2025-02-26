@@ -44,13 +44,17 @@ async function getStoriesCount(
   storyRepository: StoryRepository,
   owner?: string,
   where?: Where<Story>,
+  filterByOwner?: boolean,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
     return storyRepository.count({
       ...where,
-      or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+      or: [
+        {owner: owner},
+        ...(filterByOwner ? [] : [{owner: {inq: orgMemberIds}}]),
+      ],
     });
   }
   return storyRepository.count({
@@ -63,6 +67,7 @@ async function getStories(
   storyRepository: StoryRepository,
   owner?: string,
   filter?: Filter<Story>,
+  filterByOwner?: boolean,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
@@ -71,7 +76,10 @@ async function getStories(
       ...filter,
       where: {
         ...filter?.where,
-        or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+        or: [
+          {owner: owner},
+          ...(filterByOwner ? [] : [{owner: {inq: orgMemberIds}}]),
+        ],
       },
       fields: [
         'id',
@@ -204,12 +212,16 @@ export class StoriesController {
     content: {'application/json': {schema: CountSchema}},
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async count(@param.where(Story) where?: Where<Story>): Promise<Count> {
+  async count(
+    @param.where(Story) where?: Where<Story>,
+    @param.query.boolean('userOnly') userOnly?: boolean,
+  ): Promise<Count> {
     logger.info(`route </stories/count> getting stories count`);
     return getStoriesCount(
       this.StoryRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       where,
+      userOnly,
     );
   }
 
@@ -237,7 +249,10 @@ export class StoriesController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(cacheInterceptor({extraKey: 'stories', useUserId: true})) // caching per user
-  async find(@param.filter(Story) filter?: Filter<Story>): Promise<Story[]> {
+  async find(
+    @param.filter(Story) filter?: Filter<Story>,
+    @param.query.boolean('userOnly') userOnly?: boolean,
+  ): Promise<Story[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
       filter.order = filter.order.replace('name', 'nameLower');
@@ -247,6 +262,7 @@ export class StoriesController {
       this.StoryRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       filter,
+      userOnly,
     );
   }
 
