@@ -503,7 +503,11 @@ export class ChartsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(
-    cacheInterceptor({cacheId: 'chart-detail', useFirstPathParam: true}),
+    cacheInterceptor({
+      cacheId: 'chart-detail',
+      useFirstPathParam: true,
+      useUserId: true,
+    }),
   )
   async findById(
     @param.path.string('id') id: string,
@@ -576,6 +580,7 @@ export class ChartsController {
       cacheId: 'chart-render-detail',
       useFirstPathParam: true,
       expiry: 10 * 60,
+      useUserId: true,
     }),
   )
   async renderById(
