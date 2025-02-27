@@ -36,7 +36,7 @@ import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
-import {handleDeleteCache} from '../utils/redis';
+import {addOwnerNameToAssets, handleDeleteCache} from '../utils/redis';
 
 type FileUploadHandler = RequestHandler;
 
@@ -46,6 +46,48 @@ const FILE_UPLOAD_SERVICE = BindingKey.create<FileUploadHandler>(
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
   host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+
+const getDatasets = async (
+  datasetRepository: DatasetRepository,
+  userId: string,
+  filter?: Filter<Dataset>,
+  userOnly?: boolean,
+) => {
+  if (userId && userId !== 'anonymous') {
+    if (userOnly) {
+      return datasetRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          owner: userId,
+        },
+      });
+    }
+    const orgMembers = await getUsersOrganizationMembers(userId);
+    const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    return datasetRepository.find({
+      ...filter,
+      where: {
+        ...filter?.where,
+        or: [
+          {owner: userId},
+          {
+            owner: {
+              inq: orgMemberIds,
+            },
+          },
+        ],
+      },
+    });
+  }
+  return datasetRepository.find({
+    ...filter,
+    where: {
+      ...filter?.where,
+      or: [{owner: userId}, {public: true}, {baseline: true}],
+    },
+  });
+};
 
 export class DatasetController {
   constructor(
@@ -194,40 +236,13 @@ export class DatasetController {
 
     logger.info(`route </datasets> -  get datasets`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
-    if (userId && userId !== 'anonymous') {
-      if (userOnly) {
-        return this.datasetRepository.find({
-          ...filter,
-          where: {
-            ...filter?.where,
-            owner: userId,
-          },
-        });
-      }
-      const orgMembers = await getUsersOrganizationMembers(userId);
-      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-      return this.datasetRepository.find({
-        ...filter,
-        where: {
-          ...filter?.where,
-          or: [
-            {owner: userId},
-            {
-              owner: {
-                inq: orgMemberIds,
-              },
-            },
-          ],
-        },
-      });
-    }
-    return this.datasetRepository.find({
-      ...filter,
-      where: {
-        ...filter?.where,
-        or: [{owner: userId}, {public: true}, {baseline: true}],
-      },
-    });
+    const datasets = await getDatasets(
+      this.datasetRepository,
+      userId,
+      filter,
+      userOnly,
+    );
+    return addOwnerNameToAssets(datasets);
   }
 
   @get('/datasets/public')
@@ -252,13 +267,13 @@ export class DatasetController {
     }
 
     logger.info(`route </datasets/public> -  get public datasets`);
-    return this.datasetRepository.find({
-      ...filter,
-      where: {
-        ...filter?.where,
-        or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
-      },
-    });
+
+    const datasets = await getDatasets(
+      this.datasetRepository,
+      'anonymous',
+      filter,
+    );
+    return addOwnerNameToAssets(datasets);
   }
 
   @patch('/datasets')

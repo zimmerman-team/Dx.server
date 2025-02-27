@@ -32,7 +32,7 @@ import {ChartRepository, DatasetRepository} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
-import {handleDeleteCache} from '../utils/redis';
+import {addOwnerNameToAssets, handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -372,18 +372,21 @@ export class ChartsController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(cacheInterceptor({extraKey: 'charts', useUserId: true})) // caching per user
-  async find(@param.filter(Chart) filter?: Filter<Chart>): Promise<Chart[]> {
+  async find(
+    @param.filter(Chart) filter?: Filter<Chart>,
+  ): Promise<(Chart & {ownerName: string})[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
       filter.order = filter.order.replace('name', 'nameLower');
     }
 
     logger.info(`route</charts> Fetching charts`);
-    return getCharts(
+    const charts = await getCharts(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       filter,
     );
+    return addOwnerNameToAssets(charts);
   }
 
   @get('/charts/public')
@@ -408,7 +411,8 @@ export class ChartsController {
     }
 
     logger.info(`Fetching public charts`);
-    return getCharts(this.chartRepository, 'anonymous', filter);
+    const charts = await getCharts(this.chartRepository, 'anonymous', filter);
+    return addOwnerNameToAssets(charts);
   }
 
   /* get charts */

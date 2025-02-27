@@ -25,6 +25,7 @@ import {
   StoryRepository,
 } from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
+import {addOwnerNameToAssets} from '../utils/redis';
 
 export class AssetController {
   constructor(
@@ -131,14 +132,16 @@ export class AssetController {
         'owner',
       ],
     });
-    return _.orderBy(
-      [
-        ...charts.map(chart => ({...chart, assetType: 'chart'})),
-        ...datasets.map(dataset => ({...dataset, assetType: 'dataset'})),
-        ...stories.map(story => ({...story, assetType: 'story'})),
-      ],
-      orderField,
-      orderDirection,
+    return await addOwnerNameToAssets(
+      _.orderBy(
+        [
+          ...charts.map(chart => ({...chart, assetType: 'chart'})),
+          ...datasets.map(dataset => ({...dataset, assetType: 'dataset'})),
+          ...stories.map(story => ({...story, assetType: 'story'})),
+        ],
+        orderField,
+        orderDirection,
+      ),
     );
   }
 
@@ -219,14 +222,16 @@ export class AssetController {
         'owner',
       ],
     });
-    return _.orderBy(
-      [
-        ...charts.map(chart => ({...chart, assetType: 'chart'})),
-        ...datasets.map(dataset => ({...dataset, assetType: 'dataset'})),
-        ...stories.map(story => ({...story, assetType: 'story'})),
-      ],
-      orderField,
-      orderDirection,
+    return await addOwnerNameToAssets(
+      _.orderBy(
+        [
+          ...charts.map(chart => ({...chart, assetType: 'chart'})),
+          ...datasets.map(dataset => ({...dataset, assetType: 'dataset'})),
+          ...stories.map(story => ({...story, assetType: 'story'})),
+        ],
+        orderField,
+        orderDirection,
+      ),
     );
   }
 

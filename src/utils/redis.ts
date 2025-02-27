@@ -46,3 +46,26 @@ export const handleDeleteCache = async (options: {
     await Promise.all(promisesToAwait);
   }
 };
+
+export const getUserName = async (userId: string) => {
+  const name = await redisClient.get(`user-name-${userId}`);
+  if (name) {
+    return name;
+  }
+  return '-';
+};
+
+export const addOwnerNameToAssets = async <
+  T extends {owner: string; baseline: boolean},
+>(
+  assets: T[],
+) => {
+  const promises = assets.map(async asset => {
+    if (asset.baseline || asset.owner.length < 5) {
+      return {...asset, ownerName: 'Dataxplorer'};
+    }
+    const ownerName = await getUserName(asset.owner);
+    return {...asset, ownerName};
+  });
+  return Promise.all(promises);
+};

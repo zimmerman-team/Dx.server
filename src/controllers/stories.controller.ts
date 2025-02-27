@@ -34,7 +34,7 @@ import {
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
-import {handleDeleteCache} from '../utils/redis';
+import {addOwnerNameToAssets, handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -243,11 +243,12 @@ export class StoriesController {
       filter.order = filter.order.replace('name', 'nameLower');
     }
     logger.info(`route </stories> getting stories`);
-    return getStories(
+    const stories = await getStories(
       this.StoryRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       filter,
     );
+    return addOwnerNameToAssets(stories);
   }
 
   @get('/stories/public')
@@ -272,7 +273,8 @@ export class StoriesController {
     }
 
     logger.info(`route </stories/public> getting public stories`);
-    return getStories(this.StoryRepository, 'anonymous', filter);
+    const stories = await getStories(this.StoryRepository, 'anonymous', filter);
+    return addOwnerNameToAssets(stories);
   }
 
   @patch('/story')
