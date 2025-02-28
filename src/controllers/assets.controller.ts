@@ -59,6 +59,7 @@ export class AssetController {
   async find(
     @param.filter(Chart || Dataset || Story)
     filter?: Filter<Chart | Dataset | Story>,
+    @param.query.boolean('userOnly') userOnly?: boolean,
   ): Promise<any[]> {
     const owner = _.get(this.req, 'user.sub', 'anonymous');
     const orgMembers = await getUsersOrganizationMembers(owner);
@@ -78,7 +79,10 @@ export class AssetController {
       offset,
       where: {
         ...filter?.where,
-        or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+        or: [
+          {owner: owner},
+          ...(userOnly ? [] : [{owner: {inq: orgMemberIds}}]),
+        ],
       },
       fields: [
         'id',
@@ -238,21 +242,17 @@ export class AssetController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(
     @param.where(Dataset || Story || Chart) where?: Where<Dataset>,
+    @param.query.boolean('userOnly') userOnly?: boolean,
   ): Promise<Count> {
     logger.info(`route </assets/count> -  get datasets count`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
-
     const orgMembers = await getUsersOrganizationMembers(userId);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
     const datasetsCount = await this.datasetRepository.count({
       ...where,
       or: [
         {owner: userId},
-        {
-          owner: {
-            inq: orgMemberIds,
-          },
-        },
+        ...(userOnly ? [] : [{owner: {inq: orgMemberIds}}]),
       ],
     });
     const chartsCount = await this.chartRepository.count({
