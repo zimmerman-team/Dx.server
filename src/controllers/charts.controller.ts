@@ -778,9 +778,14 @@ export class ChartsController {
       };
     }
     const fChart = await this.chartRepository.findById(id);
+    const name = await duplicateName(
+      fChart.name,
+      fChart.owner === userId,
+      this.chartRepository,
+    );
 
     const newChart = await this.chartRepository.create({
-      name: duplicateName(fChart.name, fChart.owner === userId),
+      name,
       public: false,
       baseline: false,
       vizType: fChart.vizType,
