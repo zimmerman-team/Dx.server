@@ -526,10 +526,19 @@ export class StoriesController {
         errorType: 'planError',
       };
     }
+
     const fStory = await this.StoryRepository.findById(id);
+
+    const name = await duplicateName(
+      fStory.name,
+      fStory.owner === userId,
+      this.StoryRepository,
+      userId,
+    );
+
     // Duplicate Story
     const newStory = await this.StoryRepository.create({
-      name: duplicateName(fStory.name, fStory.owner === userId),
+      name,
       showHeader: fStory.showHeader,
       title: fStory.title,
       description: fStory.description,

@@ -629,8 +629,15 @@ export class DatasetController {
       };
     }
     const fDataset = await this.datasetRepository.findById(id);
+
+    const name = await duplicateName(
+      fDataset.name,
+      fDataset.owner === userId,
+      this.datasetRepository,
+      userId,
+    );
     const newDatasetPromise = this.datasetRepository.create({
-      name: duplicateName(fDataset.name, fDataset.owner === userId),
+      name,
       public: false,
       baseline: false,
       category: fDataset.category,
