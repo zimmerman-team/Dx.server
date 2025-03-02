@@ -323,7 +323,11 @@ export class StoriesController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(
-    cacheInterceptor({useFirstPathParam: true, cacheId: 'story-detail'}),
+    cacheInterceptor({
+      useFirstPathParam: true,
+      cacheId: 'story-detail',
+      useUserId: true,
+    }),
   )
   async findById(
     @param.path.string('id') id: string,

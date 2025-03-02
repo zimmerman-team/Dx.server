@@ -293,7 +293,11 @@ export class DatasetController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(
-    cacheInterceptor({cacheId: 'dataset-detail', useFirstPathParam: true}),
+    cacheInterceptor({
+      cacheId: 'dataset-detail',
+      useFirstPathParam: true,
+      useUserId: true,
+    }),
   )
   async findById(
     @param.path.string('id') id: string,
