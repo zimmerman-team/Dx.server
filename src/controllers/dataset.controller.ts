@@ -634,6 +634,7 @@ export class DatasetController {
       fDataset.name,
       fDataset.owner === userId,
       this.datasetRepository,
+      userId,
     );
     const newDatasetPromise = this.datasetRepository.create({
       name,

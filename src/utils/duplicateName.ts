@@ -4,6 +4,7 @@ export const duplicateName = async (
   name: string,
   isOwner: boolean,
   repo: DefaultCrudRepository<any, any, any>,
+  userId: string,
 ) => {
   if (!isOwner) {
     return name;
@@ -11,7 +12,7 @@ export const duplicateName = async (
   // Check if name has been previously duplicated
   const isDuplicatedOnce = await repo.find({where: {name: `(Copy)${name}`}});
 
-  const allAssets = await repo.find();
+  const allAssets = await repo.find({where: {owner: userId}});
   const allCopies = allAssets.filter(asset => {
     // Check if name starts with "(Copy" followed by a number and ends with currentName
     const nameParts = asset.name.split(name);

@@ -782,6 +782,7 @@ export class ChartsController {
       fChart.name,
       fChart.owner === userId,
       this.chartRepository,
+      userId,
     );
 
     const newChart = await this.chartRepository.create({

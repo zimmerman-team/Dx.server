@@ -533,6 +533,7 @@ export class StoriesController {
       fStory.name,
       fStory.owner === userId,
       this.StoryRepository,
+      userId,
     );
 
     // Duplicate Story
