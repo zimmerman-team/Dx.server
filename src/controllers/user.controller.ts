@@ -337,11 +337,6 @@ export class UserController {
     logger.info('route </users/google-drive/user-token> -  get user Token');
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const profile = await UserProfile.getUserProfile(userId);
-    // Cache the user name
-    const userName = _.get(profile, 'user');
-    if (userName) {
-      await redisClient.set(`user-name-${userId}`, userName);
-    }
     const connection = profile.identities?.[0]?.connection;
     if (connection !== 'google-oauth2') {
       return {error: 'User is not signed in with a Google account'};

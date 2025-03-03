@@ -31,7 +31,6 @@ export const cacheInterceptor = (options?: {
     try {
       const cachedResult = await redisClient.get(cacheName);
       if (cachedResult) {
-        console.log('Cache hit', cacheName);
         return JSON.parse(cachedResult);
       }
       const result = await next();
