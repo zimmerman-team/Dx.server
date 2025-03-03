@@ -34,6 +34,7 @@ export async function AUTH0_MGMT_API_CALL(
   method: Method,
   path: string,
   data?: any,
+  params?: any,
 ) {
   return getAccessToken().then(token => {
     return axios
@@ -44,6 +45,7 @@ export async function AUTH0_MGMT_API_CALL(
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        params,
       })
       .then(response => response.data)
       .catch(err => {

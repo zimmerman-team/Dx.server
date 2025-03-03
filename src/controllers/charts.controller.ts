@@ -32,7 +32,7 @@ import {ChartRepository, DatasetRepository} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
 import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
-import {handleDeleteCache} from '../utils/redis';
+import {addOwnerNameToAssets, handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -387,19 +387,20 @@ export class ChartsController {
   async find(
     @param.filter(Chart) filter?: Filter<Chart>,
     @param.query.boolean('userOnly') userOnly?: boolean,
-  ): Promise<Chart[]> {
+  ): Promise<(Chart & {ownerName: string})[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
       filter.order = filter.order.replace('name', 'nameLower');
     }
 
     logger.info(`route</charts> Fetching charts`);
-    return getCharts(
+    const charts = await getCharts(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       filter,
       userOnly,
     );
+    return addOwnerNameToAssets(charts);
   }
 
   @get('/charts/public')
@@ -424,7 +425,13 @@ export class ChartsController {
     }
 
     logger.info(`Fetching public charts`);
-    return getCharts(this.chartRepository, 'anonymous', filter, false);
+    const charts = await getCharts(
+      this.chartRepository,
+      'anonymous',
+      filter,
+      false,
+    );
+    return addOwnerNameToAssets(charts);
   }
 
   /* get charts */

@@ -12,6 +12,13 @@ export class UserProfile {
     const data = await AUTH0_MGMT_API_CALL('GET', `users/${userId}`);
     return data;
   }
+
+  static async getUsersByIds(userIds: string[]): Promise<any> {
+    const data = await AUTH0_MGMT_API_CALL('GET', `users`, undefined, {
+      q: `user_id:(${userIds.join(' OR ')})`,
+    });
+    return data;
+  }
   //delete user
   static async deleteUser(userId: string): Promise<any> {
     const userProfile = await this.getUserProfile(userId);

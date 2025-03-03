@@ -15,6 +15,7 @@ import {
 import axios from 'axios';
 import {ObjectId} from 'bson';
 import _ from 'lodash';
+import {redisClient} from '../application';
 import {UserProfile} from '../authentication-strategies/user-profile';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Story} from '../models';
@@ -26,7 +27,6 @@ import {
 import {
   addUserToNewsletter,
   deleteIntercomUser,
-  get10DayOldLeadsWithoutEmails,
   sendContactForm,
 } from '../utils/intercom';
 import {getUserPlanData} from '../utils/planAccess';
@@ -277,11 +277,12 @@ export class UserController {
       name: string;
     },
   ): Promise<{name: string} | {error: string}> {
+    const userId = _.get(this.req, 'user.sub', 'anonymous');
     try {
-      const response = await UserProfile.updateUserProfile(
-        _.get(this.req, 'user.sub', 'anonymous'),
-        {name: userDetails.name},
-      );
+      const response = await UserProfile.updateUserProfile(userId, {
+        name: userDetails.name,
+      });
+      await redisClient.set(`user-name-${userId}`, userDetails.name);
       return {name: response.name};
     } catch (error) {
       logger.error(
@@ -595,6 +596,6 @@ export class UserController {
   @response(200)
   // @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async searchUser(@param.query.string('email') email: string) {
-    return get10DayOldLeadsWithoutEmails();
+    return email;
   }
 }
