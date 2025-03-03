@@ -308,7 +308,11 @@ export class DatasetController {
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(
-    cacheInterceptor({cacheId: 'dataset-detail', useFirstPathParam: true}),
+    cacheInterceptor({
+      cacheId: 'dataset-detail',
+      useFirstPathParam: true,
+      useUserId: true,
+    }),
   )
   async findById(
     @param.path.string('id') id: string,
@@ -644,8 +648,15 @@ export class DatasetController {
       };
     }
     const fDataset = await this.datasetRepository.findById(id);
+
+    const name = await duplicateName(
+      fDataset.name,
+      fDataset.owner === userId,
+      this.datasetRepository,
+      userId,
+    );
     const newDatasetPromise = this.datasetRepository.create({
-      name: duplicateName(fDataset.name, fDataset.owner === userId),
+      name,
       public: false,
       baseline: false,
       category: fDataset.category,
