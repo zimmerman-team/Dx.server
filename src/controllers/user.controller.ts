@@ -246,7 +246,7 @@ export class UserController {
           userId,
         });
         await handleDeleteCache({
-          asset: 'report',
+          asset: 'story',
           userId,
         });
 
