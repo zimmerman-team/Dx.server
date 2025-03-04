@@ -193,6 +193,7 @@ export class AssetController {
         'isMappingValid',
         'isAIAssisted',
         'owner',
+        'baseline',
       ],
     });
     const datasets = await this.datasetRepository.find({
@@ -224,6 +225,7 @@ export class AssetController {
         'heading',
         'public',
         'owner',
+        'baseline',
       ],
     });
     return await addOwnerNameToAssets(
