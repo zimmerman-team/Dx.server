@@ -600,7 +600,6 @@ export class ChartsController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(
     cacheInterceptor({
-      cacheId: 'chart-render-detail',
       useFirstPathParam: true,
       expiry: 10 * 60,
       useUserId: true,
