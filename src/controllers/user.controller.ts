@@ -592,6 +592,14 @@ export class UserController {
     };
   }
 
+  @get('/users/check-pricing-active')
+  @response(200)
+  async checkPlanActive() {
+    return {
+      active: process.env.PRICING_ACTIVE === 'true',
+    };
+  }
+
   @get('/users/search-intercom-user')
   @response(200)
   // @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
