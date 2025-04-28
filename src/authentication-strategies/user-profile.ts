@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Stripe from 'stripe';
+import {redisClient} from '../application';
 import {AUTH0_MGMT_API_CALL} from '../utils/auth';
 
 const StripeClient = new Stripe(process.env.STRIPE_API_KEY as string, {
@@ -9,7 +10,15 @@ const StripeClient = new Stripe(process.env.STRIPE_API_KEY as string, {
 
 export class UserProfile {
   static async getUserProfile(userId: string): Promise<any> {
+    const cacheName = `user-profile-${userId}`;
+    const cachedResult = await redisClient.get(cacheName);
+    if (cachedResult) {
+      return JSON.parse(cachedResult);
+    }
     const data = await AUTH0_MGMT_API_CALL('GET', `users/${userId}`);
+    await redisClient.set(cacheName, JSON.stringify(data), {
+      EX: 60 * 30, // 20 minutes expiry
+    });
     return data;
   }
 

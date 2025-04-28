@@ -30,7 +30,7 @@ import {
   sendContactForm,
 } from '../utils/intercom';
 import {getUserPlanData} from '../utils/planAccess';
-import {handleDeleteCache} from '../utils/redis';
+import {handleDeleteCache, removeProfileCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -283,6 +283,7 @@ export class UserController {
         name: userDetails.name,
       });
       await redisClient.set(`user-name-${userId}`, userDetails.name);
+      await removeProfileCache(userId);
       return {name: response.name};
     } catch (error) {
       logger.error(
