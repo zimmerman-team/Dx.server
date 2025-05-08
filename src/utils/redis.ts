@@ -99,3 +99,8 @@ export const addOwnerNameToAssets = async <
   });
   return Promise.all(promises);
 };
+
+export const removeProfileCache = async (userId: string) => {
+  // Remove the user profile cache
+  await redisClient.del(`user-profile-${userId}`);
+};
