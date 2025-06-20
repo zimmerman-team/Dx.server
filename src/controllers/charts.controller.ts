@@ -12,6 +12,7 @@ import {
   del,
   get,
   getModelSchemaRef,
+  HttpErrors,
   param,
   patch,
   post,
@@ -253,19 +254,25 @@ export class ChartsController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   @intercept(cacheInterceptor())
   async sampleData(@param.path.string('datasetId') datasetId: string) {
-    const userId = _.get(this.req, 'user.sub', 'anonymous');
-    const orgMembers = await getUsersOrganizationMembers(userId);
-    const dataset = await this.datasetRepository.findById(datasetId);
-    if (
-      !dataset.public &&
-      !dataset.baseline &&
-      orgMembers
-        .map((o: any) => o.user_id)
-        .indexOf(_.get(dataset, 'owner', '')) === -1 &&
-      _.get(dataset, 'owner', '') !== userId
-    ) {
-      return {error: 'Unauthorized'};
-    }
+    // const userId = _.get(this.req, 'user.sub', 'anonymous');
+    // const orgMembers = await getUsersOrganizationMembers(userId);
+    // let dataset;
+    // try {
+    //   dataset = await this.datasetRepository.findById(datasetId);
+    // } catch (err) {
+    //   logger.error(`Dataset with id ${datasetId} not found`, err);
+    //   throw new HttpErrors.NotFound(`Dataset with id ${datasetId} not found`);
+    // }
+    // if (
+    //   !dataset.public &&
+    //   !dataset.baseline &&
+    //   orgMembers
+    //     .map((o: any) => o.user_id)
+    //     .indexOf(_.get(dataset, 'owner', '')) === -1 &&
+    //   _.get(dataset, 'owner', '') !== userId
+    // ) {
+    //   return {error: 'Unauthorized'};
+    // }
 
     let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
     if (process.env.ENV_TYPE !== 'prod')
@@ -273,6 +280,7 @@ export class ChartsController {
     logger.info(
       `route </chart/sample-data/{datasetId}> Fetching sample data for dataset ${datasetId}`,
     );
+
     return axios
       .get(`http://${host}:4004/sample-data/${datasetId}`)
       .then(res => {
@@ -288,7 +296,6 @@ export class ChartsController {
         };
       })
       .catch(e => {
-        console.log(e);
         logger.error(
           `route </chart/sample-data/{datasetId}> Error fetching sample data for dataset ${datasetId}; ${e.response.data.result}`,
         );

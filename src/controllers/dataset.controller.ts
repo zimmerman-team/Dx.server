@@ -9,6 +9,7 @@ import {
   repository,
 } from '@loopback/repository';
 import {
+  HttpErrors,
   Request,
   RestBindings,
   del,
@@ -387,19 +388,25 @@ export class DatasetController {
     logger.info(
       `route </datasets/{id}/data> -  get dataset content by id: ${id}`,
     );
-    const userId = _.get(this.req, 'user.sub', 'anonymous');
-    const orgMembers = await getUsersOrganizationMembers(userId);
-    const dataset = await this.datasetRepository.findById(id);
-    if (
-      !dataset.public &&
-      !dataset.baseline &&
-      orgMembers
-        .map((o: any) => o.user_id)
-        .indexOf(_.get(dataset, 'owner', '')) === -1 &&
-      _.get(dataset, 'owner', '') !== userId
-    ) {
-      return {error: 'Unauthorized'};
-    }
+    // const userId = _.get(this.req, 'user.sub', 'anonymous');
+    // const orgMembers = await getUsersOrganizationMembers(userId);
+    // let dataset;
+    // try {
+    //   dataset = await this.datasetRepository.findById(id);
+    // } catch (err) {
+    //   logger.error(`Dataset with id ${id} not found`, err);
+    //   throw new HttpErrors.NotFound(`Dataset with id ${id} not found`);
+    // }
+    // if (
+    //   !dataset.public &&
+    //   !dataset.baseline &&
+    //   orgMembers
+    //     .map((o: any) => o.user_id)
+    //     .indexOf(_.get(dataset, 'owner', '')) === -1 &&
+    //   _.get(dataset, 'owner', '') !== userId
+    // ) {
+    //   return {error: 'Unauthorized'};
+    // }
 
     return axios
       .get(
@@ -412,7 +419,6 @@ export class DatasetController {
         return res.data;
       })
       .catch(error => {
-        console.log(error);
         logger.error(
           `route </datasets/{id}/data> Error fetching data for dataset ${id}; ${error}`,
         );
