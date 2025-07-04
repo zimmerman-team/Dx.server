@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -26,10 +26,13 @@ import {execSync} from 'child_process';
 import fs from 'fs-extra';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {Chart} from '../models';
 import {ChartRepository, DatasetRepository} from '../repositories';
 import {getUsersOrganizationMembers} from '../utils/auth';
+import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
+import {addOwnerNameToAssets, handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -39,13 +42,17 @@ async function getChartsCount(
   chartRepository: ChartRepository,
   owner?: string,
   where?: Where<Chart>,
+  filterByOwner?: boolean,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
     return chartRepository.count({
       ...where,
-      or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+      or: [
+        {owner: owner},
+        ...(filterByOwner ? [] : [{owner: {inq: orgMemberIds}}]),
+      ],
     });
   }
   logger.info(`route </charts/count> Fetching chart count for owner- ${owner}`);
@@ -59,6 +66,7 @@ async function getCharts(
   chartRepository: ChartRepository,
   owner?: string,
   filter?: Filter<Chart>,
+  filterByOwner?: boolean,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
@@ -67,7 +75,10 @@ async function getCharts(
       ...filter,
       where: {
         ...filter?.where,
-        or: [{owner: owner}, {owner: {inq: orgMemberIds}}],
+        or: [
+          {owner: owner},
+          ...(filterByOwner ? [] : [{owner: {inq: orgMemberIds}}]),
+        ],
       },
       fields: [
         'id',
@@ -76,6 +87,7 @@ async function getCharts(
         'datasetId',
         'public',
         'createdDate',
+        'updatedDate',
         'isMappingValid',
         'isAIAssisted',
         'owner',
@@ -95,6 +107,7 @@ async function getCharts(
       'datasetId',
       'public',
       'createdDate',
+      'updatedDate',
       'isMappingValid',
       'isAIAssisted',
       'owner',
@@ -219,6 +232,10 @@ export class ChartsController {
     }
     chart.owner = userId;
     logger.info(`route </chart> Creating chart: ${chart.name}`);
+    await handleDeleteCache({
+      asset: 'chart',
+      userId,
+    });
     return {
       data: await this.chartRepository.create(chart),
       planWarning:
@@ -234,6 +251,7 @@ export class ChartsController {
   @get('/chart/sample-data/{datasetId}')
   @response(200)
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor())
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const orgMembers = await getUsersOrganizationMembers(userId);
@@ -284,6 +302,7 @@ export class ChartsController {
   /* get chart dataset sample data */
   @get('/chart/sample-data/public/{datasetId}')
   @response(200)
+  @intercept(cacheInterceptor())
   async sampleDataPublic(@param.path.string('datasetId') datasetId: string) {
     const dataset = await this.datasetRepository.findById(datasetId);
     if (!dataset.public && !dataset.baseline && dataset.owner !== 'anonymous') {
@@ -328,12 +347,16 @@ export class ChartsController {
     content: {'application/json': {schema: CountSchema}},
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async count(@param.where(Chart) where?: Where<Chart>): Promise<Count> {
+  async count(
+    @param.where(Chart) where?: Where<Chart>,
+    @param.query.boolean('userOnly') userOnly?: boolean,
+  ): Promise<Count> {
     logger.verbose(`route </charts/count> Fetching chart count`);
     return getChartsCount(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       where,
+      userOnly,
     );
   }
   @get('/charts/count/public')
@@ -343,7 +366,7 @@ export class ChartsController {
   })
   async countPublic(@param.where(Chart) where?: Where<Chart>): Promise<Count> {
     logger.info(`route </charts/count/public> Fetching public chart count`);
-    return getChartsCount(this.chartRepository, 'anonymous', where);
+    return getChartsCount(this.chartRepository, 'anonymous', where, false);
   }
 
   /* get charts */
@@ -360,13 +383,24 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async find(@param.filter(Chart) filter?: Filter<Chart>): Promise<Chart[]> {
+  @intercept(cacheInterceptor({extraKey: 'charts', useUserId: true})) // caching per user
+  async find(
+    @param.filter(Chart) filter?: Filter<Chart>,
+    @param.query.boolean('userOnly') userOnly?: boolean,
+  ): Promise<(Chart & {ownerName: string})[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`route</charts> Fetching charts`);
-    return getCharts(
+    const charts = await getCharts(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       filter,
+      userOnly,
     );
+    return addOwnerNameToAssets(charts);
   }
 
   @get('/charts/public')
@@ -381,11 +415,23 @@ export class ChartsController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
     @param.filter(Chart) filter?: Filter<Chart>,
   ): Promise<Chart[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`Fetching public charts`);
-    return getCharts(this.chartRepository, 'anonymous', filter);
+    const charts = await getCharts(
+      this.chartRepository,
+      'anonymous',
+      filter,
+      false,
+    );
+    return addOwnerNameToAssets(charts);
   }
 
   /* get charts */
@@ -402,6 +448,7 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor())
   async getChartTypes(@param.query.string('id') id: string) {
     let host = process.env.AIAPI_SUBDOMAIN ? 'ai-api' : 'localhost';
     if (process.env.ENV_TYPE !== 'prod')
@@ -478,6 +525,13 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'chart-detail',
+      useFirstPathParam: true,
+      useUserId: true,
+    }),
+  )
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Chart, {exclude: 'where'})
@@ -513,6 +567,9 @@ export class ChartsController {
       },
     },
   })
+  @intercept(
+    cacheInterceptor({cacheId: 'public-chart-detail', useFirstPathParam: true}),
+  )
   async findPublicById(
     @param.path.string('id') id: string,
     @param.filter(Chart, {exclude: 'where'})
@@ -541,6 +598,13 @@ export class ChartsController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(
+    cacheInterceptor({
+      useFirstPathParam: true,
+      expiry: 10 * 60,
+      useUserId: true,
+    }),
+  )
   async renderById(
     @param.path.string('id') id: string,
     @requestBody() body: any,
@@ -594,6 +658,13 @@ export class ChartsController {
       },
     },
   })
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'public-chart-render-detail',
+      useFirstPathParam: true,
+      expiry: 10 * 60,
+    }),
+  )
   async renderByIdPublic(
     @param.path.string('id') id: string,
     @requestBody() body: any,
@@ -633,6 +704,11 @@ export class ChartsController {
       updatedDate: new Date().toISOString(),
     });
     logger.info(`route</chart/{id}> Updating chart- ${id}`);
+    await handleDeleteCache({
+      asset: 'chart',
+      assetId: id,
+      userId,
+    });
     return this.chartRepository.findById(id);
   }
 
@@ -653,6 +729,11 @@ export class ChartsController {
     }
     logger.info(`route</chart/{id}> Replacing chart- ${id}`);
     await this.chartRepository.replaceById(id, chart);
+    await handleDeleteCache({
+      asset: 'chart',
+      assetId: id,
+      userId,
+    });
   }
 
   /* delete chart */
@@ -671,6 +752,11 @@ export class ChartsController {
     }
     logger.info(`route</chart/{id}> Deleting chart- ${id}`);
     await this.chartRepository.deleteById(id);
+    await handleDeleteCache({
+      asset: 'chart',
+      assetId: id,
+      userId,
+    });
   }
 
   /* duplicate chart */
@@ -703,9 +789,15 @@ export class ChartsController {
       };
     }
     const fChart = await this.chartRepository.findById(id);
+    const name = await duplicateName(
+      fChart.name,
+      fChart.owner === userId,
+      this.chartRepository,
+      userId,
+    );
 
     const newChart = await this.chartRepository.create({
-      name: `${fChart.name} (Copy)`,
+      name,
       public: false,
       baseline: false,
       vizType: fChart.vizType,
@@ -717,6 +809,10 @@ export class ChartsController {
       owner: userId,
       isMappingValid: fChart.isMappingValid ?? true,
       isAIAssisted: fChart.isAIAssisted ?? false,
+    });
+    await handleDeleteCache({
+      asset: 'chart',
+      userId,
     });
 
     return {

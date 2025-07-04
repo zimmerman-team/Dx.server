@@ -230,3 +230,118 @@ export const sendContactForm = async (
     return {error: err?.message};
   }
 };
+
+export const get10DayOldLeadsWithoutEmails = async () => {
+  try {
+    const response = await axios.post(
+      `${baseUrl}/contacts/search`,
+      {
+        query: {
+          operator: 'AND',
+          value: [
+            {
+              field: 'role',
+              operator: '=',
+              value: 'lead',
+            },
+            {
+              field: 'created_at',
+              operator: '<',
+              value: Math.floor(Date.now() / 1000) - 864000,
+            },
+            {
+              field: 'email',
+              operator: '=',
+              value: null,
+            },
+          ],
+        },
+      },
+      {
+        headers,
+      },
+    );
+    return response.data;
+  } catch (err) {
+    logger.error(
+      `fn <get10DayOldLeadsWithoutEmails()>: ${err?.message} - ${JSON.stringify(
+        err?.response?.data,
+      )}`,
+    );
+    return {error: err?.message};
+  }
+};
+
+export const updateIntercomUserWithContactId = async (
+  userData: any,
+  contactId: string,
+) => {
+  try {
+    const response = await axios.put(
+      `${baseUrl}/contacts/${contactId}`,
+      userData,
+      {
+        headers,
+      },
+    );
+    return response.data;
+  } catch (err: any) {
+    console.error(
+      `fn <updateIntercomUser()>: ${err?.message} - ${JSON.stringify(
+        err?.response?.data,
+      )}`,
+    );
+    return {error: err?.message};
+  }
+};
+
+export const delete10DayOldLeadsWithoutEmails = async () => {
+  const leads = await get10DayOldLeadsWithoutEmails();
+  if (leads.error) {
+    return leads;
+  }
+  try {
+    leads.data.forEach(async (lead: any) => {
+      await deleteIntercomUser(lead.id);
+    });
+  } catch (err) {
+    logger.error(
+      `fn <delete10DayOldLeadsWithoutEmails()>: ${
+        err?.message
+      } - ${JSON.stringify(err?.response?.data)}`,
+    );
+    return {error: err?.message};
+  }
+};
+
+export const addUserToNewsletter = async (email: string) => {
+  const userSearch = await searchIntercomUser(email);
+  if (userSearch.error) {
+    return userSearch;
+  }
+  let user;
+  if (userSearch.data.length !== 0) {
+    user = userSearch.data[0];
+  } else {
+    const createUser = await createIntercomUser({
+      email,
+      role: 'lead',
+    });
+    if (createUser.error) {
+      return createUser;
+    }
+    user = createUser;
+  }
+  const updateUser = await updateIntercomUserWithContactId(
+    {
+      custom_attributes: {
+        subscribed_to_newsletter: true,
+      },
+    },
+    user.id,
+  );
+  if (updateUser.error) {
+    return updateUser;
+  }
+  return {message: 'Thank you for subscribing!'};
+};

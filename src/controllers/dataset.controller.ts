@@ -1,5 +1,5 @@
 import {authenticate} from '@loopback/authentication';
-import {BindingKey, inject} from '@loopback/core';
+import {BindingKey, inject, intercept} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -26,14 +26,17 @@ import {Dataset} from '../models';
 import {
   ChartRepository,
   DatasetRepository,
-  ReportRepository,
+  StoryRepository,
 } from '../repositories';
 
 import {RequestHandler} from 'express-serve-static-core';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {cacheInterceptor} from '../interceptors/cache.interceptor';
 import {getUsersOrganizationMembers} from '../utils/auth';
+import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
+import {addOwnerNameToAssets, handleDeleteCache} from '../utils/redis';
 
 type FileUploadHandler = RequestHandler;
 
@@ -44,6 +47,48 @@ let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
   host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
 
+const getDatasets = async (
+  datasetRepository: DatasetRepository,
+  userId: string,
+  filter?: Filter<Dataset>,
+  userOnly?: boolean,
+) => {
+  if (userId && userId !== 'anonymous') {
+    if (userOnly) {
+      return datasetRepository.find({
+        ...filter,
+        where: {
+          ...filter?.where,
+          owner: userId,
+        },
+      });
+    }
+    const orgMembers = await getUsersOrganizationMembers(userId);
+    const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    return datasetRepository.find({
+      ...filter,
+      where: {
+        ...filter?.where,
+        or: [
+          {owner: userId},
+          {
+            owner: {
+              inq: orgMemberIds,
+            },
+          },
+        ],
+      },
+    });
+  }
+  return datasetRepository.find({
+    ...filter,
+    where: {
+      ...filter?.where,
+      or: [{owner: userId}, {public: true}, {baseline: true}],
+    },
+  });
+};
+
 export class DatasetController {
   constructor(
     @inject(RestBindings.Http.REQUEST) private req: Request,
@@ -53,8 +98,8 @@ export class DatasetController {
     @repository(ChartRepository)
     public chartRepository: ChartRepository,
 
-    @repository(ReportRepository)
-    public reportRepository: ReportRepository,
+    @repository(StoryRepository)
+    public storyRepository: StoryRepository,
 
     @inject(FILE_UPLOAD_SERVICE) private handler: FileUploadHandler,
   ) {}
@@ -95,6 +140,10 @@ export class DatasetController {
 
     dataset.owner = userId;
     logger.info(`route </datasets> -  Dataset created`);
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+    });
     return {
       data: await this.datasetRepository.create(dataset),
       planWarning:
@@ -175,46 +224,25 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor({extraKey: 'datasets', useUserId: true})) // caching per user
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
     @param.query.boolean('userOnly') userOnly?: boolean,
   ): Promise<Dataset[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`route </datasets> -  get datasets`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
-    if (userId && userId !== 'anonymous') {
-      if (userOnly) {
-        return this.datasetRepository.find({
-          ...filter,
-          where: {
-            ...filter?.where,
-            owner: userId,
-          },
-        });
-      }
-      const orgMembers = await getUsersOrganizationMembers(userId);
-      const orgMemberIds = orgMembers.map((m: any) => m.user_id);
-      return this.datasetRepository.find({
-        ...filter,
-        where: {
-          ...filter?.where,
-          or: [
-            {owner: userId},
-            {
-              owner: {
-                inq: orgMemberIds,
-              },
-            },
-          ],
-        },
-      });
-    }
-    return this.datasetRepository.find({
-      ...filter,
-      where: {
-        ...filter?.where,
-        or: [{owner: userId}, {public: true}, {baseline: true}],
-      },
-    });
+    const datasets = await getDatasets(
+      this.datasetRepository,
+      userId,
+      filter,
+      userOnly,
+    );
+    return addOwnerNameToAssets(datasets);
   }
 
   @get('/datasets/public')
@@ -229,17 +257,23 @@ export class DatasetController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async findPublic(
     @param.filter(Dataset) filter?: Filter<Dataset>,
   ): Promise<Dataset[]> {
+    if (filter?.order && filter.order.includes('name')) {
+      // @ts-ignore
+      filter.order = filter.order.replace('name', 'nameLower');
+    }
+
     logger.info(`route </datasets/public> -  get public datasets`);
-    return this.datasetRepository.find({
-      ...filter,
-      where: {
-        ...filter?.where,
-        or: [{public: true}, {owner: 'anonymous'}, {baseline: true}],
-      },
-    });
+
+    const datasets = await getDatasets(
+      this.datasetRepository,
+      'anonymous',
+      filter,
+    );
+    return addOwnerNameToAssets(datasets);
   }
 
   @patch('/datasets')
@@ -273,6 +307,13 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'dataset-detail',
+      useFirstPathParam: true,
+      useUserId: true,
+    }),
+  )
   async findById(
     @param.path.string('id') id: string,
     @param.filter(Dataset, {exclude: 'where'})
@@ -305,6 +346,12 @@ export class DatasetController {
       },
     },
   })
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'public-dataset-detail',
+      useFirstPathParam: true,
+    }),
+  )
   async findByIdPublic(
     @param.path.string('id') id: string,
     @param.filter(Dataset, {exclude: 'where'})
@@ -331,6 +378,7 @@ export class DatasetController {
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
+  @intercept(cacheInterceptor())
   async datasetContent(
     @param.path.string('id') id: string,
     @param.query.string('page') page: string,
@@ -384,6 +432,7 @@ export class DatasetController {
       },
     },
   })
+  @intercept(cacheInterceptor())
   async datasetContentPublic(
     @param.path.string('id') id: string,
     @param.query.string('page') page: string,
@@ -444,6 +493,11 @@ export class DatasetController {
       ...dataset,
       updatedDate: new Date().toISOString(),
     });
+    await handleDeleteCache({
+      asset: 'dataset',
+      assetId: id,
+      userId,
+    });
   }
 
   @put('/datasets/{id}')
@@ -461,23 +515,28 @@ export class DatasetController {
       return {error: 'Unauthorized'};
     }
     await this.datasetRepository.replaceById(id, dataset);
+    await handleDeleteCache({
+      asset: 'dataset',
+      assetId: id,
+      userId,
+    });
     logger.info(`route </datasets/{id}> -  Replaced Dataset by id: ${id}`);
   }
-  @get('/datasets/{id}/charts-reports/count')
+  @get('/datasets/{id}/charts-stories/count')
   @response(200, {
     description: 'Dataset model instance',
     content: {
       'application/json': {
-        schema: {chartsCount: Number, reportsCount: Number},
+        schema: {chartsCount: Number, storiesCount: Number},
       },
     },
   })
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  async getChartsReportsCount(
+  async getChartsStoriesCount(
     @param.path.string('id') id: string,
-  ): Promise<{chartsCount: number; reportsCount: number} | {error: string}> {
+  ): Promise<{chartsCount: number; storiesCount: number} | {error: string}> {
     logger.info(
-      `route </datasets/{id}/charts-reports/count> -  get charts and reports count by dataset id: ${id}`,
+      `route </datasets/{id}/charts-stories/count> -  get charts and stories count by dataset id: ${id}`,
     );
 
     const userId = _.get(this.req, 'user.sub', 'anonymous');
@@ -499,8 +558,8 @@ export class DatasetController {
     ).map(c => c.id);
     return {
       chartsCount: (await this.chartRepository.count({datasetId: id})).count,
-      reportsCount: (await this.reportRepository.execute?.(
-        'Report',
+      storiesCount: (await this.storyRepository.execute?.(
+        'Story',
         'countDocuments',
         {'rows.items': {$in: chartIds}},
       )) as unknown as number,
@@ -551,6 +610,11 @@ export class DatasetController {
     );
     await this.chartRepository.deleteAll({datasetId: id});
     logger.info(`route </datasets/{id}> -  Dataset ${id} removed from db`);
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+      assetId: id,
+    });
   }
 
   @get('/dataset/duplicate/{id}')
@@ -584,8 +648,15 @@ export class DatasetController {
       };
     }
     const fDataset = await this.datasetRepository.findById(id);
+
+    const name = await duplicateName(
+      fDataset.name,
+      fDataset.owner === userId,
+      this.datasetRepository,
+      userId,
+    );
     const newDatasetPromise = this.datasetRepository.create({
-      name: `${fDataset.name} (Copy)`,
+      name,
       public: false,
       baseline: false,
       category: fDataset.category,
@@ -616,7 +687,10 @@ export class DatasetController {
         );
         return {error: e.response.data.result};
       });
-
+    await handleDeleteCache({
+      userId,
+      asset: 'dataset',
+    });
     return {
       data: newDataset,
       planWarning:

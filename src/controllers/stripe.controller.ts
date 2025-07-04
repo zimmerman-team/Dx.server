@@ -1,7 +1,10 @@
 import {authenticate} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {
+  get,
+  param,
   post,
+  put,
   Request,
   requestBody,
   response,
@@ -11,42 +14,13 @@ import _ from 'lodash';
 import Stripe from 'stripe';
 import {UserProfile} from '../authentication-strategies/user-profile';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
+import {removeProfileCache} from '../utils/redis';
+import moment = require('moment');
 
 const StripeClient = new Stripe(process.env.STRIPE_API_KEY as string, {
   // @ts-ignore
   apiVersion: null,
 });
-
-const plans = [
-  {
-    name: 'free',
-    priceIds: {
-      monthly: process.env.STRIPE_PRODUCT_FREE_MONTHLY_PRICE_ID,
-      yearly: process.env.STRIPE_PRODUCT_FREE_YEARLY_PRICE_ID,
-    },
-  },
-  {
-    name: 'pro',
-    priceIds: {
-      monthly: process.env.STRIPE_PRODUCT_PRO_MONTHLY_PRICE_ID,
-      yearly: process.env.STRIPE_PRODUCT_PRO_YEARLY_PRICE_ID,
-    },
-  },
-  {
-    name: 'team',
-    priceIds: {
-      monthly: process.env.STRIPE_PRODUCT_TEAM_MONTHLY_PRICE_ID,
-      yearly: process.env.STRIPE_PRODUCT_TEAM_YEARLY_PRICE_ID,
-    },
-  },
-  {
-    name: 'enterprise',
-    priceIds: {
-      monthly: process.env.STRIPE_PRODUCT_ENTERPRISE_MONTHLY_PRICE_ID,
-      yearly: process.env.STRIPE_PRODUCT_ENTERPRISE_YEARLY_PRICE_ID,
-    },
-  },
-];
 
 export class StripeController {
   constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
@@ -85,6 +59,8 @@ export class StripeController {
             },
           },
         );
+
+        await removeProfileCache(_.get(this.req, 'user.sub', 'anonymous'));
         if (auth0Resp) {
           return {message: 'Customer created successfully', data: customer.id};
         }
@@ -143,7 +119,7 @@ export class StripeController {
         customer_update: {
           shipping: 'auto',
         },
-        payment_method_collection: 'if_required',
+        billing_address_collection: 'required',
       });
       return {
         message: 'Session created successfully',
@@ -176,36 +152,17 @@ export class StripeController {
       const session = await StripeClient.checkout.sessions.retrieve(
         details.sessionId,
       );
-      let planName = '';
-      let licenses = 0;
       const subscriptionId = _.get(session, 'subscription', '');
-      if (!session.line_items && subscriptionId) {
-        const subscription = await StripeClient.subscriptions.retrieve(
-          subscriptionId.toString(),
-        );
-        planName = _.get(subscription, 'items.data[0].plan.metadata.name', '');
-        licenses = _.get(subscription, 'items.data[0].quantity', 0);
-      } else {
-        const priceId = _.get(session, 'line_items.data[0].price.id', '');
-        planName =
-          _.find(
-            plans,
-            plan =>
-              plan.priceIds.monthly === priceId ||
-              plan.priceIds.yearly === priceId,
-          )?.name ?? '';
-        licenses = _.get(session, 'line_items.data[0].quantity', 0);
-      }
       const auth0Resp = await UserProfile.updateUserProfile(
         _.get(this.req, 'user.sub', 'anonymous'),
         {
           app_metadata: {
-            planName,
-            licenses,
             subscriptionId,
           },
         },
       );
+      await removeProfileCache(_.get(this.req, 'user.sub', 'anonymous'));
+
       if (auth0Resp) {
         return {message: 'User subscription metadata updated successfully'};
       }
@@ -216,5 +173,255 @@ export class StripeController {
       );
       return {error: 'Update user subscription metadata failed'};
     }
+  }
+
+  @get('/stripe/payment-method/{userId}')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scope: ['greet']}})
+  async getPaymentMethod(@param.path.string('userId') userId: string) {
+    const user = await UserProfile.getUserProfile(userId);
+    const customerId = _.get(user, 'app_metadata.stripeCustomerId', '');
+    if (!customerId) {
+      return {
+        data: {
+          method: '',
+          number: '',
+        },
+      };
+    }
+    const customerPaymentMethods = await StripeClient.paymentMethods.list({
+      customer: customerId,
+    });
+    const paymentMethod =
+      customerPaymentMethods.data.length > 0
+        ? customerPaymentMethods.data[0]
+        : null;
+    if (paymentMethod) {
+      let details = {};
+      switch (paymentMethod.type) {
+        case 'card':
+          details = {
+            method: _.get(paymentMethod, 'card.brand', 'card'),
+            number: _.get(paymentMethod, 'card.last4', '0000'),
+          };
+          break;
+        case 'blik':
+          details = {
+            method: 'BLIK',
+            number: _.get(paymentMethod, 'blik.code', ''),
+          };
+          break;
+        case 'bancontact':
+          details = {
+            method: 'Bancontact',
+            number: _.get(paymentMethod, 'bancontact.code', ''),
+          };
+          break;
+        case 'giropay':
+          details = {
+            method: 'giropay',
+            number: _.get(paymentMethod, 'giropay.code', ''),
+          };
+          break;
+        case 'ideal':
+          details = {
+            method: 'iDEAL',
+            number: _.get(paymentMethod, 'ideal.bank', ''),
+          };
+          break;
+        case 'sepa_debit':
+          details = {
+            method: `SEPA Direct Debit (${_.get(
+              paymentMethod,
+              'sepa_debit.bank_code',
+              '',
+            )})`,
+            number: _.get(paymentMethod, 'sepa_debit.last4', ''),
+          };
+        default:
+          break;
+      }
+      return {data: details};
+    } else {
+      return {data: null};
+    }
+  }
+
+  @put('/stripe/payment-method/{customerId}')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scope: ['greet']}})
+  async changePaymentMethod(
+    @param.path.string('customerId') customerId: string,
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {},
+        },
+      },
+    })
+    data: {
+      paymentMethodId: string;
+    },
+  ) {
+    const paymentMethod = await StripeClient.paymentMethods.attach(
+      data.paymentMethodId,
+      {customer: customerId},
+    );
+    return {data: paymentMethod};
+  }
+
+  @get('/stripe/{userId}/billing')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scope: ['greet']}})
+  async getCustomerBilling(@param.path.string('userId') userId: string) {
+    if (!userId) {
+      throw new Error('userId is required');
+    }
+    const user = await UserProfile.getUserProfile(userId);
+    const customerId = _.get(user, 'app_metadata.stripeCustomerId', '');
+    if (!customerId) {
+      return {
+        data: {
+          city: '',
+          country: '',
+          line1: '',
+          line2: '',
+          address: '',
+          postal_code: '',
+          state: '',
+        },
+      };
+    }
+    const customer = (await StripeClient.customers.retrieve(
+      customerId,
+    )) as Stripe.Customer;
+    return {data: customer.address};
+  }
+
+  @post('/stripe/portal-session')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scope: ['greet']}})
+  async createCustomerPortalSession(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {},
+        },
+      },
+    })
+    data: {
+      userId: string;
+      returnUrl: string;
+      flowDataType?: string;
+    },
+  ) {
+    const user = await UserProfile.getUserProfile(data.userId);
+    const customerId = _.get(user, 'app_metadata.stripeCustomerId', '');
+    if (!customerId) {
+      throw new Error('Customer ID is required');
+    }
+    let config: Stripe.BillingPortal.SessionCreateParams = {
+      customer: customerId,
+      return_url: data.returnUrl,
+    };
+    if (data.flowDataType) {
+      config = {
+        ...config,
+        flow_data: {
+          // @ts-ignore
+          type: data.flowDataType,
+        },
+      };
+    }
+    const session = await StripeClient.billingPortal.sessions.create(config);
+    return {data: session.url};
+  }
+
+  @get('/stripe/invoices/{userId}')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scope: ['greet']}})
+  async getInvoices(@param.path.string('userId') userId: string) {
+    const user = await UserProfile.getUserProfile(userId);
+    const customerId = _.get(user, 'app_metadata.stripeCustomerId', '');
+    if (!customerId) {
+      return {data: []};
+    }
+    const invoices = await StripeClient.invoices.list({
+      customer: customerId,
+    });
+    const data: any[] = [];
+    for (const invoice of invoices.data) {
+      const sub = await StripeClient.subscriptions.retrieve(
+        invoice.subscription as string,
+      );
+      data.push({
+        id: invoice.id,
+        name: invoice.number,
+        url: invoice.invoice_pdf,
+        hostedUrl: invoice.hosted_invoice_url,
+        date: moment(invoice.created * 1000).format('DD/MM/YYYY'),
+        plan: _.get(sub, 'plan.metadata.name', ''),
+      });
+    }
+    return {data};
+  }
+
+  @get('/stripe/subscription/{userId}')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scope: ['greet']}})
+  async getSubscription(@param.path.string('userId') userId: string) {
+    const user = await UserProfile.getUserProfile(userId);
+    const subscriptionId = _.get(user, 'app_metadata.subscriptionId', '');
+    if (!subscriptionId) {
+      return {
+        data: {
+          plan: 'Free',
+        },
+      };
+    }
+    const subscription = await StripeClient.subscriptions.retrieve(
+      subscriptionId,
+    );
+    console.log(subscription);
+    return {
+      data: {
+        plan: _.get(subscription, 'plan.metadata.name', ''),
+        message: subscription.cancel_at
+          ? `will be canceled on ${moment(subscription.cancel_at * 1000).format(
+              'DD/MM/YYYY',
+            )}`
+          : null,
+      },
+    };
+  }
+
+  @get('/stripe/auto-update-address/{userId}')
+  @response(200)
+  @authenticate({strategy: 'auth0-jwt', options: {scope: ['greet']}})
+  async autoUpdateAddress(@param.path.string('userId') userId: string) {
+    const user = await UserProfile.getUserProfile(userId);
+    const customerId = _.get(user, 'app_metadata.stripeCustomerId', '');
+    if (!customerId) {
+      return {data: 'No customer found'};
+    }
+    const paymentMethods = await StripeClient.paymentMethods.list({
+      customer: customerId,
+    });
+    const paymentMethod = paymentMethods.data[0];
+    const updatedCustomer = await StripeClient.customers.update(customerId, {
+      address: {
+        city: _.get(paymentMethod, 'billing_details.address.city', ''),
+        country: _.get(paymentMethod, 'billing_details.address.country', ''),
+        line1: _.get(paymentMethod, 'billing_details.address.line1', ''),
+        line2: _.get(paymentMethod, 'billing_details.address.line2', ''),
+        postal_code: _.get(
+          paymentMethod,
+          'billing_details.address.postal_code',
+          '',
+        ),
+        state: _.get(paymentMethod, 'billing_details.address.state', ''),
+      },
+    });
+    return {data: updatedCustomer};
   }
 }
