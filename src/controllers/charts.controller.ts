@@ -134,7 +134,10 @@ async function renderChart(
         .indexOf(_.get(chartData, 'owner', '')) === -1 &&
       _.get(chartData, 'owner', '') !== owner
     ) {
-      return;
+      logger.error(
+        `fn <renderChart()> Unauthorized access to chart with id: ${id}`,
+      );
+      return {error: 'Unauthorized'};
     }
     // save an object with ({...body}, chartData) with identifiers as body and chardata as json
     const ob = {
@@ -251,7 +254,13 @@ export class ChartsController {
   @get('/chart/sample-data/{datasetId}')
   @response(200)
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
-  @intercept(cacheInterceptor())
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'sample-data-detail',
+      useFirstPathParam: true,
+      useUserId: true,
+    }),
+  )
   async sampleData(@param.path.string('datasetId') datasetId: string) {
     const userId = _.get(this.req, 'user.sub', 'anonymous');
     const orgMembers = await getUsersOrganizationMembers(userId);
@@ -302,7 +311,12 @@ export class ChartsController {
   /* get chart dataset sample data */
   @get('/chart/sample-data/public/{datasetId}')
   @response(200)
-  @intercept(cacheInterceptor())
+  @intercept(
+    cacheInterceptor({
+      cacheId: 'public-sample-data-detail',
+      useFirstPathParam: true,
+    }),
+  )
   async sampleDataPublic(@param.path.string('datasetId') datasetId: string) {
     const dataset = await this.datasetRepository.findById(datasetId);
     if (!dataset.public && !dataset.baseline && dataset.owner !== 'anonymous') {

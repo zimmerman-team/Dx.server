@@ -24,6 +24,10 @@ export const handleDeleteCache = async (options: {
   if (options.assetId) {
     await deleteKeysWithPattern(`${options.asset}-detail-${options.assetId}*`);
     await redisClient.del(`public-${options.asset}-detail-${options.assetId}`);
+    if (options.asset === 'dataset') {
+      await redisClient.del(`public-sample-data-detail-${options.assetId}`);
+      await deleteKeysWithPattern(`*${options.assetId}*`);
+    }
     if (options.asset === 'chart') {
       await redisClient.del(`public-chart-render-detail-${options.assetId}`);
       await deleteKeysWithPattern(`*${options.assetId}*`);
