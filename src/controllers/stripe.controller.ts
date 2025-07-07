@@ -14,7 +14,6 @@ import _ from 'lodash';
 import Stripe from 'stripe';
 import {UserProfile} from '../authentication-strategies/user-profile';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
-import {removeProfileCache} from '../utils/redis';
 import moment = require('moment');
 
 const StripeClient = new Stripe(process.env.STRIPE_API_KEY as string, {
@@ -60,7 +59,6 @@ export class StripeController {
           },
         );
 
-        await removeProfileCache(_.get(this.req, 'user.sub', 'anonymous'));
         if (auth0Resp) {
           return {message: 'Customer created successfully', data: customer.id};
         }
@@ -161,7 +159,6 @@ export class StripeController {
           },
         },
       );
-      await removeProfileCache(_.get(this.req, 'user.sub', 'anonymous'));
 
       if (auth0Resp) {
         return {message: 'User subscription metadata updated successfully'};

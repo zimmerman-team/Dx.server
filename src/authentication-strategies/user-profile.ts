@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Stripe from 'stripe';
 import {redisClient} from '../application';
 import {AUTH0_MGMT_API_CALL} from '../utils/auth';
+import {removeProfileCache} from '../utils/redis';
 
 const StripeClient = new Stripe(process.env.STRIPE_API_KEY as string, {
   // @ts-ignore
@@ -35,11 +36,13 @@ export class UserProfile {
     if (customerId) {
       await StripeClient.customers.del(customerId);
     }
+    await removeProfileCache(userId);
     const data = await AUTH0_MGMT_API_CALL('DELETE', `users/${userId}`);
     return data;
   }
   //update user profile
   static async updateUserProfile(userId: string, data: any): Promise<any> {
+    await removeProfileCache(userId);
     const response = await AUTH0_MGMT_API_CALL(
       'PATCH',
       `users/${userId}`,
