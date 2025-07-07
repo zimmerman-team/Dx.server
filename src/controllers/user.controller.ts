@@ -15,7 +15,6 @@ import {
 import axios from 'axios';
 import {ObjectId} from 'bson';
 import _ from 'lodash';
-import {redisClient} from '../application';
 import {UserProfile} from '../authentication-strategies/user-profile';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
 import {Story} from '../models';
@@ -30,7 +29,7 @@ import {
   sendContactForm,
 } from '../utils/intercom';
 import {getUserPlanData} from '../utils/planAccess';
-import {handleDeleteCache, removeProfileCache} from '../utils/redis';
+import {handleDeleteCache} from '../utils/redis';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -282,8 +281,6 @@ export class UserController {
       const response = await UserProfile.updateUserProfile(userId, {
         name: userDetails.name,
       });
-      await redisClient.set(`user-name-${userId}`, userDetails.name);
-      await removeProfileCache(userId);
       return {name: response.name};
     } catch (error) {
       logger.error(
