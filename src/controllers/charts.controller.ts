@@ -12,7 +12,6 @@ import {
   del,
   get,
   getModelSchemaRef,
-  HttpErrors,
   param,
   patch,
   post,
@@ -296,6 +295,43 @@ export class ChartsController {
         };
       })
       .catch(e => {
+        logger.error(
+          `route </chart/sample-data/{datasetId}> Error fetching sample data for dataset ${datasetId}; ${e.response.data.result}`,
+        );
+        return {
+          data: [],
+          error: e.response.data.result,
+        };
+      });
+  }
+
+  /* get chart dataset sample data for data upload process*/
+  @get('/chart/sample-data/connect-data/{datasetId}')
+  @response(200)
+  @intercept(cacheInterceptor())
+  async sampleDataConnect(@param.path.string('datasetId') datasetId: string) {
+    let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
+    if (process.env.ENV_TYPE !== 'prod')
+      host = process.env.ENV_TYPE ? `dx-backend-${process.env.ENV_TYPE}` : host;
+    logger.info(
+      `route </chart/sample-data/{datasetId}> Fetching sample data for dataset ${datasetId}`,
+    );
+    return axios
+      .get(`http://${host}:4004/sample-data/${datasetId}`)
+      .then(res => {
+        logger.info(
+          `route </chart/sample-data/{datasetId}> Sample data fetched for dataset ${datasetId}`,
+        );
+        return {
+          count: _.get(res, 'data.result.count', []),
+          sample: _.get(res, 'data.result.sample', []),
+          dataTypes: _.get(res, 'data.result.dataTypes', []),
+          filterOptionGroups: _.get(res, 'data.result.filterOptionGroups', []),
+          stats: _.get(res, 'data.result.stats', []),
+        };
+      })
+      .catch(e => {
+        console.log(e);
         logger.error(
           `route </chart/sample-data/{datasetId}> Error fetching sample data for dataset ${datasetId}; ${e.response.data.result}`,
         );
