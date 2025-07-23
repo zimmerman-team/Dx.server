@@ -9,7 +9,6 @@ import {
   repository,
 } from '@loopback/repository';
 import {
-  HttpErrors,
   Request,
   RestBindings,
   del,
@@ -580,47 +579,62 @@ export class DatasetController {
   async deleteById(
     @param.path.string('id') id: string,
   ): Promise<void | {error: string}> {
-    const userId = _.get(this.req, 'user.sub', 'anonymous');
-    const dbDataset = await this.datasetRepository.findById(id);
-    if (dbDataset.owner !== userId) {
-      return {error: 'Unauthorized'};
+    try {
+      const userId = _.get(this.req, 'user.sub', 'anonymous');
+
+      // Verify dataset exists and user has permission
+      const dbDataset = await this.datasetRepository.findById(id);
+      if (dbDataset.owner !== userId) {
+        return {error: 'Unauthorized'};
+      }
+
+      // Delete from backend service
+      await this.deleteFromBackendService(id);
+
+      // Delete from database
+      await this.datasetRepository.deleteById(id);
+      logger.info(`Dataset ${id} removed from database`);
+
+      // Delete associated charts
+      await this.chartRepository.deleteAll({datasetId: id});
+      logger.info(`All charts using dataset ${id} have been deleted`);
+
+      // Clear cache
+      await handleDeleteCache({
+        userId,
+        asset: 'dataset',
+        assetId: id,
+      });
+    } catch (error) {
+      logger.error(`Failed to delete dataset ${id}:`, error);
+      throw error;
     }
-    this.datasetRepository.findById(id).then(() => {
-      // Trigger the dataset removal through the backend, cleaning up SSR and the backend
-      let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
-      if (process.env.ENV_TYPE !== 'prod')
-        host = process.env.ENV_TYPE
-          ? `dx-backend-${process.env.ENV_TYPE}`
-          : host;
-      axios
-        .post(`http://${host}:4004/delete-dataset/dx${id}`)
-        .then(_ => {
-          logger.info(
-            `route </datasets/{id}> -  File ${id} removed from DX Backend`,
-          );
-          console.log('File removed from DX Backend');
-        })
-        .catch(e => {
-          logger.error(
-            `route </datasets/{id}> -  Failed to remove the dataset ${id} from DX Backend`,
-          );
-          console.log(
-            'Failed to remove the dataset from DX Backend',
-            e.response.data.result,
-          );
-        });
-    });
-    await this.datasetRepository.deleteById(id);
-    logger.info(
-      `route </datasets/{id}> -  Deleting all charts that use dataset with id - ${id}`,
-    );
-    await this.chartRepository.deleteAll({datasetId: id});
-    logger.info(`route </datasets/{id}> -  Dataset ${id} removed from db`);
-    await handleDeleteCache({
-      userId,
-      asset: 'dataset',
-      assetId: id,
-    });
+  }
+  private async deleteFromBackendService(id: string): Promise<void> {
+    try {
+      const backendHost = this.getBackendHost();
+      const res = await axios.post(
+        `http://${backendHost}:4004/delete-dataset/dx${id}`,
+      );
+
+      logger.info(`Dataset ${id} successfully removed from DX Backend`);
+      return res.data;
+    } catch (error) {
+      logger.error(`Failed to remove dataset ${id} from DX Backend:`, error);
+      // Don't throw - continue with local cleanup even if backend fails
+    }
+  }
+
+  private getBackendHost(): string {
+    if (process.env.BACKEND_SUBDOMAIN) {
+      return 'dx-backend';
+    }
+
+    if (process.env.ENV_TYPE && process.env.ENV_TYPE !== 'prod') {
+      return `dx-backend-${process.env.ENV_TYPE}`;
+    }
+
+    return 'localhost';
   }
 
   @get('/dataset/duplicate/{id}')
