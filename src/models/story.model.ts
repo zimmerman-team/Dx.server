@@ -61,6 +61,37 @@ export class Story extends Entity {
   }[];
 
   @property({
+    type: 'object',
+    required: true,
+  })
+  uniformBlockTypeStyle: {
+    unstyled: {
+      css: null;
+      inlineStyles: [];
+    };
+    title: {
+      css: null;
+      inlineStyles: [];
+    };
+    'header-one': {
+      css: null;
+      inlineStyles: [];
+    };
+    'header-two': {
+      css: null;
+      inlineStyles: [];
+    };
+    'header-three': {
+      css: null;
+      inlineStyles: [];
+    };
+    'header-five': {
+      css: null;
+      inlineStyles: [];
+    };
+  };
+
+  @property({
     type: 'boolean',
     default: false,
   })
