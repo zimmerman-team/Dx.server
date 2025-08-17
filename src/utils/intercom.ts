@@ -163,7 +163,7 @@ export const attachUserToCompany = async (
 export const sendContactForm = async (
   userData: IntercomUser,
   message: string,
-  company: string = '',
+  company = '',
 ) => {
   const userSearch = await searchIntercomUser(userData.email);
   if (userSearch.error) {
@@ -344,4 +344,42 @@ export const addUserToNewsletter = async (email: string) => {
     return updateUser;
   }
   return {message: 'Thank you for subscribing!'};
+};
+
+export const createAndAttachUserToCompany = async (
+  userData: IntercomUser,
+  company: string,
+) => {
+  const userSearch = await searchIntercomUser(userData.email);
+  if (userSearch.error) {
+    return userSearch;
+  }
+  let user;
+  if (userSearch.data.length !== 0) {
+    user = userSearch.data[0];
+  } else {
+    const createUser = await createIntercomUser({
+      ...userData,
+      role: 'lead',
+    });
+    if (createUser.error) {
+      return createUser;
+    }
+    user = createUser;
+  }
+  if (company) {
+    let companyData = await getCompany(company);
+    // TODO: Handle not found error properly
+    if (companyData.error) {
+      companyData = await createCompany(company);
+      if (companyData.error) {
+        return companyData;
+      }
+    }
+    const userToCompany = await attachUserToCompany(user.id, companyData.id);
+    if (userToCompany.error) {
+      return userToCompany;
+    }
+  }
+  return user;
 };
