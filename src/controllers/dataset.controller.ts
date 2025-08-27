@@ -51,32 +51,25 @@ const getDatasets = async (
   datasetRepository: DatasetRepository,
   userId: string,
   filter?: Filter<Dataset>,
-  userOnly?: boolean,
+  filterValue?: string,
 ) => {
   if (userId && userId !== 'anonymous') {
-    if (userOnly) {
-      return datasetRepository.find({
-        ...filter,
-        where: {
-          ...filter?.where,
-          owner: userId,
-        },
-      });
-    }
     const orgMembers = await getUsersOrganizationMembers(userId);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    const ownerFilter = {
+      myAssets: [{owner: userId}],
+      dataxplorerAssets: [{baseline: true}],
+      allAssets: [
+        {owner: userId},
+        {baseline: true},
+        {owner: {inq: orgMemberIds}},
+      ],
+    }[filterValue ?? 'myAssets'];
     return datasetRepository.find({
       ...filter,
       where: {
         ...filter?.where,
-        or: [
-          {owner: userId},
-          {
-            owner: {
-              inq: orgMemberIds,
-            },
-          },
-        ],
+        or: [...(ownerFilter ?? [])],
       },
     });
   }
@@ -165,29 +158,26 @@ export class DatasetController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(
     @param.where(Dataset) where?: Where<Dataset>,
-    @param.query.boolean('userOnly') userOnly?: boolean,
+    @param.query.string('filterValue') filterValue?: string,
   ): Promise<Count> {
     logger.info(`route </datasets/count> -  get datasets count`);
     const userId = _.get(this.req, 'user.sub', 'anonymous');
+
     if (userId && userId !== 'anonymous') {
-      if (userOnly) {
-        return this.datasetRepository.count({
-          ...where,
-          owner: userId,
-        });
-      }
       const orgMembers = await getUsersOrganizationMembers(userId);
       const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+      const ownerFilter = {
+        myAssets: [{owner: userId}],
+        dataxplorerAssets: [{baseline: true}],
+        allAssets: [
+          {owner: userId},
+          {baseline: true},
+          {owner: {inq: orgMemberIds}},
+        ],
+      }[filterValue ?? 'myAssets'];
       return this.datasetRepository.count({
         ...where,
-        or: [
-          {owner: userId},
-          {
-            owner: {
-              inq: orgMemberIds,
-            },
-          },
-        ],
+        or: [...(ownerFilter ?? [])],
       });
     }
     return this.datasetRepository.count({
@@ -227,7 +217,7 @@ export class DatasetController {
   @intercept(cacheInterceptor({extraKey: 'datasets', useUserId: true})) // caching per user
   async find(
     @param.filter(Dataset) filter?: Filter<Dataset>,
-    @param.query.boolean('userOnly') userOnly?: boolean,
+    @param.query.string('filterValue') filterValue?: string,
   ): Promise<Dataset[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
@@ -240,7 +230,7 @@ export class DatasetController {
       this.datasetRepository,
       userId,
       filter,
-      userOnly,
+      filterValue,
     );
     return addOwnerNameToAssets(datasets);
   }
