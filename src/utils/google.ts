@@ -82,7 +82,7 @@ export async function addAttendeeToEvent(
 
   // Update event
   await axios.put(
-    `https://www.googleapis.com/calendar/v3/calendars/${process.env.GOOGLE_CALENDAR_ID}/events/${eventId}`,
+    `https://www.googleapis.com/calendar/v3/calendars/${process.env.GOOGLE_CALENDAR_ID}/events/${eventId}?sendUpdates=all`,
     {
       ...event,
       attendees,

@@ -40,7 +40,6 @@ export class GoogleCalendarController {
       email: string;
       company?: string;
       jobTitle?: string;
-      experienceLevel?: string;
       addToNewsletter?: boolean;
     },
     @param.path.string('eventId') eventId: string,
@@ -53,7 +52,6 @@ export class GoogleCalendarController {
         role: 'lead',
         custom_attributes: {
           jobTitle: data.jobTitle,
-          experienceLevel: data.experienceLevel,
         },
       },
       data.company ?? '',
