@@ -42,17 +42,21 @@ async function getChartsCount(
   chartRepository: ChartRepository,
   owner?: string,
   where?: Where<Chart>,
-  filterByOwner?: boolean,
+  filterValue?: string,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+
+    const ownerFilter = {
+      myAssets: [{owner}],
+      dataxplorerAssets: [{baseline: true}],
+      allAssets: [{owner}, {baseline: true}, {owner: {inq: orgMemberIds}}],
+    }[filterValue ?? 'myAssets'];
+
     return chartRepository.count({
       ...where,
-      or: [
-        {owner: owner},
-        ...(filterByOwner ? [] : [{owner: {inq: orgMemberIds}}]),
-      ],
+      or: [...(ownerFilter ?? [])],
     });
   }
   logger.info(`route </charts/count> Fetching chart count for owner- ${owner}`);
@@ -66,19 +70,21 @@ async function getCharts(
   chartRepository: ChartRepository,
   owner?: string,
   filter?: Filter<Chart>,
-  filterByOwner?: boolean,
+  filterValue?: string,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    const ownerFilter = {
+      myAssets: [{owner}],
+      dataxplorerAssets: [{baseline: true}],
+      allAssets: [{owner}, {baseline: true}, {owner: {inq: orgMemberIds}}],
+    }[filterValue ?? 'myAssets'];
     return chartRepository.find({
       ...filter,
       where: {
         ...filter?.where,
-        or: [
-          {owner: owner},
-          ...(filterByOwner ? [] : [{owner: {inq: orgMemberIds}}]),
-        ],
+        or: [...(ownerFilter ?? [])],
       },
       fields: [
         'id',
@@ -349,14 +355,14 @@ export class ChartsController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(
     @param.where(Chart) where?: Where<Chart>,
-    @param.query.boolean('userOnly') userOnly?: boolean,
+    @param.query.string('filterValue') filterValue?: string,
   ): Promise<Count> {
     logger.verbose(`route </charts/count> Fetching chart count`);
     return getChartsCount(
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       where,
-      userOnly,
+      filterValue,
     );
   }
   @get('/charts/count/public')
@@ -366,7 +372,12 @@ export class ChartsController {
   })
   async countPublic(@param.where(Chart) where?: Where<Chart>): Promise<Count> {
     logger.info(`route </charts/count/public> Fetching public chart count`);
-    return getChartsCount(this.chartRepository, 'anonymous', where, false);
+    return getChartsCount(
+      this.chartRepository,
+      'anonymous',
+      where,
+      'allAssets',
+    );
   }
 
   /* get charts */
@@ -386,7 +397,7 @@ export class ChartsController {
   @intercept(cacheInterceptor({extraKey: 'charts', useUserId: true})) // caching per user
   async find(
     @param.filter(Chart) filter?: Filter<Chart>,
-    @param.query.boolean('userOnly') userOnly?: boolean,
+    @param.query.string('filterValue') filterValue?: string,
   ): Promise<(Chart & {ownerName: string})[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
@@ -398,7 +409,7 @@ export class ChartsController {
       this.chartRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       filter,
-      userOnly,
+      filterValue,
     );
     return addOwnerNameToAssets(charts);
   }
@@ -429,7 +440,7 @@ export class ChartsController {
       this.chartRepository,
       'anonymous',
       filter,
-      false,
+      'allAssets',
     );
     return addOwnerNameToAssets(charts);
   }

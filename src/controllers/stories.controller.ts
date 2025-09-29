@@ -44,17 +44,19 @@ async function getStoriesCount(
   storyRepository: StoryRepository,
   owner?: string,
   where?: Where<Story>,
-  filterByOwner?: boolean,
+  filterValue?: string,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    const ownerFilter = {
+      myAssets: [{owner}],
+      dataxplorerAssets: [{baseline: true}],
+      allAssets: [{owner}, {baseline: true}, {owner: {inq: orgMemberIds}}],
+    }[filterValue ?? 'myAssets'];
     return storyRepository.count({
       ...where,
-      or: [
-        {owner: owner},
-        ...(filterByOwner ? [] : [{owner: {inq: orgMemberIds}}]),
-      ],
+      or: [...(ownerFilter ?? [])],
     });
   }
   return storyRepository.count({
@@ -67,19 +69,21 @@ async function getStories(
   storyRepository: StoryRepository,
   owner?: string,
   filter?: Filter<Story>,
-  filterByOwner?: boolean,
+  filterValue?: string,
 ) {
   if (owner && owner !== 'anonymous') {
     const orgMembers = await getUsersOrganizationMembers(owner);
     const orgMemberIds = orgMembers.map((m: any) => m.user_id);
+    const ownerFilter = {
+      myAssets: [{owner}],
+      dataxplorerAssets: [{baseline: true}],
+      allAssets: [{owner}, {baseline: true}, {owner: {inq: orgMemberIds}}],
+    }[filterValue ?? 'myAssets'];
     return storyRepository.find({
       ...filter,
       where: {
         ...filter?.where,
-        or: [
-          {owner: owner},
-          ...(filterByOwner ? [] : [{owner: {inq: orgMemberIds}}]),
-        ],
+        or: [...(ownerFilter ?? [])],
       },
       fields: [
         'id',
@@ -214,14 +218,14 @@ export class StoriesController {
   @authenticate({strategy: 'auth0-jwt', options: {scopes: ['greet']}})
   async count(
     @param.where(Story) where?: Where<Story>,
-    @param.query.boolean('userOnly') userOnly?: boolean,
+    @param.query.string('filterValue') filterValue?: string,
   ): Promise<Count> {
     logger.info(`route </stories/count> getting stories count`);
     return getStoriesCount(
       this.StoryRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       where,
-      userOnly,
+      filterValue,
     );
   }
 
@@ -251,7 +255,7 @@ export class StoriesController {
   @intercept(cacheInterceptor({extraKey: 'stories', useUserId: true})) // caching per user
   async find(
     @param.filter(Story) filter?: Filter<Story>,
-    @param.query.boolean('userOnly') userOnly?: boolean,
+    @param.query.string('filterValue') filterValue?: string,
   ): Promise<Story[]> {
     if (filter?.order && filter.order.includes('name')) {
       // @ts-ignore
@@ -262,7 +266,7 @@ export class StoriesController {
       this.StoryRepository,
       _.get(this.req, 'user.sub', 'anonymous'),
       filter,
-      userOnly,
+      filterValue,
     );
     return addOwnerNameToAssets(stories);
   }
