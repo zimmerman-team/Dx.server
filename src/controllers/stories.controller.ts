@@ -560,6 +560,7 @@ export class StoriesController {
       titleColor: fStory.titleColor,
       descriptionColor: fStory.descriptionColor,
       dateColor: fStory.dateColor,
+      uniformBlockTypeStyle: fStory.uniformBlockTypeStyle,
       owner: userId,
     });
     await handleDeleteCache({
