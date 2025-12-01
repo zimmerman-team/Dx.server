@@ -20,3 +20,23 @@ export const winstonLogger = winston.createLogger({
     }),
   ],
 });
+
+export const frontendLogger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: combine(
+    timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
+    prettyPrint(),
+    printf(
+      info =>
+        `${info.timestamp} [${info.level.toUpperCase()}]: ${info.message} ${
+          info.stack ? info.stack : ''
+        }`,
+    ),
+  ),
+  transports: [
+    new winston.transports.File({
+      filename: './logging/dx_client.log',
+      level: 'info',
+    }),
+  ],
+});
