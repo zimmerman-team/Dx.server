@@ -4,9 +4,9 @@ import jwt from 'jsonwebtoken';
 import {URLSearchParams} from 'url';
 
 // Load service account JSON
-const serviceAccount = JSON.parse(
-  fs.readFileSync(process.env.GOOGLE_CALENDAR_KEY_FILE!, 'utf-8'),
-);
+const serviceAccount = process.env.GOOGLE_CALENDAR_KEY_FILE
+  ? JSON.parse(fs.readFileSync(process.env.GOOGLE_CALENDAR_KEY_FILE!, 'utf-8'))
+  : null;
 
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar',
@@ -17,7 +17,7 @@ const SCOPES = [
 async function getAccessToken() {
   const now = Math.floor(Date.now() / 1000);
   const payload = {
-    iss: serviceAccount.client_email,
+    iss: serviceAccount?.client_email,
     scope: SCOPES.join(' '),
     aud: 'https://oauth2.googleapis.com/token',
     exp: now + 3600,
