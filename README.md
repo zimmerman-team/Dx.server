@@ -2,8 +2,7 @@
 
 ---
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/globalfund/data-explorer-server/blob/main/LICENSE.MD)
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/globalfund/data-explorer-server/blob/main/LICENSE.MD) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=globalfund_data-explorer-server&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=globalfund_data-explorer-server) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=globalfund_data-explorer-server&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=globalfund_data-explorer-server) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=globalfund_data-explorer-server&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=globalfund_data-explorer-server) [![CodeQL Advanced](https://github.com/zimmerman-team/Dx.server/actions/workflows/codeql.yml/badge.svg)](https://github.com/zimmerman-team/Dx.server/actions/workflows/codeql.yml) [![Semantic versioning](https://github.com/zimmerman-team/Dx.server/actions/workflows/main.yml/badge.svg)](https://github.com/zimmerman-team/Dx.server/actions/workflows/main.yml)
 ## What is the Data Explorer API?
 
 ## About the project
