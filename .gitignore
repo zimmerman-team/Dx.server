@@ -63,7 +63,7 @@ typings/
 # Cache used by TypeScript's incremental build
 *.tsbuildinfo
 
-src/utils/renderChart/rawgraphs-charts
+rawgraphs-charts
 
 .DS_Store
 
