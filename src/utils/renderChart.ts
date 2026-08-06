@@ -1,21 +1,10 @@
 import fs from 'fs';
 import _ from 'lodash';
 
-
 // execute renderChartData with passed arguments 1 2 and 3
 // @ts-expect-error untyped module
 import {chart as rawChart} from '@rawgraphs/rawgraphs-core';
 
-import {JSDOM} from "jsdom";
-
-
-const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
-
-(global as any).window = dom.window;
-(global as any).document = dom.window.document;
-(global as any).Element = dom.window.Element;
-(global as any).HTMLElement = dom.window.HTMLElement;
-(global as any).SVGElement = dom.window.SVGElement;
 import {
   alluvialdiagram,
   arcdiagram,
@@ -68,7 +57,7 @@ import {
   voronoidiagram,
   voronoitreemap,
   // @ts-expect-error untyped module
-} from '../../rawgraphs-charts/lib/index.cjs.js';
+} from '../../rawgraphs-charts/lib/index.es.js';
 import {winstonLogger} from '../config/logger/winston-logger.js';
 
 
