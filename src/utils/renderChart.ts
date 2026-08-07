@@ -1,8 +1,15 @@
 import fs from 'fs';
-import _ from 'lodash';
+import orderBy from 'lodash/orderBy';
+import uniqBy from 'lodash/uniqBy';
+import filter from 'lodash/filter';
+import get from 'lodash/get';
+import isEmpty from 'lodash/isEmpty';
+
 
 // execute renderChartData with passed arguments 1 2 and 3
+// @ts-expect-error untyped module
 import {chart as rawChart} from '@rawgraphs/rawgraphs-core';
+
 import {
   alluvialdiagram,
   arcdiagram,
@@ -54,9 +61,11 @@ import {
   violinplot,
   voronoidiagram,
   voronoitreemap,
-} from './rawgraphs-charts/lib/index.cjs.js';
+  // @ts-expect-error untyped module
+} from '../../rawgraphs-charts/lib/index.es.js';
+import {winstonLogger} from '../config/logger/winston-logger.js';
 
-import {winstonLogger} from './winston-logger.js';
+
 
 // consts
 const charts = {
@@ -66,15 +75,34 @@ const charts = {
   barchartmultiset,
   barchartstacked,
   beeswarm,
+  bigNumber,
   boxplot,
   bubblechart,
   bumpchart,
-  // calendarHeatmap,
   circlepacking,
   circularDendrogram,
   contourPlot,
   convexHull,
   dendrogram,
+  echartsAreastack,
+  echartsAreatimeaxis,
+  echartsBarchart,
+  echartsBubblechart,
+  echartsCirclepacking,
+  echartsCirculargraph,
+  echartsForcegraph,
+  echartsGeomap,
+  echartsGraphgl,
+  echartsHeatmap,
+  echartsLinechart,
+  echartsMultisetBarchart,
+  echartsPiechart,
+  echartsRadarchart,
+  echartsSankey,
+  echartsScatterchart,
+  echartsStackedBarchart,
+  echartsSunburst,
+  echartsTreemap,
   ganttChart,
   hexagonalBinning,
   horizongraph,
@@ -91,31 +119,14 @@ const charts = {
   violinplot,
   voronoidiagram,
   voronoitreemap,
-  echartsSankey,
-  echartsGeomap,
-  echartsTreemap,
-  echartsBarchart,
-  echartsLinechart,
-  echartsSunburst,
-  echartsPiechart,
-  echartsCirclepacking,
-  echartsForcegraph,
-  echartsCirculargraph,
-  echartsBubblechart,
-  echartsAreastack,
-  echartsHeatmap,
-  echartsRadarchart,
-  echartsGraphgl,
-  echartsAreatimeaxis,
-  echartsScatterchart,
-  echartsMultisetBarchart,
-  echartsStackedBarchart,
-  bigNumber,
 };
 
 // utils
-function getDatasetFilterOptions(dataset, dataTypes, onlyKeys, appliedFilters) {
-  const filterOptions = [];
+function getDatasetFilterOptions(dataset: any[],
+  dataTypes: any,
+  onlyKeys: boolean | null,
+  appliedFilters: any) {
+  const filterOptions: any[] = [];
   if (!dataset || dataset.length === 0) return filterOptions;
 
   // Extract the keys from dataset, excluding certain ones
@@ -140,7 +151,7 @@ function getDatasetFilterOptions(dataset, dataTypes, onlyKeys, appliedFilters) {
     delete relaxedFilters[key]; // Temporarily remove the current key from filters
 
     const relaxedDataset = filterData(dataset, relaxedFilters);
-    relaxedDataset.forEach(item => {
+    relaxedDataset.forEach((item: any) => {
       const value = item[key];
       if (value !== undefined && value !== null && value !== '') {
         if (!potentialGroupedMap.has(value)) {
@@ -163,8 +174,8 @@ function getDatasetFilterOptions(dataset, dataTypes, onlyKeys, appliedFilters) {
       filterOptions.push({
         name: key,
         enabled: true,
-        options: _.orderBy(
-          _.uniqBy(potentialOptionsWithContent, 'name').map(o => ({
+        options: orderBy(
+        uniqBy(potentialOptionsWithContent, 'name').map(o => ({
             label: o.name,
             value: o.name,
             count: o.count,
@@ -179,13 +190,13 @@ function getDatasetFilterOptions(dataset, dataTypes, onlyKeys, appliedFilters) {
   return filterOptions;
 }
 
-function filterData(parsedDataset, appliedFilters) {
+function filterData(parsedDataset: any[], appliedFilters: any) {
   // Get the filter keys
   const filterKeys = Object.keys(appliedFilters || {});
   if (filterKeys.length === 0) return parsedDataset; // can't be 0, but safety return
 
   // Filter 'data' based on 'appliedFilters' using the specified 'filterKeys'
-  const filteredData = _.filter(parsedDataset, item => {
+  const filteredData = filter(parsedDataset, item => {
     // Check if all conditions hold for each 'filterKey'
     return filterKeys.every(filterKey =>
       appliedFilters[filterKey]?.includes(item[filterKey]),
@@ -196,14 +207,22 @@ function filterData(parsedDataset, appliedFilters) {
 }
 
 function renderChart(
-  item,
-  parsed,
-  initialParsedDataset,
-  id,
-  itemAppliedFilters,
-  vizType,
+  item:  {
+    chartType: string;
+    mapping: any;
+    vizOptions: any;
+    appliedFilters: any;
+    enabledFilterOptionGroups: any;
+    datasetId: string;
+    vizType: string;
+  },
+  parsed: any,
+  initialParsedDataset: any[],
+  id: string,
+  itemAppliedFilters: any,
+  vizType: string,
 ) {
-  const chart = charts[vizType];
+  const chart = charts[vizType as keyof typeof charts];
   let header = '';
   let subheader = '';
   let unitofmeasurement = '';
@@ -239,7 +258,7 @@ function renderChart(
       };
     }
 
-    let tabItem = {
+    const tabItem = {
       renderedContent: '',
       appliedFilters: itemAppliedFilters || item.appliedFilters,
       filterOptionGroups: getDatasetFilterOptions(
@@ -253,35 +272,34 @@ function renderChart(
       mappedData: vizData,
       dimensions: chart.dimensions,
       ssr: false,
-    };
-    if (id !== 'new') {
-      tabItem = {
-        ...tabItem,
+      ...(id === 'new' ? {}: {
         mapping: item.mapping,
         vizType: item.vizType,
         datasetId: item.datasetId,
         vizOptions: item.vizOptions,
-      };
-    }
+      })
+
+    };
+
     return tabItem;
   } catch (e) {
     console.log(e);
     winstonLogger.error(
-      `route <utils/renderchart/index.js>;fn <renderChart()>: Error rendering chart: ${e}`,
+      `route <utils/renderChart.ts>;fn <renderChart()>: Error rendering chart: ${e}`,
     );
   }
 }
 
-export async function renderChartData(id, body, chartData) {
+export async function renderChartData(id: string, body: any, chartData: any) {
   winstonLogger.debug(
-    `route <utils/renderchart/index.js>;fn <renderChartData()>: Starting render chart process for chart with id: ${id}`,
+    `route <utils/renderChart.ts>;fn <renderChartData()>: Starting render chart process for chart with id: ${id}`,
   );
 
   let internalData;
   if (id === 'new' || body.rows) {
     if (!body.rows || body.rows.length === 0) {
       winstonLogger.error(
-        `route <utils/renderchart/index.js>;fn <renderChartData()>: Error rendering chart: No rows`,
+        `route <utils/renderChart.ts>;fn <renderChartData()>: Error rendering chart: No rows`,
       );
       return {error: 'no rows'};
     }
@@ -293,7 +311,7 @@ export async function renderChartData(id, body, chartData) {
   // we can assume that we only take the data item at data[0][0].
   // content is never in item anymore.
   // read the item and get the relevant parsed-data-file as json
-  let item = internalData[0][0];
+  const item = internalData[0][0];
   let parsed = null;
 
   try {
@@ -303,15 +321,15 @@ export async function renderChartData(id, body, chartData) {
     parsed = JSON.parse(parsedData.toString());
   } catch (error) {
     winstonLogger.error(
-      `route <utils/renderchart/index.js>;fn <renderChartData()>: Error reading parsed data file: ${error}`,
+      `route <utils/renderChart.ts>;fn <renderChartData()>: Error reading parsed data file: ${error}`,
     );
     console.log('Error reading parsed data file', error);
   }
   // Check if there are either filters in the item.appliedFilters or in the body.previewAppliedFilters
-  const itemAppliedFilters = _.get(body, `previewAppliedFilters[0][0]`, null);
+  const itemAppliedFilters = get(body, `previewAppliedFilters[0][0]`, null);
   const initialParsedDataset = parsed.dataset;
   // If there are filters, filter the data
-  if (!_.isEmpty(item.appliedFilters) || itemAppliedFilters) {
+  if (!isEmpty(item.appliedFilters) || itemAppliedFilters) {
     parsed.dataset = filterData(
       parsed.dataset,
 
@@ -330,50 +348,17 @@ export async function renderChartData(id, body, chartData) {
       item.vizType,
     );
     // Return the rendered chart item
-    // json stringify and save to ./rendered.json
-    fs.writeFileSync(
-      `${__dirname}/rendering/${id}_rendered.json`,
-      JSON.stringify(renderedChart),
-    );
     winstonLogger.debug(
-      `route <utils/renderchart/index.js>;fn <renderChartData()>: Render chart success`,
+      `route <utils/renderChart.ts>;fn <renderChartData()>: Render chart success`,
     );
     console.log('Success...');
+    return renderedChart;
   } catch (e) {
     console.log(e);
     winstonLogger.error(
-      `route <utils/renderchart/index.js>;fn <renderChartData()>: Error rendering chart: ${e}`,
+      `route <utils/renderChart.ts>;fn <renderChartData()>: Error rendering chart: ${e}`,
     );
   }
 }
 
-try {
-  // if argv2 is undefined, return error
-  if (process.argv[2] === undefined) {
-    winstonLogger.error(
-      'route <utils/renderchart/index.js>: process.argv[2] undefined',
-    );
-    console.error('No id provided');
-  } else {
-    winstonLogger.debug(
-      `route <utils/renderchart/index.js>: process.argv[2]: ${process.argv[2]}`,
-    );
 
-    // read the first argument as id
-    const id = process.argv[2]; // 2 because 0 is node and 1 is this file
-    // read the data from ./source_data.json as json
-    const data = fs.readFileSync(`${__dirname}/rendering/${id}.json`);
-    const parsedData = JSON.parse(data);
-    const body = parsedData.body;
-    const chartData = parsedData.chartData;
-    renderChartData(id, body, chartData);
-    winstonLogger.debug(
-      `route <utils/renderchart/index.js>: Rendered chart with id: ${id}`,
-    );
-  }
-} catch (error) {
-  winstonLogger.error(
-    `route <utils/renderchart/index.js>: Error rendering chart: ${'error'}`,
-  );
-  console.error('Something went wrong...\n');
-}

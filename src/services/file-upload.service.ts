@@ -30,6 +30,7 @@ export class FileUploadProvider implements Provider<FileUploadHandler> {
   }
 
   value(): FileUploadHandler {
+    // @ts-ignore
     return multer(this.options).any();
   }
 }

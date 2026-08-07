@@ -22,7 +22,6 @@ import {
   RestBindings,
 } from '@loopback/rest';
 import axios from 'axios';
-import {execSync} from 'child_process';
 import fs from 'fs-extra';
 import _ from 'lodash';
 import {winstonLogger as logger} from '../config/logger/winston-logger';
@@ -33,6 +32,7 @@ import {getUsersOrganizationMembers} from '../utils/auth';
 import {duplicateName} from '../utils/duplicateName';
 import {getUserPlanData} from '../utils/planAccess';
 import {addOwnerNameToAssets, handleDeleteCache} from '../utils/redis';
+import {renderChartData} from '../utils/renderChart';
 
 let host = process.env.BACKEND_SUBDOMAIN ? 'dx-backend' : 'localhost';
 if (process.env.ENV_TYPE !== 'prod')
@@ -142,47 +142,14 @@ async function renderChart(
     ) {
       return;
     }
-    // save an object with ({...body}, chartData) with identifiers as body and chardata as json
-    const ob = {
-      body: {...body},
-      chartData: chartData,
-    };
-    logger.debug(`fn <renderChart()> Writing chart data to file- ${id}.json`);
-    fs.writeFileSync(
-      `./src/utils/renderChart/dist/rendering/${id}.json`,
-      JSON.stringify(ob, null, 4),
-    );
-    // execute the ./src/utiles/renderChart/dist/index.cjs with id as the parameter
-    logger.debug(`fn <renderChart()> executing renderChart for chart- ${id}`);
-    execSync(`node ./src/utils/renderChart/dist/index.cjs ${id}`, {
-      timeout: 0,
-      stdio: 'ignore',
-    });
-    // once the rendering is done, read the output file
-    logger.debug(
-      `fn <renderChart()> Reading rendered chart data from file- ${id}_rendered.json`,
-    );
-    const data = fs.readFileSync(
-      `./src/utils/renderChart/dist/rendering/${id}_rendered.json`,
-    );
 
-    logger.debug(
-      `fn <renderChart()> Reading rendered chart data from file- ${id}_rendered.json`,
-    );
+    const data = await renderChartData(id, body, chartData);
+
     logger.verbose(
-      `fn <renderChart()> rendered chart data: ${data.toString()}`,
+      `fn <renderChart()> rendered chart data: ${data?.toString()}`,
     );
 
-    // clean temp files
-    logger.debug(`fn <renderChart()> Cleaning temp files for chart- ${id}`);
-    fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}.json`);
-    fs.removeSync(`./src/utils/renderChart/dist/rendering/${id}_rendered.json`);
-
-    // return jsonified data
-    logger.verbose(
-      `fn <renderChart()> Chart with id: ${id} rendered data: ${data.toString()}`,
-    );
-    return JSON.parse(data.toString());
+    return data;
   } catch (err) {
     logger.error(
       `fn <renderChart()> Error rendering chart with id: ${id}; error:${err.toString()} `,
