@@ -1,5 +1,10 @@
 import fs from 'fs';
-import _ from 'lodash';
+import orderBy from 'lodash/orderBy';
+import uniqBy from 'lodash/uniqBy';
+import filter from 'lodash/filter';
+import get from 'lodash/get';
+import isEmpty from 'lodash/isEmpty';
+
 
 // execute renderChartData with passed arguments 1 2 and 3
 // @ts-expect-error untyped module
@@ -169,8 +174,8 @@ function getDatasetFilterOptions(dataset: any[],
       filterOptions.push({
         name: key,
         enabled: true,
-        options: _.orderBy(
-          _.uniqBy(potentialOptionsWithContent, 'name').map(o => ({
+        options: orderBy(
+        uniqBy(potentialOptionsWithContent, 'name').map(o => ({
             label: o.name,
             value: o.name,
             count: o.count,
@@ -191,7 +196,7 @@ function filterData(parsedDataset: any[], appliedFilters: any) {
   if (filterKeys.length === 0) return parsedDataset; // can't be 0, but safety return
 
   // Filter 'data' based on 'appliedFilters' using the specified 'filterKeys'
-  const filteredData = _.filter(parsedDataset, item => {
+  const filteredData = filter(parsedDataset, item => {
     // Check if all conditions hold for each 'filterKey'
     return filterKeys.every(filterKey =>
       appliedFilters[filterKey]?.includes(item[filterKey]),
@@ -253,7 +258,7 @@ function renderChart(
       };
     }
 
-    let tabItem = {
+    const tabItem = {
       renderedContent: '',
       appliedFilters: itemAppliedFilters || item.appliedFilters,
       filterOptionGroups: getDatasetFilterOptions(
@@ -306,7 +311,7 @@ export async function renderChartData(id: string, body: any, chartData: any) {
   // we can assume that we only take the data item at data[0][0].
   // content is never in item anymore.
   // read the item and get the relevant parsed-data-file as json
-  let item = internalData[0][0];
+  const item = internalData[0][0];
   let parsed = null;
 
   try {
@@ -321,10 +326,10 @@ export async function renderChartData(id: string, body: any, chartData: any) {
     console.log('Error reading parsed data file', error);
   }
   // Check if there are either filters in the item.appliedFilters or in the body.previewAppliedFilters
-  const itemAppliedFilters = _.get(body, `previewAppliedFilters[0][0]`, null);
+  const itemAppliedFilters = get(body, `previewAppliedFilters[0][0]`, null);
   const initialParsedDataset = parsed.dataset;
   // If there are filters, filter the data
-  if (!_.isEmpty(item.appliedFilters) || itemAppliedFilters) {
+  if (!isEmpty(item.appliedFilters) || itemAppliedFilters) {
     parsed.dataset = filterData(
       parsed.dataset,
 
